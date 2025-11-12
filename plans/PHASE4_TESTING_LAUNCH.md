@@ -27,10 +27,10 @@ Comprehensive end-to-end testing for **Chrome extension** (`ytgify`) integration
 | Token Refresh | E2E (Playwright) | Token refreshed before expiry |
 | Token Expiry Handling | E2E (Playwright) | Redirect to login on expired token |
 | Service Worker Restart | E2E (Playwright) | Token checked on restart |
-| GIF Creation (Offline) | E2E (Playwright) | GIF saved in IndexedDB |
+| GIF Creation (Anonymous) | E2E (Playwright) | GIF saved to Downloads folder |
+| GIF Creation (Authenticated) | E2E (Playwright) | GIF saved to Downloads AND uploaded to cloud |
 | GIF Upload (Authenticated) | E2E (Playwright) | GIF uploaded to S3, visible in web app |
 | Metadata Extraction | E2E (Playwright) | fps, resolution, duration correct |
-| Offline→Online Sync | E2E (Playwright) | Offline GIFs auto-upload on auth |
 | Like GIF | E2E (Playwright) | Like count increments, persists |
 | Comment on GIF | E2E (Playwright) | Comment appears on web app |
 | Notification Polling | E2E (Playwright) | Badge updates, notifications received |

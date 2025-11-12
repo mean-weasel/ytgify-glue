@@ -1825,7 +1825,7 @@ rails test:system test/system/api/gif_api_test.rb
 
 ## Next Steps for Extension
 
-1. Update extension to use backend API instead of local storage
+1. Update extension to use backend API (in addition to Downloads folder)
 2. Implement authentication flow in popup
 3. Send GIF creation requests to `/api/v1/gifs`
 4. Fetch user's GIFs from `/api/v1/gifs?user_id=current`
@@ -2081,7 +2081,7 @@ The Rails backend is **fully ready** for integration with:
 
 ### Next Steps for Extension
 1. Add authentication flow to extension popup
-2. Replace local storage with API calls
+2. Add cloud upload functionality to GIF creation flow
 3. Implement token refresh mechanism
 4. Sync GIFs to backend
 5. Enable social features from extension

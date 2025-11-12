@@ -244,10 +244,10 @@ browser.notifications.create({ ... })
 |---------------|-------------------|---------------|
 | User Login | ✓ | JWT stored, user authenticated |
 | Token Refresh | ✓ | Token refreshed before expiry |
-| GIF Creation (Offline) | ✓ | GIF saved in IndexedDB |
+| GIF Creation (Offline) | ✓ | GIF created and downloaded |
 | GIF Upload | ✓ | GIF uploaded to S3, visible on web |
 | Metadata Extraction | ✓ | fps, resolution, duration correct |
-| Offline→Online Sync | ✓ | Offline GIFs auto-upload |
+| Anonymous→Authenticated | ✓ | After login, new GIFs upload to cloud |
 | Like GIF | ✓ | Like count increments |
 | Comment on GIF | ✓ | Comment appears on web |
 | Notification Polling | ✓ | Badge updates |

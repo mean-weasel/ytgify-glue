@@ -69,8 +69,8 @@ Enable JWT authentication from Chrome extension:
 
 Upload GIFs to backend with metadata:
 - GIF metadata extraction (fps, resolution, duration)
-- Cloud upload with hybrid storage
-- Offline-to-online sync
+- Optional cloud upload + metadata
+- Downloads folder first (progressive enhancement)
 - Upload progress UI
 
 **Status:** ⚠️ Ready after Phase 1
@@ -123,7 +123,7 @@ Port Chrome implementation to Firefox:
 ### [Architecture Decisions](./ARCHITECTURE_DECISIONS.md)
 
 Key design decisions with rationale:
-1. **Hybrid Storage** - Local + cloud approach
+1. **Download + Optional Cloud Upload** - Progressive enhancement approach
 2. **Authentication UX** - Login in popup, signup on web
 3. **Error Handling** - Graceful degradation
 4. **Notifications** - HTTP polling vs WebSocket
@@ -156,7 +156,7 @@ Key design decisions with rationale:
 |-------|----------|-------|--------|--------------|
 | Phase 0 | Week 0 (2-3 days) | Chrome Setup | Not Started | Infrastructure ready |
 | Phase 1 | Weeks 1-2 | Chrome Auth | Not Started | Authentication working |
-| Phase 2 | Weeks 3-4 | Chrome Upload | Not Started | GIF upload with metadata |
+| Phase 2 | Weeks 3-4 | Chrome Upload | Not Started | Optional cloud upload + metadata |
 | Phase 3 | Weeks 5-6 | Chrome Social | Not Started | Social features integrated |
 | Phase 4 | Weeks 7-8 | Chrome Launch | Not Started | **Chrome extension live** 🚀 |
 | Phase 5 | Weeks 9-10 | Firefox Port | Not Started | **Firefox extension live** 🦊 |

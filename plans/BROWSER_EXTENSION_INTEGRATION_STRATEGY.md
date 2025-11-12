@@ -44,7 +44,7 @@ This integration strategy is split into separate phase documents for easier navi
 
 **Current Architecture:**
 - **Standalone operation** - No backend integration
-- **Local storage only** - Uses Chrome `chrome.storage.local` and IndexedDB
+- **Downloads folder only** - Saves GIFs to browser Downloads folder
 - **No authentication** - Anonymous usage only
 - **GIF Processing:** Complete client-side pipeline (frame extraction, encoding, storage)
 - **Technology:** TypeScript, React, Webpack, Tailwind CSS, shadcn/ui
@@ -56,7 +56,7 @@ This integration strategy is split into separate phase documents for easier navi
 - Content script for YouTube integration
 - GIF processor with multiple encoder options (gifenc, gifski, gif.js)
 - Frame extractor for Canvas-based video capture
-- Local IndexedDB storage (YouTubeGifStore)
+- Downloads folder storage (browser download API)
 - Newsletter integration (Beehiiv)
 
 **Chrome-Specific Constraints:**
@@ -67,7 +67,7 @@ This integration strategy is split into separate phase documents for easier navi
 **NO Backend Integration:**
 - No API calls to ytgify-share
 - No JWT authentication
-- No cloud storage
+- No cloud storage (Downloads folder only)
 - No social features
 - No user accounts
 
@@ -88,7 +88,6 @@ This integration strategy is split into separate phase documents for easier navi
 **Firefox-Specific Optimizations:**
 - Event pages stay alive longer (no 5-minute auto-termination)
 - Native Promise-based browser API (no callback wrappers)
-- Better IndexedDB support in content scripts
 - No keep-alive hacks needed
 
 **Firefox-Specific Constraints:**

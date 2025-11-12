@@ -12,18 +12,18 @@
 
 ## Goal
 
-Enable GIFs created in extensions to upload to ytgify-share backend with full metadata extraction. Implement hybrid storage strategy (local + cloud) with automatic sync for offline-created GIFs.
+Enable optional cloud upload for GIFs created in extensions. Maintain current Downloads folder behavior while adding optional backend sync when user is authenticated. Focus on progressive enhancement: anonymous users get current functionality, authenticated users unlock cloud features.
 
 ---
 
 ## Key Features
 
 1. **GIF Metadata Extraction** - Extract fps, resolution, duration during encoding
-2. **Cloud Upload with Metadata** - Send GIF file + metadata to backend API
-3. **Hybrid Storage** - Save locally AND upload to cloud
-4. **Offline Sync** - Auto-upload offline GIFs when user authenticates
+2. **Optional Cloud Upload** - Send GIF file + metadata to backend API (when authenticated)
+3. **Downloads Folder First** - Maintain current behavior: always save to Downloads
+4. **Progressive Enhancement** - Cloud features available when user wants them
 5. **Upload Progress UI** - Show progress, success/failure messages
-6. **Error Handling** - Retry failed uploads, fallback to local-only
+6. **Error Handling** - Upload failures don't affect Downloads folder saves
 
 ---
 
@@ -125,116 +125,102 @@ private async uploadToBackend(
 
 ---
 
-### Task 3: Implement Hybrid Storage Strategy
+### Task 3: Implement Download + Optional Cloud Upload
 
 ```typescript
 async createGif(params: GifCreationParams) {
   // Step 1: Create GIF with metadata
   const { gifBlob, metadata } = await this.generateGifWithMetadata(params)
-  
-  // Step 2: Always save locally first (hybrid strategy)
-  const localGif = await this.saveGifLocally(gifBlob, params, metadata)
 
-  // Step 3: Try to upload to cloud if authenticated
+  // Step 2: ALWAYS save to Downloads folder (current behavior)
+  await this.downloadGif(gifBlob, params.filename || 'ytgify.gif')
+
+  console.log('✅ GIF saved to Downloads folder')
+
+  // Step 3: OPTIONALLY upload to cloud if authenticated
   const isAuthenticated = await apiClient.isAuthenticated()
 
   if (isAuthenticated) {
     try {
       const uploadedGif = await this.uploadToBackend(gifBlob, params, metadata)
-      
-      // Update local GIF with cloud reference
-      await this.updateGifWithCloudRef(localGif.id, uploadedGif.id)
-      
-      console.log('✅ GIF saved locally and uploaded to cloud')
+
+      console.log('✅ GIF also uploaded to cloud for social features')
+
+      // Show success with cloud features unlocked
+      showSuccess('Saved to Downloads and uploaded to ytgify! Now shareable.')
     } catch (error) {
-      console.error('❌ Cloud upload failed:', error)
-      
-      // Mark for later sync
-      await this.markGifForSync(localGif.id)
-      
-      showWarning('Saved locally. Will sync when connection improves.')
+      console.error('⚠️ Cloud upload failed:', error)
+
+      // User still has file in Downloads folder
+      showWarning('Saved to Downloads. Cloud upload failed - retry from web app.')
     }
   } else {
-    // Not authenticated - local only
-    console.log('📋 GIF saved locally (not authenticated)')
+    // Not authenticated - Downloads only (current behavior)
+    console.log('📋 GIF saved to Downloads (sign in to enable cloud features)')
+    showInfo('Saved to Downloads. Sign in to share on ytgify!')
   }
-  
-  return localGif
+}
+
+/**
+ * Save GIF to Downloads folder (existing functionality)
+ */
+async downloadGif(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+
+  await chrome.downloads.download({
+    url: url,
+    filename: filename,
+    saveAs: false  // Auto-download to Downloads folder
+  })
+
+  // Clean up blob URL
+  setTimeout(() => URL.revokeObjectURL(url), 100)
 }
 ```
 
 ---
 
-### Task 4: Implement Offline-to-Online Sync
+### Task 4: Optional Settings Toggle
 
-**File:** `ytgify/src/background/sync-manager.ts`
+**File:** `ytgify/src/popup/components/Settings.tsx`
+
+Add user preference for auto-upload:
 
 ```typescript
-export class SyncManager {
-  /**
-   * Sync offline GIFs to cloud after authentication
-   */
-  static async syncOfflineGifs(): Promise<SyncResult> {
-    const unsyncedGifs = await this.getUnsyncedGifs()
-    
-    if (unsyncedGifs.length === 0) {
-      return { success: 0, failed: 0, total: 0 }
-    }
+interface SettingsState {
+  buttonVisibility: boolean
+  autoCloudUpload: boolean  // NEW: Default true
+}
 
-    console.log(`🔄 Syncing ${unsyncedGifs.length} offline GIFs...`)
+// In Settings component
+<div className="setting-item">
+  <label>
+    <input
+      type="checkbox"
+      checked={settings.autoCloudUpload}
+      onChange={(e) => handleSettingChange('autoCloudUpload', e.target.checked)}
+    />
+    <span>Auto-upload GIFs to cloud (when signed in)</span>
+  </label>
+  <p className="setting-description">
+    Automatically upload created GIFs to your ytgify.com account.
+    GIFs always download to your computer regardless of this setting.
+  </p>
+</div>
+```
 
-    let success = 0
-    let failed = 0
+**Check setting before upload:**
+```typescript
+// In createGif method
+const settings = await chrome.storage.sync.get(['autoCloudUpload'])
+const shouldUpload = isAuthenticated && settings.autoCloudUpload !== false // Default true
 
-    for (const gif of unsyncedGifs) {
-      try {
-        const uploadedGif = await this.uploadGifToBackend(gif)
-        await this.markAsSynced(gif.id, uploadedGif.id)
-        success++
-      } catch (error) {
-        console.error(`Failed to sync GIF ${gif.id}:`, error)
-        failed++
-      }
-    }
-
-    console.log(`✅ Sync complete: ${success} success, ${failed} failed`)
-
-    return { success, failed, total: unsyncedGifs.length }
-  }
-
-  /**
-   * Get GIFs that haven't been synced to cloud
-   */
-  private static async getUnsyncedGifs(): Promise<LocalGif[]> {
-    // Query IndexedDB for GIFs where cloudId is null and syncPending is true
-    // Implementation depends on your IndexedDB schema
-  }
-
-  /**
-   * Trigger sync on successful authentication
-   */
-  static async onAuthenticationSuccess(): Promise<void> {
-    // Show sync progress to user
-    chrome.runtime.sendMessage({
-      type: 'SYNC_STARTED'
-    })
-
-    const result = await this.syncOfflineGifs()
-
-    chrome.runtime.sendMessage({
-      type: 'SYNC_COMPLETED',
-      result
-    })
-  }
+if (shouldUpload) {
+  await this.uploadToBackend(gifBlob, params, metadata)
 }
 ```
 
-**Call on login success:**
-```typescript
-// In popup after successful login
-await apiClient.login(email, password)
-await SyncManager.onAuthenticationSuccess()
-```
+**Note:** Since GIFs are saved to Downloads folder and not managed by the extension, there is no automatic "sync" of old GIFs. Users can manually re-upload GIFs from their Downloads folder via the web app if desired.
 
 ---
 
@@ -292,18 +278,21 @@ export const UploadProgress: React.FC<{ gifId: string }> = ({ gifId }) => {
 ### Unit Tests
 - [ ] Metadata extraction accurate
 - [ ] Upload FormData contains all fields
-- [ ] Sync manager identifies unsynced GIFs
-- [ ] Error handling falls back to local storage
+- [ ] Downloads folder save always executes first
+- [ ] Error handling: upload failure doesn't block download
+- [ ] Anonymous users can create GIFs (no auth required)
 
 ### Integration Tests
-- [ ] Create GIF → Upload → Verify in database
-- [ ] Create GIF offline → Login → Auto-sync
-- [ ] Upload failure → Marked for sync
-- [ ] Retry mechanism works
+- [ ] Create GIF → Download → Verify file exists
+- [ ] Create GIF (authenticated) → Download + Upload → Verify in database
+- [ ] Create GIF (anonymous) → Download only → No database entry
+- [ ] Upload failure → File still in Downloads
+- [ ] Retry mechanism works for failed uploads
 
 ### E2E Tests (Chrome Focus)
-- [ ] **Chrome:** Create GIF, verify upload to S3
-- [ ] **Chrome:** Offline creation → Online login → Sync
+- [ ] **Chrome:** Create GIF (anonymous), verify in Downloads folder
+- [ ] **Chrome:** Create GIF (authenticated), verify in Downloads AND S3
+- [ ] **Chrome:** Upload failure → File still in Downloads
 - [ ] **Chrome:** Upload progress UI updates
 - [ ] **Chrome:** Metadata extraction accuracy
 - [ ] ⏸️ **Firefox:** Deferred to Phase 5
@@ -312,23 +301,23 @@ export const UploadProgress: React.FC<{ gifId: string }> = ({ gifId }) => {
 
 ## Deliverables
 
-- [x] Metadata extraction implemented
-- [x] Cloud upload with metadata working
-- [x] Hybrid storage strategy implemented
-- [x] Offline-to-online sync working
-- [x] Upload progress UI complete
-- [x] Error handling robust
-- [x] Unit tests passing (80%+ coverage)
-- [x] E2E tests passing (both browsers)
-- [x] S3 storage verified in production
+- [ ] Metadata extraction implemented
+- [ ] Optional cloud upload working (authenticated users)
+- [ ] Downloads folder behavior unchanged (anonymous users)
+- [ ] Upload progress UI complete
+- [ ] Error handling robust (upload failure doesn't affect download)
+- [ ] Unit tests passing (80%+ coverage)
+- [ ] E2E tests passing (Chrome)
+- [ ] S3 storage verified in production
+- [ ] Anonymous user flow verified (no auth required)
 
 ---
 
 ## Next Steps
 
-1. ✅ All GIF uploads include metadata
-2. ✅ Hybrid storage working
-3. ✅ Offline sync functional
+1. ✅ Downloads folder functionality unchanged
+2. ✅ Optional cloud upload working for authenticated users
+3. ✅ Anonymous users can create GIFs without accounts
 4. → **[Proceed to Phase 3: Social Features](./PHASE3_SOCIAL_FEATURES.md)**
 
 ---

@@ -13,75 +13,92 @@ This document captures key architectural decisions made during the ytgify browse
 
 ---
 
-## Decision 1: Dual Storage Strategy (Hybrid Local + Cloud)
+## Decision 1: Download + Optional Cloud Upload
 
 ### Context
 
-Extensions currently store GIFs locally in IndexedDB. After backend integration, we need to decide where GIFs should be stored.
+Extensions currently save GIFs directly to the browser's Downloads folder. After backend integration, we need to decide where GIFs should be stored.
 
 ### Options Considered
 
-1. **Cloud-only:** Remove local storage, always upload to backend
-2. **Local-only with optional cloud sync:** Keep local as primary, sync to cloud optionally
-3. **Hybrid:** Store locally AND upload to cloud, keep both in sync
+1. **Download-only:** Keep current behavior, no backend integration
+2. **Cloud-only:** Remove Downloads, always upload to backend (requires authentication)
+3. **Download + Optional Cloud Upload:** Keep Downloads as default, add optional cloud backup when authenticated
 
-### Decision: Hybrid Strategy (Option 3)
+### Decision: Download + Optional Cloud Upload (Option 3)
 
 ### Rationale
 
-- **Offline capability:** Users can create GIFs without internet connection
-- **Fast access:** Local storage provides instant access to user's GIFs (no network latency)
-- **Cloud backup:** Backend provides backup and disaster recovery
-- **Cross-device sync:** Cloud storage enables viewing GIFs on web app
-- **Social features:** Cloud storage required for sharing, likes, comments
-- **Graceful degradation:** Local fallback if upload fails
+- **User control:** Users get a file they can immediately use without needing an account
+- **No breaking changes:** Existing behavior (Downloads folder) remains unchanged
+- **Progressive enhancement:** Cloud features available when users want them
+- **Zero friction for anonymous users:** GIF creation works without authentication
+- **Social features unlocked:** Cloud storage enables sharing, likes, comments for authenticated users
+- **Graceful degradation:** Works offline, works without account, works always
 
 ### Implementation
 
 ```typescript
 interface GifStorage {
-  local: IndexedDBStorage    // Existing local storage
-  cloud: YtgifyApiClient      // New backend API
+  download: DownloadManager     // Existing Downloads folder behavior
+  cloud: YtgifyApiClient        // New backend API (optional)
 
   async save(gif: Gif) {
-    // ALWAYS save locally first (fast, reliable)
-    await this.local.save(gif)
+    // ALWAYS save to Downloads folder (current behavior)
+    await this.download.save(gif)
 
-    // TRY to upload to cloud if authenticated
+    // OPTIONALLY upload to cloud if authenticated
     if (await this.cloud.isAuthenticated()) {
       try {
         const cloudGif = await this.cloud.upload(gif)
-        // Link local GIF to cloud GIF
-        await this.local.updateWithCloudRef(gif.id, cloudGif.id)
+        console.log('✅ GIF saved to Downloads AND uploaded to cloud')
       } catch (error) {
-        // Upload failed - mark for later sync
-        await this.local.markForSync(gif.id)
+        // Upload failed - user still has local file
+        console.warn('⚠️ Cloud upload failed, but file saved to Downloads')
       }
-    }
-  }
-
-  async sync() {
-    // Sync unsynced GIFs when connection improves
-    const unsyncedGifs = await this.local.getUnsyncedGifs()
-    for (const gif of unsyncedGifs) {
-      await this.cloud.upload(gif)
+    } else {
+      // Not authenticated - Downloads only (current behavior)
+      console.log('📋 GIF saved to Downloads folder')
     }
   }
 }
 ```
 
+### User Experience Flow
+
+**Anonymous User (No Account):**
+1. Create GIF → Saved to Downloads folder ✅
+2. No authentication required
+3. Works exactly like current version
+
+**Authenticated User:**
+1. Create GIF → Saved to Downloads folder ✅
+2. Automatically uploaded to cloud ✅
+3. Available on web app and other devices ✅
+4. Social features enabled (like, comment, share) ✅
+
+**Offline User:**
+1. Create GIF → Saved to Downloads folder ✅
+2. Works offline (no cloud upload)
+3. When back online: New GIFs upload automatically
+
 ### Trade-offs
 
 **✅ Pros:**
-- Best user experience (fast + reliable)
-- Works offline
-- Enables cloud features
-- No data loss if upload fails
+- Zero breaking changes (Downloads folder still works)
+- No authentication required for basic functionality
+- Cloud features are progressive enhancement
+- Users always get a file they can use immediately
+- No storage duplication concerns (Downloads folder only)
+- Simple mental model: "Always get a file, optionally backed up to cloud"
 
 **❌ Cons:**
-- More complex implementation (manage two storage systems)
-- Sync conflicts possible (rare, handled by "cloud wins" strategy)
-- Storage duplication (acceptable trade-off)
+- Files in Downloads folder are not managed by extension (user may delete them)
+- No "GIF library" in extension (user must manage files themselves)
+- Cannot re-share old GIFs from extension unless uploaded to cloud
+- Requires authentication for social features
+
+**Note:** This is a simpler architecture than hybrid storage. The Downloads folder is the source of truth for anonymous users. Cloud storage becomes the source of truth for authenticated users who want social features.
 
 ### Status: ✅ Approved
 
@@ -491,7 +508,7 @@ formData.append('gif[duration]', metadata.duration.toString())
 
 | Decision | Status | Impact | Complexity |
 |----------|--------|--------|------------|
-| 1. Hybrid Storage | ✅ Approved | High | Medium |
+| 1. Download + Optional Cloud Upload | ✅ Approved | High | Low |
 | 2. Hybrid Auth UX | ✅ Approved | Medium | Low |
 | 3. Graceful Degradation | ✅ Approved | High | Medium |
 | 4. HTTP Polling (Not WebSocket) | ✅ Approved | Medium | Low |
