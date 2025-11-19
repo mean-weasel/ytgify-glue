@@ -15,6 +15,8 @@ This document outlines the strategy for integrating the ytgify browser extension
 
 **🎯 Chrome-First Strategy:** We will complete the Chrome extension integration fully (Phases 0-4) before circling back to Firefox. This reduces complexity, enables faster iteration, and delivers a working product sooner. Firefox integration will follow as Phase 5.
 
+**📱 Extension Scope:** Extensions focus on **GIF creation and cloud upload only**. Social features (likes, comments, follows, notifications, feed) remain web-only on ytgify-share. This keeps extensions simple, focused, and easier to maintain while leveraging the full power of the web app for community interaction.
+
 ---
 
 ## Document Navigation
@@ -23,10 +25,10 @@ This integration strategy is split into separate phase documents for easier navi
 
 ### Chrome Extension Integration (Priority)
 - **[Phase 0: Pre-Implementation](./PHASE0_PRE_IMPLEMENTATION.md)** - Infrastructure setup (Week 0)
-- **[Phase 1: Authentication](./PHASE1_AUTHENTICATION.md)** - User auth and JWT integration (Weeks 1-2)
-- **[Phase 2: GIF Cloud Upload](./PHASE2_GIF_UPLOAD.md)** - Upload and sync (Weeks 3-4)
-- **[Phase 3: Social Features](./PHASE3_SOCIAL_FEATURES.md)** - Likes, comments, notifications (Weeks 5-6)
-- **[Phase 4: E2E Testing & Launch](./PHASE4_TESTING_LAUNCH.md)** - Chrome production launch (Weeks 7-8)
+- **[Phase 1: Authentication](./PHASE1_AUTHENTICATION.md)** - User auth and JWT integration ✅ **COMPLETE**
+- **[Phase 2: GIF Cloud Upload](./PHASE2_GIF_UPLOAD.md)** - Upload and sync ✅ **COMPLETE**
+- **[Phase 3: Social Features](./PHASE3_SOCIAL_FEATURES.md)** - ~~Social in extension~~ **DEPRECATED** (web-only instead)
+- **[Phase 4: E2E Testing & Launch](./PHASE4_TESTING_LAUNCH.md)** - Chrome production launch (Weeks 3-4)
 
 ### Firefox Extension Integration (After Chrome Complete)
 - **[Phase 5: Firefox Integration](./PHASE5_FIREFOX_INTEGRATION.md)** - Port Chrome work to Firefox (Weeks 9-10)

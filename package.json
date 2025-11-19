@@ -1,0 +1,23 @@
+{
+  "name": "ytgify-glue",
+  "version": "1.0.0",
+  "description": "ytgify ecosystem - browser extensions + Rails backend",
+  "private": true,
+  "scripts": {
+    "test:integration": "npm run test:integration:setup && npm run test:integration:run",
+    "test:integration:setup": "echo 'Starting integration test environment...' && cd ytgify-share && bin/rails db:test:prepare",
+    "test:integration:run": "cd ytgify && npm run test:e2e:upload",
+    "backend:start": "cd ytgify-share && bin/rails server",
+    "backend:test": "cd ytgify-share && RAILS_ENV=test bin/rails server -p 3001",
+    "extension:build": "cd ytgify && npm run build",
+    "extension:build:dev": "cd ytgify && npm run dev"
+  },
+  "workspaces": [
+    "ytgify",
+    "ytgify-firefox"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
