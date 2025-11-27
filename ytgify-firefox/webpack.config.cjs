@@ -80,12 +80,15 @@ module.exports = (env, argv) => {
             noErrorOnMissing: true,
           },
           {
-            from: 'node_modules/gif.js/dist/gif.worker.js',
+            // Look in both local and root node_modules (npm workspaces hoists to root)
+            from: path.resolve(__dirname, '..', 'node_modules/gif.js/dist/gif.worker.js'),
             to: 'gif.worker.js',
+            noErrorOnMissing: false,
           },
           {
-            from: path.resolve(__dirname, 'node_modules/gifski-wasm/pkg/gifski_wasm_bg.wasm'),
-            to: 'pkg/gifski_wasm_bg.wasm'
+            from: path.resolve(__dirname, '..', 'node_modules/gifski-wasm/pkg/gifski_wasm_bg.wasm'),
+            to: 'pkg/gifski_wasm_bg.wasm',
+            noErrorOnMissing: false,
           },
         ],
       }),
