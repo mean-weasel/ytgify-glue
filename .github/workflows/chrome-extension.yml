@@ -15,6 +15,7 @@ jobs:
   test:
     name: Test and Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -56,17 +57,8 @@ jobs:
           path: ytgify/dist/
           retention-days: 7
 
-      - name: Check coverage thresholds
-        run: |
-          coverage_output=$(npm run test:coverage 2>&1)
-          echo "$coverage_output"
-          coverage=$(echo "$coverage_output" | grep "All files" | awk '{print $3}' | sed 's/%//')
-          if (( $(echo "$coverage < 60" | bc -l) )); then
-            echo "Coverage is below 60% threshold: ${coverage}%"
-            exit 1
-          else
-            echo "Coverage is above threshold: ${coverage}%"
-          fi
+      # Coverage threshold is checked by Jest config, not here
+      # Removed redundant coverage check that ran tests twice
 
   mock-e2e-tests:
     name: E2E Tests (Shard ${{ matrix.shard }}/4)
