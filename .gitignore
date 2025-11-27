@@ -138,7 +138,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Sub-repositories (not tracked by this repo)
-ytgify/
-ytgify-share/
-ytgify-firefox/
+# The following directories are now part of the monorepo
+# ytgify/
+# ytgify-share/
+# ytgify-firefox/

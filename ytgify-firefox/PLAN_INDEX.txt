@@ -1,0 +1,349 @@
+================================================================================
+FRAME COUNTING UI PLAN - COMPLETE DOCUMENTATION INDEX
+================================================================================
+
+This directory contains a comprehensive plan for adding frame counting UI to
+ProcessingScreen.tsx in the YTgify Firefox extension.
+
+START HERE:
+===========
+1. Read this file (you are here) - 2 min
+2. Read: FRAME_COUNTING_PLAN_SUMMARY.txt - 5 min
+3. Reference: plans/FRAME_COUNTING_QUICK_REFERENCE.md - during coding
+
+DOCUMENTATION STRUCTURE:
+========================
+
+ROOT DIRECTORY FILES:
+─────────────────────
+
+FRAME_COUNTING_PLAN_SUMMARY.txt (THIS DIRECTORY)
+  - Executive summary
+  - File modifications summary
+  - State management architecture
+  - Conditional rendering logic
+  - Display format and examples
+  - Data flow integration
+  - CSS styling details
+  - Edge cases and safeguards
+  - Implementation checklist
+  - Testing strategy
+  - Performance considerations
+  - Rollback plan
+  - Documentation files list
+  - Next steps
+  - Key metrics
+  - Approval checklist
+  Status: Ready to reference
+  Read Time: 10-15 minutes
+
+
+PLANS DIRECTORY FILES (plans/):
+───────────────────────────────
+
+README.md
+  - Overview of documentation files
+  - Quick start sequence
+  - Key information summary
+  - Browser support
+  - Testing checklist
+  - Files organization
+  Status: Entry point for plans
+  Read Time: 2-3 minutes
+
+FRAME_COUNTING_QUICK_REFERENCE.md ⭐ PRIMARY REFERENCE
+  - Files to modify summary
+  - Implementation checklist
+  - Key values table
+  - Display logic
+  - Format examples
+  - Progress bar examples
+  - Safe fallbacks
+  - CSS inheritance diagram
+  - Duration calculation
+  - Code snippets (all major sections)
+  - Rollback procedure
+  - Testing commands
+  - Browser support
+  - Performance notes
+  - Documentation files list
+  Status: Use during implementation
+  Read Time: 10-15 minutes
+
+frame_counting_implementation_summary.md
+  - Changes required summary
+  - Component structure overview
+  - Data flow diagram
+  - Critical numbers and values
+  - Visibility logic
+  - Key implementation details
+  - Files modified
+  - Rollback steps
+  - Testing approach
+  - CSS specificity notes
+  Status: Understanding scope
+  Read Time: 5-10 minutes
+
+frame_counting_ui_plan.md
+  - Overview section
+  - 12-part detailed plan:
+    1. State Management
+    2. Effects Hook for Persisting Buffering Status
+    3. Conditional Rendering Logic
+    4. Frame Counting Display Component
+    5. CSS Styling Updates
+    6. Props Type Update
+    7. Data Flow Integration Points
+    8. Detailed Line-by-Line Implementation Guide
+    9. Edge Cases & Safeguards
+    10. Testing Checklist
+    11. Chrome vs Firefox Differences
+    12. Rollback Plan
+  Status: Comprehensive reference
+  Read Time: 15-20 minutes
+
+frame_counting_code_annotations.md
+  - Section-by-section code breakdown
+  - Before/after code comparisons
+  - Logic explanations
+  - Data flow pseudo-code
+  - State mutation timeline
+  - CSS logic breakdown
+  - Complete annotations for every change
+  Status: Detailed technical guide
+  Read Time: 20-30 minutes
+
+
+IMPLEMENTATION WORKFLOW:
+========================
+
+PHASE 1: PLANNING & PREPARATION (5-10 min)
+  └─ Read: FRAME_COUNTING_PLAN_SUMMARY.txt
+  └─ Read: plans/README.md
+  └─ Read: plans/FRAME_COUNTING_QUICK_REFERENCE.md
+  └─ Skim: plans/frame_counting_implementation_summary.md
+
+PHASE 2: UNDERSTAND SCOPE (10-15 min)
+  └─ Read: plans/frame_counting_ui_plan.md (skim sections)
+  └─ Reference: plans/frame_counting_code_annotations.md
+  └─ Identify: Target files and sections
+
+PHASE 3: IMPLEMENT (30-45 min)
+  └─ Step 1: Add props interface details field
+  └─ Step 2: Add state hook for lastBufferingStatus
+  └─ Step 3: Add useEffect for buffering status sync
+  └─ Step 4: Add computed variables
+  └─ Step 5: Replace JSX message section
+  └─ Step 6: Add CSS classes
+  └─ Reference: Code snippets from FRAME_COUNTING_QUICK_REFERENCE.md
+
+PHASE 4: TEST (15-20 min)
+  └─ Build: npm run build
+  └─ Run: npm run dev:firefox
+  └─ Test cases: Manual testing steps
+  └─ Verify: All conditions from testing checklist
+
+PHASE 5: COMMIT & SUBMIT (5-10 min)
+  └─ Review: Changes against plan
+  └─ Commit: With descriptive message
+  └─ Submit: PR with reference to plan
+
+
+KEY FILES TO MODIFY:
+====================
+
+PRIMARY TARGET:
+  src/content/overlay-wizard/screens/ProcessingScreen.tsx
+  
+  Changes:
+    - Props interface: Add details field (1-2 lines)
+    - State hook: Add lastBufferingStatus (3-5 lines)
+    - useEffect: Add buffering status sync (10-12 lines)
+    - Computed variables: Add 2 constants (2-3 lines)
+    - JSX: Replace message section (lines 137-152, ~30 lines)
+    
+  Total: ~50 lines
+
+SECONDARY TARGET:
+  src/content/wizard-styles.css
+  
+  Changes:
+    - Add 4 new CSS classes (after line 1753, ~30 lines)
+    
+  Total: ~30 lines
+
+COMBINED TOTAL: ~70 lines of changes
+
+
+QUICK REFERENCE DURING CODING:
+==============================
+
+For State Hook: planes/FRAME_COUNTING_QUICK_REFERENCE.md → "Code Snippets"
+For useEffect: plans/FRAME_COUNTING_QUICK_REFERENCE.md → "Code Snippets"
+For Computed Variables: plans/FRAME_COUNTING_QUICK_REFERENCE.md → "Code Snippets"
+For JSX Frame Counter: plans/FRAME_COUNTING_QUICK_REFERENCE.md → "Code Snippets"
+For CSS Classes: plans/FRAME_COUNTING_QUICK_REFERENCE.md → "Code Snippets"
+
+For Logic Explanation: plans/frame_counting_code_annotations.md
+For Edge Cases: plans/frame_counting_ui_plan.md (Section 9)
+For Testing: FRAME_COUNTING_PLAN_SUMMARY.txt (Testing Strategy)
+
+
+DECISION REFERENCE:
+===================
+
+Should I implement this as a separate component?
+  └─ NO: Add directly to ProcessingScreen (simpler, less boilerplate)
+
+Should I use a custom hook for the buffering logic?
+  └─ NO: Keep state/effect in component (straightforward, easier to understand)
+
+Should I add TypeScript types for buffering status?
+  └─ NO: Use inline type definition (matches existing pattern)
+
+Should I add unit tests?
+  └─ OPTIONAL: Component logic straightforward, manual testing sufficient
+
+Should I add error boundaries?
+  └─ NO: Safe fallbacks already built-in (division by zero, missing data)
+
+Should I add accessibility labels?
+  └─ OPTIONAL: Considered but not critical (progress bar visual only)
+
+Should I add animation prefers-reduced-motion?
+  └─ OPTIONAL: CSS transition only, can be added later if needed
+
+
+TROUBLESHOOTING:
+================
+
+Frame counter doesn't appear:
+  └─ Check: Is processingStatus?.details being passed from parent?
+  └─ Check: Is stage === 'CAPTURING'?
+  └─ Check: Are currentFrame and totalFrames defined?
+  └─ Solution: Add console.log to verify lastBufferingStatus updates
+
+Progress bar width is wrong:
+  └─ Check: Is totalFrames > 0?
+  └─ Check: Calculation: (currentFrame / totalFrames) * 100
+  └─ Solution: Verify both values in browser console
+
+Initializing message doesn't appear:
+  └─ Check: Are you checking isCaptureStage correctly?
+  └─ Check: Is lastBufferingStatus actually undefined?
+  └─ Solution: Add temporary console.log to verify conditions
+
+Styling looks off:
+  └─ Check: Are CSS classes in correct location (after line 1753)?
+  └─ Check: Are color values correct (#cc3399, #ff0066)?
+  └─ Solution: Use Firefox DevTools to inspect element styles
+
+State not updating:
+  └─ Check: Are useEffect dependencies correct?
+  └─ Check: Are conditions in effect being met?
+  └─ Solution: Add console.log in useEffect to verify execution
+
+
+VALIDATION CHECKLIST:
+====================
+
+Before Committing:
+  [ ] npm run build succeeds without errors
+  [ ] npm run typecheck passes
+  [ ] npm run lint passes
+  [ ] All manual tests pass
+  [ ] No console errors in Firefox
+  [ ] Frame counter displays during capture
+  [ ] Progress bar animates smoothly
+  [ ] Counter hidden on stage transitions
+  [ ] "Initializing..." appears initially
+  [ ] Encoder info still displays
+  [ ] Loading dots still animate
+  [ ] No memory leaks
+  [ ] Keyboard navigation still works
+
+
+DOCUMENT READING ORDER (RECOMMENDED):
+====================================
+
+For Quick Implementation (< 1 hour):
+  1. This file (PLAN_INDEX.txt) - 2 min
+  2. FRAME_COUNTING_PLAN_SUMMARY.txt - 10 min
+  3. plans/FRAME_COUNTING_QUICK_REFERENCE.md - 10 min
+  4. Code snippets section - 5 min
+  5. Implement using checklists - 30-40 min
+  6. Test - 15 min
+  Total: ~1.5 hours
+
+For Deep Understanding (< 2 hours):
+  1. This file (PLAN_INDEX.txt) - 2 min
+  2. plans/README.md - 3 min
+  3. plans/frame_counting_implementation_summary.md - 8 min
+  4. plans/FRAME_COUNTING_QUICK_REFERENCE.md - 15 min
+  5. plans/frame_counting_ui_plan.md - 20 min
+  6. plans/frame_counting_code_annotations.md (skim) - 10 min
+  7. Implement - 30-40 min
+  8. Test - 15 min
+  Total: ~2 hours
+
+For Complete Mastery (< 3 hours):
+  1-6. All documents (full read)
+  7. Implement - 30-40 min
+  8. Test - 15 min
+  9. Write unit tests - 20-30 min
+  Total: ~2.5-3 hours
+
+
+SUPPORT & REFERENCES:
+====================
+
+Questions about state management?
+  └─ See: plans/frame_counting_code_annotations.md (Section D)
+  └─ See: plans/frame_counting_ui_plan.md (Section 1-2)
+
+Questions about rendering logic?
+  └─ See: plans/frame_counting_code_annotations.md (Section J)
+  └─ See: plans/frame_counting_ui_plan.md (Section 3)
+
+Questions about CSS?
+  └─ See: plans/frame_counting_code_annotations.md (CSS Section)
+  └─ See: plans/FRAME_COUNTING_QUICK_REFERENCE.md (CSS Inheritance)
+
+Questions about data flow?
+  └─ See: plans/frame_counting_code_annotations.md (Data Flow Pseudo-Code)
+  └─ See: FRAME_COUNTING_PLAN_SUMMARY.txt (Data Flow Integration)
+
+Questions about testing?
+  └─ See: FRAME_COUNTING_PLAN_SUMMARY.txt (Testing Strategy)
+  └─ See: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Testing Commands)
+
+Questions about edge cases?
+  └─ See: plans/frame_counting_ui_plan.md (Section 9)
+  └─ See: plans/FRAME_COUNTING_QUICK_REFERENCE.md (Safe Fallbacks)
+
+
+DOCUMENTATION STATISTICS:
+=========================
+
+Total Documentation Files: 5
+Total Lines of Documentation: ~4,000
+Total Words: ~25,000
+Estimated Reading Time: 30-60 minutes
+Estimated Implementation Time: 30-45 minutes
+Total Effort: 1-2 hours
+
+Files Modified: 2
+Lines Added: ~70
+Code Snippets Provided: 6 complete
+Test Cases Defined: 10+
+Edge Cases Covered: 6
+
+================================================================================
+END OF INDEX
+================================================================================
+
+Last Updated: 2025-11-11
+Status: Documentation Complete - Ready for Implementation
+Next Action: Read FRAME_COUNTING_PLAN_SUMMARY.txt
+
+Questions? See TROUBLESHOOTING section above.

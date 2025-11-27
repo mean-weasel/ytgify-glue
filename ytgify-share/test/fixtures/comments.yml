@@ -1,0 +1,49 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# Top-level comments
+alice_comment_on_bob_gif:
+  user: one  # alice
+  gif: bob_public_gif
+  content: "This is a great GIF!"
+  parent_comment:
+  reply_count: 2
+  like_count: 0
+  deleted_at:
+
+bob_comment_on_alice_gif:
+  user: two  # bob
+  gif: alice_public_gif
+  content: "Nice work Alice!"
+  parent_comment:
+  reply_count: 0
+  like_count: 0
+  deleted_at:
+
+# Replies (nested comments)
+bob_reply_to_alice_comment:
+  user: two  # bob
+  gif: bob_public_gif
+  content: "Thank you!"
+  parent_comment: alice_comment_on_bob_gif
+  reply_count: 0
+  like_count: 0
+  deleted_at:
+
+alice_reply_to_alice_comment:
+  user: one  # alice
+  gif: bob_public_gif
+  content: "You're welcome!"
+  parent_comment: alice_comment_on_bob_gif
+  reply_count: 0
+  like_count: 0
+  deleted_at:
+
+# Deleted comment (soft deleted)
+deleted_comment:
+  user: one  # alice
+  gif: alice_public_gif
+  content: "[deleted]"
+  parent_comment:
+  reply_count: 0
+  like_count: 0
+  deleted_at: <%= 1.day.ago %>

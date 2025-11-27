@@ -1,0 +1,10 @@
+<%= turbo_stream.replace "notification_#{@notification.id}" do %>
+  <%= render partial: "notifications/notification_item", locals: { notification: @notification } %>
+<% end %>
+
+<%= turbo_stream.update "unread_count" do %>
+  <% unread_count = current_user.notifications.unread.count %>
+  <% if unread_count > 0 %>
+    <%= unread_count %>
+  <% end %>
+<% end %>

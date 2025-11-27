@@ -1,0 +1,21 @@
+<h2 style="margin: 0 0 20px 0; color: #111827; font-size: 24px; font-weight: 600;">
+  Email Address Changed
+</h2>
+
+<p style="margin: 0 0 20px 0;">
+  Hi <%= @email %>,
+</p>
+
+<div style="margin: 20px 0; padding: 16px; background-color: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 4px;">
+  <p style="margin: 0; color: #1e3a8a; font-size: 14px;">
+    <% if @resource.try(:unconfirmed_email?) %>
+      <strong>Email Update in Progress:</strong> Your email is being changed to <%= @resource.unconfirmed_email %>.
+    <% else %>
+      <strong>Email Updated:</strong> Your email has been successfully changed to <%= @resource.email %>.
+    <% end %>
+  </p>
+</div>
+
+<p style="margin: 20px 0 0 0; color: #6b7280; font-size: 14px;">
+  If you didn't make this change, please contact our support team immediately at support@ytgify.com
+</p>

@@ -1,0 +1,58 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  email: alice@example.com
+  username: alice
+  display_name: Alice Smith
+  bio: Test user Alice
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  jti: <%= SecureRandom.uuid %>
+  is_verified: false
+  gifs_count: 0
+  total_likes_received: 0
+  follower_count: 0
+  following_count: 0
+  preferences: { default_privacy: 'public', default_upload_behavior: 'show_options', recently_used_tags: [] }
+
+two:
+  email: bob@example.com
+  username: bob
+  display_name: Bob Johnson
+  bio: Test user Bob
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  jti: <%= SecureRandom.uuid %>
+  is_verified: true
+  gifs_count: 0
+  total_likes_received: 0
+  follower_count: 0
+  following_count: 0
+  preferences: { default_privacy: 'public', default_upload_behavior: 'show_options', recently_used_tags: [] }
+
+# E2E test users - predictable credentials for system tests
+e2e_test_user:
+  email: e2e@example.com
+  username: e2e_tester
+  display_name: E2E Test User
+  bio: System test user
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  jti: <%= SecureRandom.uuid %>
+  is_verified: true
+  gifs_count: 0
+  total_likes_received: 0
+  follower_count: 0
+  following_count: 0
+  preferences: { default_privacy: 'public', default_upload_behavior: 'show_options', recently_used_tags: [] }
+
+e2e_follower:
+  email: follower@e2e.com
+  username: e2e_follower
+  display_name: E2E Follower
+  bio: E2E follower user
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  jti: <%= SecureRandom.uuid %>
+  is_verified: true
+  gifs_count: 2
+  total_likes_received: 5
+  follower_count: 0
+  following_count: 0
+  preferences: { default_privacy: 'public', default_upload_behavior: 'show_options', recently_used_tags: [] }

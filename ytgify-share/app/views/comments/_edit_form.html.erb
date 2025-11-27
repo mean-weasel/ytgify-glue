@@ -1,0 +1,36 @@
+<%= turbo_frame_tag dom_id(comment) do %>
+  <%= form_with model: comment,
+                url: comment_path(comment),
+                method: :patch,
+                class: "flex space-x-3" do |f| %>
+    <!-- User Avatar -->
+    <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold flex-shrink-0">
+      <%= comment.user.username.first.upcase %>
+    </div>
+
+    <div class="flex-1 min-w-0">
+      <div class="bg-gray-50 rounded-lg px-4 py-3">
+        <%= f.text_area :content,
+            rows: 3,
+            autofocus: true,
+            class: "w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none #{'border-red-500' if comment.errors.any?}" %>
+
+        <% if comment.errors.any? %>
+          <div class="mt-2 text-sm text-red-600">
+            <%= comment.errors.full_messages.to_sentence %>
+          </div>
+        <% end %>
+
+        <div class="mt-2 flex justify-end space-x-2">
+          <%= link_to "Cancel",
+              "#",
+              data: { action: "turbo:click->turbo#reload" },
+              class: "px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50" %>
+          <%= f.submit "Save",
+              class: "px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700",
+              data: { turbo_submits_with: "Saving..." } %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>

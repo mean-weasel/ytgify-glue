@@ -1,0 +1,49 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Rails temporary files
+/tmp/*
+!/tmp/.keep
+!/tmp/screenshots
+/tmp/screenshots/*
+!/tmp/screenshots/.keep
+
+# Log files
+/log/*.log
+log/*.log.*
+
+# Storage files (ActiveStorage uploads)
+/storage/*
+!/storage/.keep
+
+# Ignore coverage reports
+/coverage/
+*.coverage
+
+# Ignore test artifacts
+brakeman_report.txt
+sprint*.log
+test_output*.log
+*_coverage.log
+
+# Ignore cache
+/tmp/cache/*
+!/tmp/cache/.keep
+
+# Ignore pids
+/tmp/pids/*
+!/tmp/pids/.keep
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

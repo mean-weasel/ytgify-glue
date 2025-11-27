@@ -1,0 +1,45 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/background/index.ts",
+    "src/content/index.ts",
+    "src/popup/index.tsx",
+    "webpack.config.cjs",
+    "tests/**/*.test.ts",
+    "tests/**/*.test.tsx"
+  ],
+  "project": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "ignore": [
+    "dist/**",
+    "node_modules/**",
+    "coverage/**",
+    "**/*.d.ts"
+  ],
+  "ignoreDependencies": [
+    "@playwright/test",
+    "geckodriver",
+    "web-ext",
+    "tsx"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "typescript": {
+    "entry": [
+      "src/background/index.ts",
+      "src/content/index.ts",
+      "src/popup/index.tsx"
+    ]
+  },
+  "webpack": {
+    "config": ["webpack.config.cjs"]
+  },
+  "jest": {
+    "config": [
+      "tests/jest.config.cjs",
+      "tests/selenium/jest.config.cjs",
+      "tests/selenium/jest.config.mock.cjs"
+    ]
+  }
+}

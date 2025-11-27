@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ytgify - Create & Share GIFs from YouTube</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="turbo-visit-control" content="reload">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-gray-50">
+    <%= render "shared/navbar" if user_signed_in? %>
+
+    <main class="<%= user_signed_in? ? 'pt-16' : '' %>">
+      <div id="flash_messages">
+        <%= render "shared/flash" if notice || alert %>
+      </div>
+      <%= yield %>
+    </main>
+  </body>
+</html>

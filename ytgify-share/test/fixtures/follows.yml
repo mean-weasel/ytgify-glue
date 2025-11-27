@@ -1,0 +1,4 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# Empty - each test creates its own follows for isolation
+# Pre-loaded fixtures cause test pollution due to counter cache conflicts

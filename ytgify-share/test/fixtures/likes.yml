@@ -1,0 +1,7 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Minimal fixtures required by notification tests
+
+# Bob likes Alice's public GIF (referenced by alice_like_notification)
+bob_like:
+  user: two  # bob
+  gif: bob_public_gif  # Changed from alice_public_gif to avoid conflict with Like model tests

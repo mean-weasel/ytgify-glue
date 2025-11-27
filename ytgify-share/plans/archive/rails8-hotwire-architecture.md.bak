@@ -1,0 +1,2335 @@
+# ytgify Full-Stack Web Application Plan
+## Rails 8 + Hotwire Architecture
+
+## Overview
+A social-first web platform for discovering, sharing, organizing, and remixing YouTube GIFs created with the ytgify Chrome extension. Built with **Ruby on Rails 8** and the **Hotwire stack** (Turbo + Stimulus) for a modern, reactive user experience with minimal JavaScript.
+
+---
+
+## 🚀 Quick Start: Using Claude Code Agents
+
+**Before diving into this plan, leverage Claude Code's AI agents to understand the current codebase and plan your implementation:**
+
+### Step 1: Explore the Current Application
+```bash
+# Get a high-level overview
+@agent-Explore "medium: Analyze the overall application structure and tech stack"
+
+# Understand the backend
+@agent-Explore "medium: Show me all models, their associations, and database schema"
+@agent-Explore "quick: Find all API controllers and their endpoints"
+
+# Check frontend setup
+@agent-Explore "quick: Find React components and frontend structure"
+@agent-Explore "quick: Check if Turbo/Stimulus is configured"
+```
+
+### Step 2: Understand What's Already Built
+```bash
+# Review existing authentication
+@agent-Explore "medium: Analyze the authentication system (Devise, JWT, sessions)"
+
+# Check file upload setup
+@agent-Explore "quick: Find ActiveStorage configuration and file upload handling"
+
+# Review social features
+@agent-Explore "quick: Check if Follow, Collection, Hashtag models exist"
+```
+
+### Step 3: Plan Your Implementation
+```bash
+# Decide on architecture
+@agent-Plan "medium: Evaluate keeping React vs refactoring to Hotwire based on current code"
+
+# Plan missing features
+@agent-Plan "medium: Create implementation plan for social models (Follow, Collection, Hashtag)"
+@agent-Plan "very thorough: Design feed algorithm implementation with caching"
+@agent-Plan "very thorough: Plan remix editor with Canvas API and GIF.js"
+```
+
+### Step 4: Reference This Plan
+Use this document as a **reference architecture** and **feature specification**. The agents will help you:
+- ✅ Understand how the current code maps to this plan
+- ✅ Identify gaps between current implementation and plan
+- ✅ Generate step-by-step implementation guides
+- ✅ Find existing patterns to follow
+- ✅ Plan testing strategies
+
+**💡 Pro Tip:** Throughout this document, you'll find **🤖 agent prompts** for specific features. Use these to get targeted help!
+
+---
+
+## Core Vision
+
+**Primary Use Case:** Social sharing and discovery of YouTube GIFs
+**Target Audience:** Casual meme makers, content creators, marketers
+**Key Differentiator:** Remix functionality - anyone can take a base GIF and add their own text overlay
+
+**Technical Philosophy:** Server-first architecture with strategic client-side interactivity where needed
+
+---
+
+## 1. Core Features (MVP)
+
+### 1.1 User Authentication & Accounts
+
+#### Registration & Login
+- Email/password authentication via **Devise**
+- Social login options (Google, GitHub - optional via OmniAuth)
+- Email verification
+- Password reset flow
+- Session management:
+  - **Web users:** Session cookies via Devise
+  - **Extension users:** JWT tokens (access + refresh) via devise-jwt
+
+#### Extension Integration
+**The web app handles ALL authentication - the extension redirects users here.**
+
+**Auth flow for extension users:**
+1. User clicks "Sign in at ytgify.com" button in extension
+2. Opens ytgify.com/login (or /signup for new users)
+3. User completes signup/login on web app
+4. After successful auth, web app:
+   - Stores session in cookie (for web browsing)
+   - Displays JWT token for extension (copy to clipboard or auto-message)
+   - Signals to extension that auth is complete:
+     - **Option A:** Use shared cookie domain (extension reads via `chrome.cookies` API)
+     - **Option B:** Use `postMessage` to communicate back to extension
+     - **Option C:** Extension polls `/api/auth/me` endpoint
+5. Extension detects auth and stores token in extension storage
+6. User can now upload GIFs from YouTube
+
+**Implementation considerations:**
+- Login/signup pages detect `?source=extension` query param
+- Show extension-specific messaging: "Sign in to save your YouTube GIFs"
+- After auth: "Success! Return to YouTube and start saving GIFs"
+- Provide extension download link on auth pages if not detected
+- Use **Turbo Frames** for inline error messages during auth
+
+#### User Profiles
+- Public profile page (`ytgify.com/@username`)
+- **Server-rendered with Turbo Frames** for tab navigation
+- Profile components:
+  - Avatar upload (via ActiveStorage with direct S3 uploads)
+  - Display name
+  - Bio (short description)
+  - Links (website, Twitter, YouTube, etc.)
+  - Join date
+  - Stats: Total GIFs, total likes received, followers
+- Profile tabs loaded via **Turbo Frames:**
+  - GIFs (grid view)
+  - Liked GIFs
+  - Collections (if public)
+  - About
+
+#### Privacy & Settings
+- Account settings page
+- **Turbo Frames** for different settings sections (avoid full page reloads)
+- User preferences:
+  - Default privacy for new uploads (public/unlisted/private) - **synced to extension**
+  - Default upload behavior (show options vs. quick save)
+  - Recently used tags (for quick selection)
+- Notification preferences
+- Email preferences
+- Account deletion with confirmation modal (**Stimulus controller**)
+
+---
+
+### 1.2 GIF Upload & Storage
+
+#### Upload from Extension
+- **API endpoint** to receive GIF uploads from Chrome extension (unchanged from original plan)
+- Accept multipart form data:
+  - Base GIF file
+  - Final GIF file (with text overlay, if any)
+  - Metadata JSON including:
+    - Video/GIF technical data
+    - Text overlay configuration
+    - **User-selected privacy level** (public/unlisted/private)
+    - **User-selected tags** (array of tag strings)
+    - Optional title/description overrides
+
+#### Server-Side Processing
+- Validate file format and size via **ActiveStorage validations**
+- Generate thumbnail (first frame or middle frame) via **ActiveJob + image_processing gem**
+- Extract GIF properties (dimensions, frame count, file size)
+- Optional: Re-encode for consistency/compression
+- Store files in **AWS S3** via **ActiveStorage**
+- Generate unique shareable ID (UUID)
+
+#### Metadata Storage (Database)
+**GIFs Table (ActiveRecord model):**
+```ruby
+# app/models/gif.rb
+class Gif < ApplicationRecord
+  belongs_to :user
+  belongs_to :parent_gif, class_name: 'Gif', optional: true
+  has_many :remix_gifs, class_name: 'Gif', foreign_key: 'parent_gif_id'
+  has_many :likes, dependent: :destroy
+  has_many :comments, dependent: :destroy
+  has_many_attached :files # ActiveStorage: base_gif, final_gif, thumbnail
+
+  # Fields:
+  # - id (UUID)
+  # - user_id (foreign key)
+  # - title
+  # - description
+  # - youtube_video_url
+  # - youtube_video_title
+  # - youtube_channel_name
+  # - youtube_timestamp_start
+  # - youtube_timestamp_end
+  # - duration (decimal)
+  # - fps (integer)
+  # - resolution_width
+  # - resolution_height
+  # - file_size
+  # - has_text_overlay (boolean)
+  # - text_overlay_data (jsonb)
+  # - is_remix (boolean)
+  # - parent_gif_id (foreign key, nullable)
+  # - remix_count (counter_cache)
+  # - privacy (enum: public, unlisted, private)
+  # - view_count (default: 0)
+  # - like_count (counter_cache)
+  # - comment_count (counter_cache)
+  # - share_count (default: 0)
+  # - created_at, updated_at, deleted_at
+end
+```
+
+**text_overlay_data JSON structure:**
+```json
+{
+  "content": "text string",
+  "font_family": "Arial",
+  "font_size": 48,
+  "font_weight": "bold",
+  "color": "#FFFFFF",
+  "outline_color": "#000000",
+  "outline_width": 2,
+  "position": { "x": 50, "y": 90 },
+  "shadow": { "blur": 2, "offset_x": 1, "offset_y": 1 }
+}
+```
+
+---
+
+### 1.3 Discovery & Feed
+
+#### Home Feed
+**Implementation: Server-rendered ERB with Turbo Frames**
+
+**🤖 Before implementing, use agents:**
+```
+@agent-Explore "medium: Find existing controller pagination patterns and view structures"
+@agent-Plan "medium: Design feed algorithm with trending, recent, and recommended GIFs using existing Gif model scopes"
+@agent-Plan "medium: Create infinite scroll implementation with Turbo Frames and IntersectionObserver"
+```
+
+- Algorithmic feed showing:
+  - Trending GIFs (high engagement recently)
+  - Recent uploads from followed users
+  - Recommended based on user's likes/tags
+- **Infinite scroll pagination** via **Stimulus controller**:
+  - Detects scroll position using IntersectionObserver
+  - Triggers **Turbo Frame** request for next page
+  - Appends new GIFs to existing grid
+- Filter options: Today, This Week, This Month, All Time
+  - Filters update via **Turbo Frames** (no full page reload)
+
+**Example Turbo Frame structure:**
+```erb
+<!-- app/views/gifs/index.html.erb -->
+<%= turbo_frame_tag "gifs_feed" do %>
+  <div class="gif-grid" data-controller="infinite-scroll">
+    <%= render @gifs %>
+    <%= turbo_frame_tag "gifs_feed",
+        src: gifs_path(page: @next_page),
+        loading: :lazy if @next_page %>
+  </div>
+<% end %>
+```
+
+#### Explore Page
+**Implementation: Server-rendered with Turbo Frame filtering**
+
+- Category browsing:
+  - Reactions, Memes, Sports, Gaming, TV & Movies, Music, Animals, Misc
+  - Category tabs loaded via **Turbo Frames**
+- Search functionality:
+  - Search by GIF title, YouTube video title, creator username, hashtags
+  - **PgSearch** gem for PostgreSQL full-text search
+  - Search results update via **Turbo Frames** (instant filtering)
+- Sort by: Recent, Most Viewed, Most Liked, Most Remixed
+  - Sorting triggers **Turbo Frame** reload with new query params
+
+#### Trending Algorithm
+**Implementation: Sidekiq scheduled job + Redis caching**
+
+**🤖 Before implementing, use agents:**
+```
+@agent-Explore "quick: Find existing Sidekiq job patterns and Redis configuration"
+@agent-Explore "quick: Locate the Gif model and its engagement counter columns"
+@agent-Plan "medium: Design trending score calculation job with Redis caching strategy"
+```
+
+Basic scoring formula:
+```ruby
+# app/models/gif.rb
+def trending_score
+  engagement = (like_count * 3 + comment_count * 5 + remix_count * 10 + share_count * 7)
+  age_in_hours = ((Time.current - created_at) / 1.hour).to_f
+  engagement / (age_in_hours ** 1.5)
+end
+```
+- Decay over time (older = lower score)
+- Weight remixes heavily (encourages creative reuse)
+- Recalculate periodically (every 15-60 minutes via **sidekiq-cron**)
+- Cache trending GIF IDs in **Redis** for fast retrieval
+
+**🤖 After implementing:**
+```
+@agent-Plan "quick: Create monitoring strategy for trending algorithm performance"
+```
+
+---
+
+### 1.4 Social Features
+
+#### Engagement Actions
+
+**Likes**
+**Implementation: Turbo Streams for optimistic updates**
+
+- Users can like GIFs
+- Heart icon, toggle on/off
+- Display like count
+- "Liked by you and X others"
+- **Turbo Stream response** updates:
+  - Like button state (filled/unfilled heart)
+  - Like count
+  - Likes list preview
+
+**Example Stimulus controller:**
+```javascript
+// app/javascript/controllers/like_button_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["button", "count"]
+
+  toggle(event) {
+    // Optimistic UI update
+    this.buttonTarget.classList.toggle("liked")
+
+    // Turbo will handle the actual server request
+    // Server responds with Turbo Stream to confirm/rollback
+  }
+}
+```
+
+**Comments**
+**Implementation: Turbo Frames + Turbo Streams**
+
+- Threaded commenting on GIFs
+- Markdown support (via **redcarpet** or **kramdown** gem)
+- Edit/delete your own comments (inline via **Turbo Frames**)
+- Sort by: Newest, Oldest, Top (most liked)
+  - Sorting triggers **Turbo Frame** reload
+- New comments append via **Turbo Stream broadcasts** (real-time for all viewers)
+- Comment notifications (via **ActionCable** + Turbo Streams)
+
+**Shares**
+- Copy share link button (**Stimulus controller** for clipboard API)
+- Share to Twitter/X (pre-filled tweet with GIF)
+- Share to Reddit (open submission page)
+- Share to Discord/Slack (copy embed code)
+- Track share count (increment on click via AJAX)
+
+**Collections/Saves**
+- Users can save others' GIFs to personal collections
+- Add to collection via modal (**Turbo Frame**)
+- Collections are private by default (can make public)
+- Name collections ("Reaction GIFs", "Office Memes", etc.)
+- Browse your collections (grid view with **Turbo Frames** for pagination)
+
+#### Follow System
+- Follow other creators (button via **Turbo Stream** response)
+- Following feed (see only followed users' GIFs)
+- Follower/following counts on profiles (updated via **counter_cache**)
+- Notifications when followed users post (via **ActionCable** + Turbo Streams)
+
+#### Hashtags
+- Add hashtags to GIFs (#mondaymood, #reaction, etc.)
+- Click hashtag to see all GIFs with that tag (server-rendered page)
+- Trending hashtags (most used this week) - cached in **Redis**
+- Auto-suggest popular hashtags while typing (via **Stimulus controller** + AJAX to `/api/tags/autocomplete`)
+
+---
+
+### 1.5 Remix Functionality
+
+#### Remix Discovery
+- "Remix" button on every public GIF
+- Shows remix count: "12 remixes"
+- View all remixes of a GIF (gallery view via **Turbo Frame**)
+- Remix chain visualization:
+  - Original GIF → Remix 1, Remix 2, Remix 3...
+  - Tree view if remixes are themselves remixed (server-rendered, possibly with D3.js via **Stimulus**)
+
+#### Remix Creation Flow (Web-Based)
+
+**All remixing happens directly in the web app - no extension required.**
+
+**Implementation: Stimulus controller + HTML5 Canvas + GIF.js library**
+
+**🤖 Before implementing, use agents:**
+```
+@agent-Explore "very thorough: Find all GIF processing code, file upload handling, and JavaScript libraries"
+@agent-Plan "very thorough: Design comprehensive remix editor implementation with Canvas API, GIF.js integration, and S3 upload flow"
+```
+
+**Steps:**
+
+1. User clicks "Remix" button on any public GIF
+2. Opens in-browser GIF editor modal/page (via **Turbo Frame** or full page)
+3. Loads base GIF from S3 via ActiveStorage URL
+4. **Stimulus controller** manages Canvas-based text overlay editor:
+   - Text input field (real-time preview)
+   - Font selection (family, size, weight)
+   - Color pickers (text color, outline color)
+   - Position controls (drag to position or preset locations)
+   - Live preview as user types/adjusts
+5. User adds their custom text overlay
+6. Click "Save Remix"
+7. **Client-side GIF generation:**
+   - Use **GIF.js** or **gifshot** library (bundled via Vite Rails)
+   - Composite text onto base GIF frames in browser
+   - Generate new GIF blob
+8. Upload new GIF via **ActiveStorage direct upload** to S3:
+   - JavaScript uploads blob to S3
+   - Callback creates new Gif record with metadata:
+     - `is_remix: true`
+     - `parent_gif_id: <original_gif_id>`
+     - Text overlay configuration (saved to `text_overlay_data`)
+9. Redirect to new GIF's detail page via **Turbo navigation**
+
+**🤖 During implementation:**
+```
+@agent-Explore "Find Vite Rails configuration for adding JavaScript libraries"
+@agent-Explore "Locate existing Stimulus controllers to understand the pattern"
+@agent-Plan "Create testing strategy for Canvas-based remix editor"
+```
+
+**Alternative: Server-side rendering (if client-side is too slow):**
+- Send text overlay config + base GIF ID to backend
+- Rails job uses **MiniMagick** or **vips** to render GIF server-side
+- Respond with **Turbo Stream** to update UI with progress/completion
+
+**Example Stimulus controller structure:**
+```javascript
+// app/javascript/controllers/gif_editor_controller.js
+import { Controller } from "@hotwired/stimulus"
+import GIF from "gif.js" // or gifshot
+
+export default class extends Controller {
+  static targets = ["canvas", "textInput", "preview"]
+
+  connect() {
+    this.loadBaseGif()
+    this.setupCanvas()
+  }
+
+  updateTextOverlay() {
+    // Redraw canvas with new text
+  }
+
+  async saveRemix() {
+    // Generate GIF blob
+    // Upload to S3 via ActiveStorage
+    // Submit form to create Gif record
+  }
+}
+```
+
+#### Remix Metadata
+- `is_remix: true`
+- `parent_gif_id: <original_id>`
+- Display attribution: "Remixed from @original_creator"
+- Link to original GIF
+- Original creator gets notification (via **Turbo Stream** to notification bell)
+
+#### Remix Permissions
+- All public GIFs are remixable by default
+- Option to disable remixes (per-GIF setting in edit form)
+- Private GIFs cannot be remixed
+
+---
+
+### 1.6 GIF Detail Page
+
+**URL Structure:** `ytgify.com/g/<gif_id>` or `ytgify.com/@username/<slug>`
+
+**Implementation: Server-rendered ERB with Turbo Frames for interactive sections**
+
+#### Page Components
+- Large GIF preview (auto-play loop)
+- Engagement buttons (like, comment, share, remix)
+  - Like button: **Stimulus controller** + **Turbo Stream** response
+  - Share button: **Stimulus controller** for clipboard/social sharing
+- Metadata sidebar:
+  - Creator (avatar + username)
+  - Upload date
+  - View count, like count (updated via **Turbo Stream** broadcasts)
+  - Source: YouTube video title + link
+  - Timestamp (e.g., "0:45 - 0:52")
+  - Tags/hashtags (clickable, server-rendered links)
+  - Privacy level (if owner)
+- Comments section below (**Turbo Frame** for pagination + **Turbo Stream** for new comments)
+- Related GIFs (same creator, same source video, similar tags) - **Turbo Frame** for lazy loading
+- Remix gallery (**Turbo Frame** for modal or expandable section)
+- Lineage (if this is a remix, show parent) - breadcrumb navigation
+
+#### Actions
+- Copy link (**Stimulus controller** for clipboard API)
+- Download GIF (direct link to S3 file)
+- Report (inappropriate content) - modal via **Turbo Frame**
+- Delete (if owner) - confirmation via **Stimulus controller**, then **Turbo Stream** redirect
+- **Edit metadata (if owner):**
+  - Inline editing via **Turbo Frames**
+  - Change privacy level (dropdown)
+  - Edit tags (auto-suggest via **Stimulus** + AJAX)
+  - Edit title/description
+  - All edits submit via **Turbo** (no full page reload)
+
+#### SEO Optimization
+- Server-rendered HTML (fully indexable by Google)
+- Open Graph meta tags for social sharing
+- Schema.org JSON-LD for rich snippets
+- Sitemap generation for all public GIFs
+
+---
+
+### 1.7 User Library & Organization
+
+#### My GIFs Page
+**Implementation: Server-rendered with Turbo Frames for filtering**
+
+- Grid view of all user's uploaded GIFs
+- Filter by:
+  - Privacy level (public, unlisted, private)
+  - Date range (date pickers via **Stimulus**)
+  - Source (which YouTube videos)
+  - Has text overlay / no text
+  - Is remix / original creation
+- Sort by: Recent, Most viewed, Most liked
+- Filters/sorts update via **Turbo Frames** (instant filtering, no page reload)
+- Bulk actions:
+  - Select multiple → delete, change privacy, add tags
+  - **Stimulus controller** manages checkbox selection
+  - Bulk action form submits via **Turbo Stream** for success/error messages
+- Search within your library (via **PgSearch**)
+
+#### Collections
+**Implementation: CRUD via Turbo Frames**
+
+- Create named collections ("Funny Reactions", "Product Demos", etc.)
+  - Modal via **Turbo Frame**
+- Add GIFs to multiple collections
+  - Checkbox form via **Turbo Frame** modal
+  - Submit via **Turbo Stream** response
+- Public collections can be shared (toggle via inline edit)
+- Collection pages show all GIFs in grid (with **Turbo Frame** pagination)
+
+#### Tags
+- Add/edit tags on your GIFs (individual or bulk edit)
+- Auto-suggest from popular/trending tags (via **Stimulus** + AJAX to `/api/tags/autocomplete`)
+- Show recently used tags for quick selection (stored in `users.preferences` JSONB column)
+- Filter your library by tag (via **Turbo Frames**)
+- Browse all GIFs by tag across platform (server-rendered page)
+- Tag management:
+  - Rename tags across all your GIFs (bulk update form)
+  - Merge duplicate tags (admin interface)
+  - Delete unused tags (soft delete)
+
+---
+
+### 1.8 Sharing & Embeds
+
+#### Shareable Links
+- Clean URLs: `ytgify.com/g/abc123`
+- Unlisted GIFs: require full URL (not discoverable via search/feed)
+- Private GIFs: only accessible to owner (403 error for others)
+
+#### Open Graph / Meta Tags
+**Implementation: Server-rendered in layout**
+
+- Proper OG tags for rich previews on social media
+- Twitter Card support (auto-play GIF in tweet)
+- Discord/Slack embed support
+- Thumbnail, title, description dynamically generated per GIF
+
+```erb
+<!-- app/views/gifs/show.html.erb -->
+<% content_for :meta_tags do %>
+  <%= tag.meta property: "og:title", content: @gif.title %>
+  <%= tag.meta property: "og:image", content: url_for(@gif.thumbnail) %>
+  <%= tag.meta property: "og:url", content: gif_url(@gif) %>
+  <%= tag.meta name: "twitter:card", content: "player" %>
+  <%= tag.meta name: "twitter:player", content: url_for(@gif.final_gif) %>
+<% end %>
+```
+
+#### Embed Codes
+- `<iframe>` embed option (copy button via **Stimulus**)
+- Direct GIF URL for use in Discord/Slack/etc.
+- Copy buttons for each format (**Stimulus controller** for clipboard API)
+
+---
+
+## 2. Technical Architecture
+
+### 2.0 Hotwire Documentation & Resources 📚
+
+**Essential Reading for Hotwire Implementation:**
+
+#### Official Documentation
+- **Hotwire Handbook:** https://hotwired.dev/
+- **Turbo Reference:** https://turbo.hotwired.dev/reference
+- **Stimulus Reference:** https://stimulus.hotwired.dev/reference
+- **Rails Turbo Guide:** https://guides.rubyonrails.org/working_with_javascript_in_rails.html#turbo
+
+#### Key Concepts
+
+**Turbo Drive** (SPA-like navigation without full page reloads)
+- Docs: https://turbo.hotwired.dev/handbook/drive
+- Intercepts link clicks and form submissions
+- Uses `fetch()` to load new pages in background
+- Swaps `<body>` content without full reload
+- Preserves scroll position
+
+**Turbo Frames** (Partial page updates for specific sections)
+- Docs: https://turbo.hotwired.dev/handbook/frames
+- Scopes navigation to specific part of page
+- Example: Tab navigation, modal content, infinite scroll
+- Use `turbo_frame_tag` helper in views
+- Lazy loading with `loading: :lazy` attribute
+
+```erb
+<!-- Example: Tab navigation with Turbo Frames -->
+<%= turbo_frame_tag "profile_content" do %>
+  <div class="tabs">
+    <%= link_to "Posts", profile_posts_path %>
+    <%= link_to "Likes", profile_likes_path %>
+  </div>
+  <%= render @posts %>
+<% end %>
+```
+
+**Turbo Streams** (Real-time partial page updates via WebSocket or HTTP)
+- Docs: https://turbo.hotwired.dev/handbook/streams
+- Seven actions: `append`, `prepend`, `replace`, `update`, `remove`, `before`, `after`
+- Broadcast changes to multiple users via ActionCable
+- Example: New comment appears for all viewers
+
+```ruby
+# Example: Broadcast new comment to all viewers
+class Comment < ApplicationRecord
+  after_create_commit do
+    broadcast_prepend_to(
+      "gif_#{gif_id}_comments",
+      target: "comments_list",
+      partial: "comments/comment",
+      locals: { comment: self }
+    )
+  end
+end
+```
+
+**Stimulus** (Targeted JavaScript for specific interactive components)
+- Docs: https://stimulus.hotwired.dev/handbook/introduction
+- Modest JavaScript framework
+- Connects JS behavior to HTML via `data-controller` attributes
+- Perfect for: dropdowns, modals, copy-to-clipboard, drag-and-drop
+- Example use cases:
+  - GIF remix editor (Canvas manipulation)
+  - Infinite scroll (IntersectionObserver)
+  - Tag autocomplete (AJAX suggestions)
+  - Copy share link (Clipboard API)
+
+```javascript
+// Example: Copy to clipboard Stimulus controller
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["source"]
+
+  copy() {
+    navigator.clipboard.writeText(this.sourceTarget.value)
+    // Show success message
+  }
+}
+```
+
+**ActionCable** (WebSocket for real-time features)
+- Docs: https://guides.rubyonrails.org/action_cable_overview.html
+- Integrated with Rails 8
+- Powers Turbo Streams for real-time updates
+- Use for: live notifications, new comments, like counts
+
+#### Tutorials & Examples
+- **Hotwire for Rails Developers (eBook):** https://pragprog.com/titles/dhotwire/hotwire-for-rails-developers/
+- **GoRails Hotwire Screencasts:** https://gorails.com/series/hotwire-rails
+- **Turbo Rails Tutorial:** https://www.hotrails.dev/turbo-rails
+- **Stimulus Components Library:** https://www.stimulus-components.com/
+
+#### Common Patterns for ytgify
+
+**Pattern 1: Infinite Scroll Feed**
+```erb
+<%= turbo_frame_tag "gifs_feed" do %>
+  <div data-controller="infinite-scroll">
+    <%= render @gifs %>
+    <%= turbo_frame_tag "gifs_feed",
+        src: gifs_path(page: @next_page),
+        loading: :lazy if @next_page %>
+  </div>
+<% end %>
+```
+
+**Pattern 2: Like Button with Live Updates**
+```ruby
+# Controller
+def like
+  @like_result = Like.toggle(current_user, @gif)
+  respond_to do |format|
+    format.turbo_stream # Renders app/views/gifs/like.turbo_stream.erb
+  end
+end
+```
+
+```erb
+<!-- app/views/gifs/like.turbo_stream.erb -->
+<%= turbo_stream.replace "like_button_#{@gif.id}" do %>
+  <%= render "gifs/like_button", gif: @gif %>
+<% end %>
+<%= turbo_stream.replace "like_count_#{@gif.id}" do %>
+  <%= @gif.like_count %> likes
+<% end %>
+```
+
+**Pattern 3: Real-time Comments**
+```ruby
+# app/models/comment.rb
+class Comment < ApplicationRecord
+  after_create_commit do
+    broadcast_prepend_to(
+      "gif_#{gif_id}_comments",
+      target: "comments_list",
+      partial: "comments/comment"
+    )
+  end
+end
+```
+
+```erb
+<!-- app/views/gifs/show.html.erb -->
+<%= turbo_stream_from "gif_#{@gif.id}_comments" %>
+<div id="comments_list">
+  <%= render @gif.comments %>
+</div>
+```
+
+---
+
+### 2.1 Environment & Secrets Management
+
+#### Doppler Configuration
+✅ **Already configured** - All secrets managed via Doppler for secure environment variable management.
+
+**Configured secrets:**
+- `AWS_ACCESS_KEY_ID` - AWS access key for S3 authentication
+- `AWS_SECRET_ACCESS_KEY` - AWS secret key for S3 authentication
+- `AWS_S3_BUCKET` - S3 bucket name for storing GIFs
+- `AWS_S3_REGION` - AWS region for the S3 bucket
+- `JWT_SECRET_KEY` - Secret for signing JWT access tokens (for extension API)
+- `JWT_REFRESH_SECRET_KEY` - Secret for signing JWT refresh tokens (for extension API)
+
+**Integration:**
+- Doppler CLI installed and configured in development
+- Rails accesses these via standard `ENV['KEY_NAME']` calls
+- Production deployment uses Doppler integration or exported environment variables
+
+---
+
+### 2.1 Frontend Architecture
+
+#### Technology Stack
+- **Ruby on Rails 8** - Full-stack framework with built-in Hotwire support
+- **Hotwire (Turbo + Stimulus)** - Modern reactive UI with minimal JavaScript
+  - **Turbo Drive** - SPA-like navigation without full page reloads
+  - **Turbo Frames** - Partial page updates (feeds, comments, modals)
+  - **Turbo Streams** - Real-time updates via WebSocket (likes, comments, notifications)
+  - **Stimulus** - Lightweight JavaScript framework for targeted interactivity
+- **Vite Rails** - Fast asset bundling with HMR (for JavaScript libraries like GIF.js)
+- **Tailwind CSS** - Utility-first CSS framework for styling
+- **ViewComponent** - Component-based architecture for reusable UI (server-rendered)
+
+#### Why Rails 8 + Hotwire?
+✅ **SEO-first:** Server-rendered HTML for all pages (critical for GIF discovery)
+✅ **Fast initial load:** No large JavaScript bundle download
+✅ **Real-time features:** Turbo Streams perfect for social features (likes, comments, notifications)
+✅ **Simpler architecture:** No API serialization, no client-side state management
+✅ **Progressive enhancement:** Works without JavaScript, better with it
+✅ **Mobile-friendly:** Works great on all browsers without heavy client-side code
+
+#### JavaScript Libraries (bundled with Vite Rails)
+- **GIF.js** or **gifshot** - Client-side GIF generation for remix editor
+- **TomSelect** or **Choices.js** - Enhanced select dropdowns (tag auto-suggest)
+- **Flatpickr** - Date pickers for filtering
+- **Clipboard.js** or native Clipboard API - Copy to clipboard functionality
+- **Intersection Observer API** (native) - Infinite scroll, lazy loading
+
+#### Project Structure
+```
+app/
+  assets/
+    stylesheets/
+      application.tailwind.css  → Tailwind CSS entry point
+  javascript/
+    controllers/               → Stimulus controllers
+      gif_editor_controller.js
+      infinite_scroll_controller.js
+      like_button_controller.js
+      clipboard_controller.js
+      tag_autocomplete_controller.js
+    libs/                      → Third-party JS libraries
+      gif.js
+  views/
+    layouts/
+      application.html.erb
+    gifs/
+      index.html.erb
+      show.html.erb
+      _gif.html.erb            → Partial for GIF card
+    components/                → ViewComponents
+      gif_card_component.rb
+      user_avatar_component.rb
+  components/                  → ViewComponent classes
+    gif_card_component.rb
+    user_avatar_component.rb
+```
+
+#### Routing Strategy
+**Server-side routing (Rails resourceful routes) + Turbo navigation**
+
+```ruby
+# config/routes.rb
+Rails.application.routes.draw do
+  # Authentication (Devise)
+  devise_for :users
+
+  # Web pages (server-rendered)
+  root 'home#index'
+  get 'explore', to: 'gifs#explore'
+  get 'trending', to: 'gifs#trending'
+  get 'search', to: 'gifs#search'
+
+  # GIF resources
+  resources :gifs do
+    member do
+      post 'like'
+      delete 'unlike'
+      post 'view'
+    end
+    resources :comments
+    get 'remixes', to: 'gifs#remixes'
+  end
+
+  # User profiles
+  get '@:username', to: 'users#show', as: :user_profile
+  get '@:username/:slug', to: 'gifs#show_by_username'
+
+  # Collections
+  resources :collections do
+    post 'add_gif', on: :member
+    delete 'remove_gif/:gif_id', on: :member
+  end
+
+  # Settings
+  get 'settings', to: 'users#settings'
+  patch 'settings', to: 'users#update_settings'
+
+  # API endpoints (for extension)
+  namespace :api do
+    namespace :auth do
+      post 'register'
+      post 'login'
+      post 'logout'
+      post 'refresh'
+      get 'me'
+    end
+
+    resources :gifs, only: [:create, :update, :destroy]
+    get 'tags/autocomplete', to: 'tags#autocomplete'
+    get 'tags/popular', to: 'tags#popular'
+    get 'tags/recent', to: 'tags#recent'
+    get 'users/me/preferences', to: 'users#preferences'
+    patch 'users/me/preferences', to: 'users#update_preferences'
+  end
+end
+```
+
+#### Responsive Design
+- Mobile-first Tailwind CSS classes
+- Grid layouts adapt to screen size (`grid-cols-1 md:grid-cols-3 lg:grid-cols-4`)
+- Touch-friendly UI (large tap targets, swipe gestures via **Stimulus**)
+- Optimized GIF loading on mobile (ActiveStorage variants for smaller files)
+- Turbo works great on mobile browsers (no special configuration needed)
+
+---
+
+### 2.2 Backend Architecture
+
+#### Technology Stack
+- **Ruby on Rails 8** - Full-stack web framework
+- **Devise** - Authentication solution with Warden
+- **devise-jwt** - JWT token authentication for extension API
+- **Rack CORS** - Handle Cross-Origin Resource Sharing for API requests
+- **ActiveStorage** - File upload and storage (S3 integration)
+- **ActiveJob** - Background job interface (Sidekiq backend)
+- **ActionCable** - WebSocket support (for Turbo Streams)
+- **Rack::Attack** - Rate limiting and throttling
+
+#### API Design
+**Hybrid approach:**
+- **Web app:** Server-rendered HTML (no JSON API needed)
+- **Extension:** RESTful JSON API at `/api/*` endpoints
+
+**API Endpoints for Extension:**
+```
+Auth:
+POST   /api/auth/register              → User signup
+POST   /api/auth/login                 → User login, returns JWT
+POST   /api/auth/logout                → Invalidate refresh token
+POST   /api/auth/refresh               → Refresh access token
+GET    /api/auth/me                    → Get current user info
+
+GIFs:
+POST   /api/gifs                   → Upload new GIF
+PATCH  /api/gifs/:id               → Update metadata
+DELETE /api/gifs/:id               → Delete GIF
+
+Tags:
+GET    /api/tags/autocomplete      → Auto-suggest tags (query param: q)
+GET    /api/tags/popular           → Popular/trending tags
+GET    /api/tags/recent            → User's recently used tags
+
+User Preferences:
+GET    /api/users/me/preferences   → Get preferences
+PATCH  /api/users/me/preferences   → Update preferences
+```
+
+**Web app uses standard Rails actions (no JSON serialization needed):**
+- Controllers render HTML/Turbo Stream responses
+- Forms submit via Turbo (either Frame or Stream responses)
+- Partials re-rendered server-side and pushed via Turbo Stream
+
+#### Authentication
+**Dual authentication strategy:**
+
+1. **Web users:** Session-based auth via Devise
+   - HTTP-only cookies
+   - CSRF protection
+   - Standard Devise helpers (`current_user`, `authenticate_user!`)
+
+2. **Extension users:** JWT tokens via devise-jwt
+   - Access token (short-lived, 15 minutes)
+   - Refresh token (long-lived, 7 days)
+   - Bearer token authentication for API endpoints
+   - Stored in extension's chrome.storage
+
+**Shared user model:**
+```ruby
+# app/models/user.rb
+class User < ApplicationRecord
+  devise :database_authenticatable, :registerable, :recoverable,
+         :rememberable, :validatable, :trackable,
+         :jwt_authenticatable, jwt_revocation_strategy: JwtDenylist
+end
+```
+
+#### File Upload Handling
+**ActiveStorage + Direct S3 Uploads**
+
+```ruby
+# app/models/gif.rb
+class Gif < ApplicationRecord
+  has_one_attached :base_gif
+  has_one_attached :final_gif
+  has_one_attached :thumbnail
+
+  validates :base_gif, content_type: ['image/gif'],
+                       size: { less_than: 50.megabytes }
+end
+```
+
+**Direct uploads from browser/extension:**
+- ActiveStorage generates pre-signed S3 URLs
+- Client uploads directly to S3 (bypasses Rails server)
+- Callback to Rails creates Gif record
+- Background job generates thumbnail via ActiveJob
+
+---
+
+### 2.3 Database
+
+#### Technology Stack
+- **PostgreSQL** - Relational database with JSON support and full-text search
+- **Rails ActiveRecord** - ORM for database interactions
+- **pg gem** - PostgreSQL adapter for Ruby
+- **PgSearch gem** - Full-text search capabilities
+
+#### Rails Models & Schema
+
+**Users Table:**
+```ruby
+# db/migrate/..._create_users.rb
+create_table :users, id: :uuid do |t|
+  t.string :username, null: false, index: { unique: true }
+  t.string :email, null: false, index: { unique: true }
+  t.string :encrypted_password, null: false
+
+  # Profile
+  t.string :display_name
+  t.text :bio
+  t.string :website
+  t.string :twitter_handle
+  t.string :youtube_channel
+  t.boolean :is_verified, default: false
+
+  # Counter caches
+  t.integer :gifs_count, default: 0
+  t.integer :total_likes_received, default: 0
+  t.integer :follower_count, default: 0
+  t.integer :following_count, default: 0
+
+  # Preferences (JSONB)
+  t.jsonb :preferences, default: {
+    default_privacy: 'public',
+    default_upload_behavior: 'show_options',
+    recently_used_tags: []
+  }
+
+  # Devise
+  t.datetime :reset_password_sent_at
+  t.datetime :remember_created_at
+  t.integer :sign_in_count, default: 0
+  t.datetime :current_sign_in_at
+  t.datetime :last_sign_in_at
+  t.string :current_sign_in_ip
+  t.string :last_sign_in_ip
+
+  t.timestamps
+end
+```
+
+**GIFs Table:**
+```ruby
+# db/migrate/..._create_gifs.rb
+create_table :gifs, id: :uuid do |t|
+  t.uuid :user_id, null: false, index: true
+  t.string :title
+  t.text :description
+
+  # YouTube source
+  t.string :youtube_video_url
+  t.string :youtube_video_title
+  t.string :youtube_channel_name
+  t.float :youtube_timestamp_start
+  t.float :youtube_timestamp_end
+
+  # GIF properties
+  t.float :duration
+  t.integer :fps
+  t.integer :resolution_width
+  t.integer :resolution_height
+  t.bigint :file_size
+
+  # Text overlay
+  t.boolean :has_text_overlay, default: false
+  t.jsonb :text_overlay_data
+
+  # Remix
+  t.boolean :is_remix, default: false
+  t.uuid :parent_gif_id, index: true
+  t.integer :remix_count, default: 0
+
+  # Privacy
+  t.integer :privacy, default: 0 # enum: public, unlisted, private
+
+  # Engagement (counter caches)
+  t.integer :view_count, default: 0
+  t.integer :like_count, default: 0
+  t.integer :comment_count, default: 0
+  t.integer :share_count, default: 0
+
+  # Soft delete
+  t.datetime :deleted_at, index: true
+
+  t.timestamps
+
+  add_foreign_key :gifs, :users
+  add_foreign_key :gifs, :gifs, column: :parent_gif_id
+  add_index :gifs, [:user_id, :created_at]
+  add_index :gifs, :privacy
+end
+```
+
+**Likes Table:**
+```ruby
+create_table :likes do |t|
+  t.uuid :user_id, null: false
+  t.uuid :gif_id, null: false
+  t.timestamps
+
+  add_index :likes, [:user_id, :gif_id], unique: true
+  add_index :likes, :gif_id
+end
+```
+
+**Follows Table:**
+```ruby
+create_table :follows do |t|
+  t.uuid :follower_id, null: false
+  t.uuid :following_id, null: false
+  t.timestamps
+
+  add_index :follows, [:follower_id, :following_id], unique: true
+  add_index :follows, :following_id
+end
+```
+
+**Comments Table:**
+```ruby
+create_table :comments, id: :uuid do |t|
+  t.uuid :gif_id, null: false, index: true
+  t.uuid :user_id, null: false
+  t.uuid :parent_comment_id, index: true
+  t.text :content, null: false
+  t.integer :like_count, default: 0
+  t.datetime :deleted_at
+  t.timestamps
+end
+```
+
+**Collections Table:**
+```ruby
+create_table :collections, id: :uuid do |t|
+  t.uuid :user_id, null: false, index: true
+  t.string :name, null: false
+  t.text :description
+  t.boolean :is_public, default: false
+  t.integer :gifs_count, default: 0
+  t.timestamps
+end
+```
+
+**CollectionGifs Table (join table):**
+```ruby
+create_table :collection_gifs do |t|
+  t.uuid :collection_id, null: false
+  t.uuid :gif_id, null: false
+  t.datetime :added_at, default: -> { 'CURRENT_TIMESTAMP' }
+
+  add_index :collection_gifs, [:collection_id, :gif_id], unique: true
+end
+```
+
+**Hashtags Table:**
+```ruby
+create_table :hashtags do |t|
+  t.string :tag, null: false, index: { unique: true }
+  t.integer :usage_count, default: 0
+  t.timestamps
+end
+```
+
+**GifHashtags Table (join table):**
+```ruby
+create_table :gif_hashtags do |t|
+  t.uuid :gif_id, null: false
+  t.bigint :hashtag_id, null: false
+
+  add_index :gif_hashtags, [:gif_id, :hashtag_id], unique: true
+  add_index :gif_hashtags, :hashtag_id
+end
+```
+
+#### Indexes & Performance
+- **User lookups:** `username`, `email` (unique indexes)
+- **GIF queries:** Composite index on `(user_id, created_at)`, `privacy`, `is_remix`, `parent_gif_id`
+- **Full-text search:** PostgreSQL GIN index on `title`, `description`, `youtube_video_title`
+- **Trending:** Composite index on `created_at` + engagement columns
+- **Counter caches:** Automatic via ActiveRecord (e.g., `gifs_count` on User, `like_count` on Gif)
+
+---
+
+### 2.4 File Storage
+
+#### Technology Stack
+- **AWS S3** - Object storage for GIF files, thumbnails (✅ already configured)
+- **AWS CloudFront** - CDN for fast global delivery
+- **Rails ActiveStorage** - File attachment framework
+  - Seamless S3 integration via `aws-sdk-s3` gem
+  - Direct uploads from browser to S3
+  - URL helpers and image processing
+  - Variants for responsive images
+
+#### Storage Configuration
+```ruby
+# config/storage.yml
+amazon:
+  service: S3
+  access_key_id: <%= ENV['AWS_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['AWS_SECRET_ACCESS_KEY'] %>
+  region: <%= ENV['AWS_S3_REGION'] %>
+  bucket: <%= ENV['AWS_S3_BUCKET'] %>
+
+# config/environments/production.rb
+config.active_storage.service = :amazon
+```
+
+#### Storage Organization
+ActiveStorage automatically organizes files by model/attachment:
+```
+/gifs/
+  /:model/:id/:attachment/:blob_id/
+    base_gif.gif
+    final_gif.gif
+    thumbnail.jpg
+```
+
+#### CDN & Optimization
+- **CloudFront CDN** - Serve GIFs via CDN for fast global delivery
+- Cache-Control headers (long cache for immutable GIFs)
+- ActiveStorage provides signed URLs for secure access (if needed)
+- Lazy loading on web app (intersection observer via **Stimulus**)
+- ActiveStorage variants for responsive images:
+  ```ruby
+  # app/models/gif.rb
+  def thumbnail_small
+    thumbnail.variant(resize_to_limit: [300, 300])
+  end
+  ```
+
+---
+
+### 2.5 Background Jobs & Real-Time Features
+
+#### Technology Stack
+- **Sidekiq** - Background job processing (uses Redis)
+- **Redis** - In-memory data store for Sidekiq queue and caching
+- **ActiveJob** - Rails interface for background jobs
+- **sidekiq-cron** - Scheduled jobs (for trending score recalculation)
+- **ActionCable** - WebSocket support for Turbo Streams
+
+#### Background Jobs (via Sidekiq)
+```ruby
+# app/jobs/generate_gif_thumbnail_job.rb
+class GenerateGifThumbnailJob < ApplicationJob
+  queue_as :default
+
+  def perform(gif_id)
+    gif = Gif.find(gif_id)
+    # Generate thumbnail using image_processing gem
+  end
+end
+
+# app/jobs/recalculate_trending_scores_job.rb
+class RecalculateTrendingScoresJob < ApplicationJob
+  queue_as :low_priority
+
+  def perform
+    # Calculate trending scores for all recent GIFs
+    # Cache results in Redis
+  end
+end
+```
+
+**Scheduled jobs (via sidekiq-cron):**
+```ruby
+# config/schedule.yml
+recalculate_trending:
+  cron: "*/15 * * * *" # Every 15 minutes
+  class: RecalculateTrendingScoresJob
+```
+
+#### Real-Time Features (via Turbo Streams + ActionCable)
+
+**Turbo Streams broadcast for real-time updates:**
+
+```ruby
+# app/models/like.rb
+class Like < ApplicationRecord
+  after_create_commit :broadcast_like
+  after_destroy_commit :broadcast_unlike
+
+  private
+
+  def broadcast_like
+    broadcast_update_to(
+      "gif_#{gif_id}_likes",
+      target: "gif_#{gif_id}_like_count",
+      partial: "gifs/like_count",
+      locals: { gif: gif }
+    )
+  end
+end
+```
+
+**Real-time notifications:**
+```ruby
+# app/models/notification.rb
+class Notification < ApplicationRecord
+  after_create_commit do
+    broadcast_prepend_to(
+      "user_#{user_id}_notifications",
+      target: "notifications_list",
+      partial: "notifications/notification",
+      locals: { notification: self }
+    )
+  end
+end
+```
+
+---
+
+### 2.6 Testing Strategy
+
+#### Testing Stack
+- **Minitest** - Rails default testing framework
+  - Model tests (validations, associations, business logic)
+  - Controller tests (request specs, Turbo responses)
+  - Integration tests (full user flows)
+  - System tests (browser-based via Capybara + Selenium)
+- **Capybara** - Integration testing with browser simulation
+- **Selenium WebDriver** - Browser automation for system tests
+- **Playwright** (optional) - Alternative to Selenium for E2E tests
+
+#### Test Organization
+```
+test/
+  models/
+    user_test.rb
+    gif_test.rb
+    like_test.rb
+  controllers/
+    gifs_controller_test.rb
+    api/gifs_controller_test.rb
+  integration/
+    user_flow_test.rb
+  system/
+    remix_flow_test.rb
+    feed_navigation_test.rb
+  fixtures/
+    users.yml
+    gifs.yml
+```
+
+#### Testing Turbo/Stimulus
+```ruby
+# test/system/like_button_test.rb
+class LikeButtonTest < ApplicationSystemTestCase
+  test "like button updates count via Turbo Stream" do
+    gif = gifs(:one)
+    visit gif_path(gif)
+
+    assert_selector "#like_button_#{gif.id}"
+    click_button "Like"
+
+    # Wait for Turbo Stream response
+    assert_text "1 like"
+    assert_selector "#like_button_#{gif.id}.liked"
+  end
+end
+```
+
+---
+
+## 3. Additional Features (Post-MVP)
+
+### 3.1 Analytics & Insights
+- User dashboard showing:
+  - Views over time (chart via **Chart.js** + **Stimulus**)
+  - Top performing GIFs
+  - Audience demographics (if trackable)
+  - Referrer sources (Twitter, Reddit, etc.)
+- Per-GIF analytics page (server-rendered with charts)
+
+### 3.2 Notifications
+**Implementation: ActionCable + Turbo Streams**
+
+- Real-time notifications via **Turbo Streams over ActionCable**
+- Notification types:
+  - Someone liked your GIF
+  - Someone commented on your GIF
+  - Someone remixed your GIF
+  - Someone followed you
+  - Your GIF is trending
+- Notification bell icon updates via **Turbo Stream broadcasts**
+- Email digests (daily/weekly summary via **ActionMailer**)
+
+### 3.3 Moderation & Safety
+
+#### Content Moderation
+- User reporting system (modal via **Turbo Frame**)
+- Admin review queue (server-rendered with **Turbo Frames** for quick actions)
+- Automated NSFW detection (image classification AI via background job)
+- Profanity filter for text overlays (server-side validation)
+- DMCA takedown process (admin interface)
+
+#### Spam Prevention
+- Rate limiting via **Rack::Attack** (to prevent abuse)
+- CAPTCHA on registration (via **recaptcha** gem)
+- Email verification required (Devise confirmable)
+- Shadowban/suspend abusive users (admin controls)
+
+### 3.4 Advanced Search & Discovery
+**Implementation: PgSearch + Turbo Frames**
+
+- Advanced filters (duration, resolution, FPS, date range)
+- Filters update via **Turbo Frames**
+- Saved searches (stored in user preferences)
+- Search history (stored in session or database)
+
+### 3.5 Gamification
+- Achievements/badges (server-rendered, unlocked via background jobs)
+- Leaderboards (cached in Redis, updated hourly)
+- Progress bars and stats on profile page
+
+### 3.6 Creator Tools
+- Bulk upload (multiple file upload via ActiveStorage)
+- CSV export of analytics (via background job, email download link)
+- API access for automation (extend `/api` endpoints)
+- Scheduling posts (via **sidekiq-scheduler**)
+- Watermark customization (server-side image processing)
+- Team accounts (multiple users manage one brand account)
+
+### 3.7 Advanced Web-Based GIF Editor
+**Implementation: Enhanced Stimulus controller**
+
+- Upload existing GIFs from user's device
+- Advanced editing tools (trim, crop, speed adjustment)
+- Add stickers, emojis, shapes (Canvas API + **Stimulus**)
+- Apply filters and effects (CSS filters or Canvas processing)
+- Multi-layer text overlays
+- Edit your own existing GIFs (reload into editor)
+
+---
+
+## 4. User Experience & Design
+
+### 4.1 Landing Page (Logged Out)
+**Implementation: Server-rendered marketing page**
+
+- Hero section: "Turn YouTube moments into shareable GIFs"
+- How it works (3 steps with animations via **Stimulus**)
+- Featured GIFs (trending/curated, lazy-loaded via **Turbo Frames**)
+- CTA: "Get Started" (install extension + sign up)
+- Fast initial load (server-rendered HTML, minimal JavaScript)
+
+### 4.2 Onboarding Flow
+**Implementation: Multi-step form via Turbo Frames**
+
+1. User installs extension
+2. Extension prompts signup/login (redirect to web app)
+3. Welcome tour (step-by-step guide via **Stimulus controller**)
+4. Suggest following popular creators (via **Turbo Frame**)
+
+### 4.3 Mobile Experience
+- Responsive Tailwind CSS (mobile-first)
+- Turbo works great on mobile browsers (no special config)
+- Touch-friendly UI (large tap targets, swipe gestures via **Stimulus**)
+- No extension on mobile, but can:
+  - Browse feed, view GIFs, like, comment, share
+  - Manage library, follow creators
+  - Remix GIFs (Canvas editor works on mobile)
+- Optimized GIF loading (ActiveStorage variants)
+
+---
+
+## 5. Performance & Scalability
+
+### 5.1 Performance Targets
+- Page load time: < 2 seconds (server-rendered HTML)
+- GIF load time: < 1 second (via CDN)
+- API response time: < 200ms (p95)
+- Search results: < 500ms (PostgreSQL full-text search)
+
+### 5.2 Optimization Strategies
+- **Frontend:**
+  - Minimal JavaScript bundle (Hotwire + small Stimulus controllers)
+  - Lazy loading GIFs (IntersectionObserver via **Stimulus**)
+  - Service worker for caching (via **serviceworker-rails** gem)
+  - Tailwind CSS purging (only include used classes)
+- **Backend:**
+  - Database query optimization (proper indexes, `includes` for N+1 prevention)
+  - Fragment caching (Russian doll caching for GIF partials)
+  - Redis caching for frequently accessed data (trending GIFs, popular tags)
+  - Pagination for all list endpoints (via **pagy** gem)
+- **Storage:**
+  - CloudFront CDN for all static assets
+  - Edge caching (long TTL for immutable GIFs)
+  - Compression (gzip, brotli via Rack middleware)
+
+### 5.3 Scalability Considerations
+- Horizontal scaling (multiple Puma instances behind load balancer)
+- Database read replicas for heavy read traffic (via **makara** gem)
+- Redis cluster for caching and Sidekiq
+- Separate storage for hot (recent) vs cold (old) GIFs
+- Background job queue scaling (multiple Sidekiq workers)
+
+---
+
+## 6. Security & Privacy
+
+### 6.1 Security Measures
+- HTTPS everywhere (via **Let's Encrypt** or cloud provider SSL)
+- SQL injection prevention (ActiveRecord parameterized queries)
+- XSS prevention (ERB auto-escaping, CSP headers via **secure_headers** gem)
+- CSRF tokens (Rails default for all forms)
+- Rate limiting via **Rack::Attack** (to prevent abuse)
+- Secure password hashing (bcrypt via Devise)
+- Regular security audits (via **bundler-audit**, **brakeman**)
+- Dependency updates (automated with **Dependabot**)
+
+### 6.2 Privacy Considerations
+- GDPR compliance (if EU users):
+  - Right to access data (export feature)
+  - Right to delete account (destroy action with cascading deletes)
+  - Cookie consent (via **cookie_consent** gem)
+  - Privacy policy page
+- Terms of Service page
+- Clear data retention policy
+- User data export option (CSV/JSON download)
+- Anonymize analytics data
+
+---
+
+## 7. Analytics & Monitoring
+
+### 7.1 Application Monitoring
+- Error tracking (**Sentry** or **Rollbar** integration)
+- Performance monitoring (**Skylight** or **Scout APM**)
+- Uptime monitoring (**Pingdom**, **UptimeRobot**)
+- Log aggregation (**Lograge** for structured logging)
+- Alerts for critical issues (via monitoring service)
+
+### 7.2 User Analytics
+- Page views, unique visitors (**Ahoy** gem for privacy-friendly analytics)
+- User journey tracking (funnel analysis)
+- Feature usage (track via events in Ahoy)
+- A/B testing framework (**Split** gem or **Field Test**)
+- Conversion tracking (signups, uploads, shares)
+
+### 7.3 Business Metrics
+- DAU/MAU (daily/monthly active users)
+- Upload rate (GIFs created per day)
+- Engagement rate (likes, comments per GIF)
+- Viral coefficient (shares per GIF, remix rate)
+- Retention (users returning after 1 week, 1 month)
+
+---
+
+## 8. Legal & Compliance
+
+### 8.1 Terms of Service
+- User agreement
+- Content ownership (users own their GIFs)
+- Platform rights (license to display, store, share)
+- Prohibited content (hate speech, violence, etc.)
+- Account termination policy
+
+### 8.2 Privacy Policy
+- What data we collect
+- How we use it
+- Third-party services (CDN, analytics)
+- User rights (access, deletion)
+- Contact information
+
+### 8.3 DMCA / Copyright
+- DMCA takedown process
+- Designated agent for notices
+- Counter-notice procedure
+- Repeat infringer policy
+- Fair use disclaimer (for YouTube clips)
+
+### 8.4 Content Policy
+- Community guidelines
+- Prohibited content list
+- Moderation process
+- Appeals process
+
+---
+
+## 9. Launch Strategy
+
+### 9.1 MVP Scope
+**Must-Have for Launch:**
+- User authentication (Devise)
+- GIF upload from extension (API endpoint)
+- Home feed (trending, recent) via **Turbo Frames**
+- GIF detail pages (server-rendered)
+- User profiles (server-rendered)
+- Like & comment (via **Turbo Streams**)
+- Basic search (PgSearch)
+- Remix functionality (Canvas editor via **Stimulus**)
+- Mobile-responsive design (Tailwind)
+
+**Nice-to-Have (can defer):**
+- Collections
+- Advanced search filters
+- Real-time notifications
+- Analytics dashboard
+
+### 9.2 Beta Testing
+- Closed beta with small user group
+- Gather feedback on UX, bugs
+- Iterate on core features
+- Invite-only initially (create exclusivity)
+
+### 9.3 Public Launch
+- Announce on Product Hunt, Hacker News, Reddit
+- Social media campaign
+- Reach out to YouTubers/influencers
+- Press release
+- Showcase featured GIFs on landing page
+
+### 9.4 Growth Tactics
+- SEO optimization (server-rendered pages indexed by Google)
+- Social sharing (Open Graph tags for rich previews)
+- Viral loop (remixes encourage more creation)
+- Partnerships with content creators
+- Browser extension featured in Chrome Web Store
+
+---
+
+## 10. Development Roadmap
+
+### Phase 1: Foundation (Weeks 1-4)
+
+**Prerequisites:**
+- ✅ Set up Rails 8 project with Hotwire + Tailwind
+- ✅ Install and configure Devise + devise-jwt
+- ✅ Database schema and migrations
+- ✅ ActiveStorage configuration with S3
+- ✅ Basic models (User, Gif, Like, Comment)
+- Extension API integration (JWT auth endpoints)
+
+**Tasks:**
+1. Create missing models (Follow, Collection, Hashtag)
+2. Add API endpoints for social features
+3. Install and configure PgSearch for search
+
+**🤖 Use Claude Code Agents:**
+
+**Before starting implementation:**
+```
+Use @agent-Plan to:
+- Review the current codebase structure
+- Identify existing patterns to follow
+- Plan the implementation approach for social models
+- Break down tasks into smaller steps
+```
+
+**When exploring existing code:**
+```
+Use @agent-Explore to:
+- Find similar model implementations (e.g., "How is the Like model structured?")
+- Locate controller patterns (e.g., "Show me the API controller authentication pattern")
+- Search for test examples (e.g., "Find model test examples with associations")
+- Understand file organization (e.g., "How are serializers organized?")
+```
+
+**Example workflow:**
+```
+1. @agent-Explore "Find all model files and their associations to understand the pattern"
+2. @agent-Plan "Create implementation plan for Follow model following existing patterns"
+3. Implement based on agent recommendations
+4. @agent-Explore "Find all controller tests to understand testing pattern"
+5. Write tests following discovered patterns
+```
+
+---
+
+### Phase 2: Core Features (Weeks 5-8)
+
+**Tasks:**
+- Home feed with Turbo Frames (trending, recent)
+- GIF detail pages (server-rendered)
+- User profiles with Turbo Frame tabs
+- Like & comment functionality (Turbo Streams)
+- Basic search (PgSearch)
+- ViewComponents for reusable UI
+
+**🤖 Use Claude Code Agents:**
+
+**Before building Turbo Frame features:**
+```
+Use @agent-Explore to:
+- "Search for any existing Turbo Frame implementations in the codebase"
+- "Find view files and their structure to understand the pattern"
+- "Locate JavaScript controllers to see if Stimulus is already configured"
+```
+
+**When planning feed implementation:**
+```
+Use @agent-Plan to:
+- "Design the trending algorithm based on current Gif model structure"
+- "Plan the feed controller architecture with caching strategy"
+- "Create implementation steps for infinite scroll with Turbo Frames"
+```
+
+**For ViewComponent migration:**
+```
+Use @agent-Explore to:
+- "Find all React components in app/frontend/components"
+- "Identify reusable UI patterns across components"
+- "Show me the Tailwind configuration and theme setup"
+
+Then use @agent-Plan to:
+- "Create migration plan from React Button component to ViewComponent"
+- "Plan component hierarchy for ViewComponents matching current React structure"
+```
+
+**Example workflow:**
+```
+1. @agent-Explore "Find all Gif-related views and partials"
+2. @agent-Plan "Design GIF detail page with Turbo Frames for comments section"
+3. Implement view templates
+4. @agent-Explore "Search for existing Stimulus controllers"
+5. @agent-Plan "Create Stimulus controller for infinite scroll using IntersectionObserver"
+```
+
+---
+
+### Phase 3: Social & Remix (Weeks 9-12)
+
+**Tasks:**
+- Remix functionality (Stimulus controller + Canvas + GIF.js)
+- Follow system (Turbo Stream updates)
+- Collections (CRUD via Turbo Frames)
+- Hashtags (auto-suggest via Stimulus)
+- Notifications (ActionCable + Turbo Streams)
+
+**🤖 Use Claude Code Agents:**
+
+**For remix editor (complex feature):**
+```
+Use @agent-Explore to:
+- "Find existing GIF processing code in jobs and models"
+- "Search for any Canvas or image manipulation libraries"
+- "Locate file upload handling in controllers"
+
+Use @agent-Plan to:
+- "Design remix editor architecture with Canvas API and GIF.js"
+- "Plan the client-side GIF generation workflow"
+- "Create step-by-step implementation for text overlay editor"
+- "Design the upload flow for remixed GIFs to S3"
+```
+
+**For real-time features:**
+```
+Use @agent-Explore to:
+- "Check if ActionCable is configured"
+- "Find any existing broadcast or channel code"
+- "Search for WebSocket or real-time implementations"
+
+Use @agent-Plan to:
+- "Design notification system with ActionCable channels"
+- "Plan Turbo Stream broadcasts for live updates"
+- "Create implementation steps for real-time comment updates"
+```
+
+**For hashtag auto-suggest:**
+```
+Use @agent-Explore to:
+- "Find the Hashtag model and its associations"
+- "Search for existing autocomplete or search implementations"
+
+Use @agent-Plan to:
+- "Design autocomplete API endpoint with efficient queries"
+- "Plan Stimulus controller for tag input with AJAX suggestions"
+```
+
+**Example workflow:**
+```
+1. @agent-Explore "Show me all GIF upload and processing code"
+2. @agent-Plan "Design comprehensive remix editor implementation plan"
+3. @agent-Explore "Find JavaScript bundling configuration for adding GIF.js"
+4. Implement Stimulus controller for remix editor
+5. @agent-Plan "Create testing strategy for remix editor functionality"
+```
+
+---
+
+### Phase 4: Polish & Launch (Weeks 13-16)
+
+**Tasks:**
+- Mobile optimization (responsive Tailwind)
+- Performance tuning (caching, CDN)
+- Security audit (brakeman, bundler-audit)
+- Beta testing
+- Bug fixes
+- Launch prep (landing page, marketing)
+
+**🤖 Use Claude Code Agents:**
+
+**For performance optimization:**
+```
+Use @agent-Explore to:
+- "Find all database queries in controllers looking for N+1 issues"
+- "Search for missing indexes on frequently queried columns"
+- "Locate caching implementations to identify gaps"
+
+Use @agent-Plan to:
+- "Create caching strategy for trending GIFs using Redis"
+- "Plan database query optimizations for feed algorithm"
+- "Design CDN integration for static assets"
+```
+
+**For security audit:**
+```
+Use @agent-Explore to:
+- "Search for all user input handling to check sanitization"
+- "Find file upload validation code"
+- "Locate authentication and authorization checks"
+- "Search for any direct SQL queries that might be vulnerable"
+
+Use @agent-Plan to:
+- "Create security checklist based on OWASP top 10"
+- "Plan rate limiting strategy for all public endpoints"
+- "Design content security policy headers"
+```
+
+**For test coverage:**
+```
+Use @agent-Explore to:
+- "Find all test files and identify coverage gaps"
+- "Search for untested controllers or models"
+- "Locate integration test examples"
+
+Use @agent-Plan to:
+- "Create comprehensive test plan for missing coverage"
+- "Design system test scenarios for critical user flows"
+```
+
+**Example workflow:**
+```
+1. @agent-Explore "Analyze all controller queries for N+1 problems"
+2. @agent-Plan "Create performance optimization roadmap with priorities"
+3. @agent-Explore "Find all authentication and authorization code"
+4. @agent-Plan "Design security audit checklist and remediation plan"
+5. @agent-Explore "Map all test coverage and identify gaps"
+6. @agent-Plan "Create testing strategy to achieve 90% coverage"
+```
+
+---
+
+### Phase 5: Post-Launch (Ongoing)
+
+**Tasks:**
+- Monitor usage and bugs
+- User feedback implementation
+- Analytics & insights features
+- Advanced web-based editor (advanced Canvas features)
+- Additional creator tools
+
+**🤖 Use Claude Code Agents:**
+
+**For feature requests:**
+```
+Use @agent-Explore to:
+- "Find similar features in codebase to understand implementation patterns"
+- "Search for related code that can be extended"
+
+Use @agent-Plan to:
+- "Design new feature architecture fitting existing patterns"
+- "Create implementation roadmap with dependencies"
+```
+
+**For bug investigation:**
+```
+Use @agent-Explore to:
+- "Search for code related to reported bug area"
+- "Find test files covering the buggy functionality"
+- "Locate error handling and logging code"
+
+Use @agent-Plan to:
+- "Create debugging strategy and fix approach"
+- "Plan regression test to prevent future occurrences"
+```
+
+---
+
+### Agent Usage Best Practices 💡
+
+**When to use @agent-Explore:**
+- ✅ Finding existing code patterns
+- ✅ Understanding codebase structure
+- ✅ Locating specific implementations
+- ✅ Searching for similar features
+- ✅ Identifying code organization conventions
+- ✅ Discovering test patterns
+
+**When to use @agent-Plan:**
+- ✅ Designing new feature architecture
+- ✅ Breaking down complex tasks
+- ✅ Creating implementation roadmaps
+- ✅ Planning refactoring approaches
+- ✅ Designing API endpoints
+- ✅ Planning test strategies
+
+**Thoroughness levels:**
+- **"quick"** - Fast exploration for simple searches (1-2 file locations)
+- **"medium"** - Moderate depth for feature planning (standard use case)
+- **"very thorough"** - Deep analysis for complex refactoring or architecture decisions
+
+**Example prompts:**
+
+```bash
+# Exploring existing patterns
+@agent-Explore "quick: Find the User model and show its structure"
+@agent-Explore "medium: Search for all Turbo Frame usage in views"
+@agent-Explore "very thorough: Analyze the entire authentication system"
+
+# Planning implementations
+@agent-Plan "medium: Design Follow model with counter caches"
+@agent-Plan "very thorough: Create comprehensive remix editor implementation plan"
+@agent-Plan "quick: Plan migration to add hashtags table"
+```
+
+---
+
+## 11. Success Metrics
+
+### Launch Goals (First 3 Months)
+- 1,000 registered users
+- 10,000 GIFs uploaded
+- 50,000 page views
+- 20% weekly active users (of registered)
+- 5% of GIFs get remixed
+
+### Long-Term Goals (Year 1)
+- 50,000 registered users
+- 500,000 GIFs uploaded
+- 1M+ page views/month
+- Featured in major tech publications
+- Partnership with YouTube creators
+
+---
+
+## 12. Key Architecture Decisions
+
+### Current Status: React Architecture Already Implemented ⚠️
+
+**Important:** The current application uses **React 19 + Rails API** architecture, not Rails 8 + Hotwire as specified in this plan. Before proceeding with this plan, make a strategic decision:
+
+**Option 1: Keep React (Recommended - Pragmatic)**
+- Modern, industry-standard approach
+- Better developer experience
+- 40% of frontend already implemented (auth, pages, UI components)
+- Works well with TypeScript
+- Easier to hire for React skills
+- **Effort:** 0 days (already done)
+- **Trade-off:** SEO challenges (mitigate with SSR or hybrid approach)
+
+**Option 2: Refactor to Hotwire (Aligns with this plan)**
+- Better SEO (server-rendered HTML)
+- Turbo Streams for real-time features
+- Less JavaScript, single language (Ruby)
+- Simpler architecture (no API serialization)
+- **Effort:** 20-25 days to refactor
+- **Trade-off:** Discard existing React work
+
+**Option 3: Hybrid (Best of Both Worlds)**
+- Keep React for authenticated app pages
+- Server-render public pages (homepage, GIF detail) for SEO
+- Use meta tags and OpenGraph for social sharing
+- **Effort:** 5-7 days to add SSR for key pages
+- **Trade-off:** More complex setup, dual code paths
+
+### Why Rails 8 + Hotwire Over React? (If Refactoring)
+
+✅ **SEO is critical** - Server-rendered HTML ensures GIF pages are indexed by Google
+✅ **Faster initial load** - No large JavaScript bundle to download
+✅ **Simpler architecture** - No API serialization, no client-side state management
+✅ **Real-time features** - Turbo Streams over ActionCable perfect for social features
+✅ **Mobile-friendly** - Works great on all browsers without heavy JS
+✅ **Progressive enhancement** - Works without JavaScript, better with it
+✅ **Rails conventions** - Faster development with less decision fatigue
+✅ **One language** - Ruby for full stack (except targeted JS via Stimulus)
+
+### Learnings from Current Implementation 🎓
+
+**Excellent patterns to keep (regardless of frontend choice):**
+
+1. **Model Structure** - Current User and Gif models are exemplary:
+   ```ruby
+   # app/models/user.rb (161 lines, excellent)
+   validates :username, presence: true, uniqueness: { case_sensitive: false }
+   before_validation :generate_jti, on: :create
+   after_initialize :set_default_preferences, if: :new_record?
+   ```
+
+2. **API Controller Pattern** - Clean separation of concerns:
+   ```ruby
+   # app/controllers/api/v1/gifs_controller.rb (238 lines)
+   skip_before_action :authenticate_user!, only: [:index, :show]
+   before_action :set_gif, only: [:show, :update, :destroy]
+   before_action :authorize_gif_access!, only: [:update, :destroy]
+   ```
+
+3. **Toggle Pattern** - Efficient like/unlike:
+   ```ruby
+   # app/models/like.rb
+   def self.toggle(user, gif)
+     like = find_by(user: user, gif: gif)
+     like ? like.destroy : create!(user: user, gif: gif)
+   end
+   ```
+
+4. **Counter Caches** - Performance optimization:
+   ```ruby
+   belongs_to :gif, counter_cache: :like_count
+   belongs_to :user, counter_cache: :gifs_count
+   ```
+
+5. **File Validation** - Custom validator for GIFs:
+   ```ruby
+   # app/validators/gif_file_validator.rb
+   validates :base_gif, presence: true
+   validates_with GifFileValidator
+   ```
+
+6. **JSONB Preferences** - Flexible user settings storage:
+   ```ruby
+   # users table
+   t.jsonb :preferences, default: {
+     default_privacy: 'public',
+     default_upload_behavior: 'show_options',
+     recently_used_tags: []
+   }
+   ```
+
+### When to Use JavaScript (Stimulus)
+- **GIF remix editor** - Canvas API manipulation for text overlays
+- **Infinite scroll** - IntersectionObserver for feed pagination
+- **Clipboard** - Copy links, embed codes
+- **Tag auto-suggest** - Real-time autocomplete
+- **Form enhancements** - Date pickers, color pickers
+- **Analytics tracking** - Custom event tracking
+
+### Extension Integration
+- Extension uses **same API endpoints** as before (no change needed)
+- JWT authentication for API requests
+- Extension is independent (React-based, can share types via TypeScript)
+- Web app and extension serve different purposes (no need to share UI components)
+
+---
+
+## 13. What We Can Reuse from Current React App 🔄
+
+### Backend Components (100% Reusable) ✅
+
+The current Rails backend is **excellent** and requires minimal changes:
+
+#### Models (Keep As-Is)
+- ✅ **User model** (`app/models/user.rb` - 161 lines)
+  - All validations, associations, counter caches
+  - JSONB preferences handling
+  - Avatar attachment via ActiveStorage
+  - JWT generation helpers
+
+- ✅ **Gif model** (`app/models/gif.rb` - 135 lines)
+  - Perfect schema matching plan
+  - Text overlay data (JSONB)
+  - Remix support (parent_gif_id, is_remix)
+  - All scopes (not_deleted, public_only, recent, popular)
+  - File attachments (base_gif, final_gif, thumbnail)
+
+- ✅ **Comment model** (`app/models/comment.rb` - 69 lines)
+  - Threaded comments (parent_comment_id)
+  - Soft delete support
+  - Counter caches
+
+- ✅ **Like model** (`app/models/like.rb` - 29 lines)
+  - Efficient toggle method
+  - Counter cache on Gif
+
+#### Controllers (Adapt for Turbo Responses)
+- **Keep:** All API controllers for extension (`/api/v1/*`)
+- **Adapt:** Create new controllers for web views that render HTML instead of JSON
+- **Reuse:** Authorization logic, before_action filters, error handling
+
+```ruby
+# Example: Adapt API controller to web controller
+# BEFORE (API - returns JSON)
+class Api::V1::GifsController < ApplicationController
+  def show
+    @gif = Gif.find(params[:id])
+    render json: GifSerializer.new(@gif).serializable_hash
+  end
+end
+
+# AFTER (Web - renders HTML/Turbo Stream)
+class GifsController < ApplicationController
+  def show
+    @gif = Gif.find(params[:id])
+    @gif.increment_view_count_async
+    # Renders app/views/gifs/show.html.erb
+  end
+
+  def like
+    @like_result = Like.toggle(current_user, @gif)
+    respond_to do |format|
+      format.turbo_stream # Renders like.turbo_stream.erb
+    end
+  end
+end
+```
+
+#### Background Jobs (Keep As-Is) ✅
+- ✅ `GifProcessingJob` - thumbnail generation, metadata extraction
+- ✅ `GifViewCountJob` - async view count increment
+- ✅ Sidekiq configuration
+- ✅ sidekiq-cron for scheduled jobs
+
+#### Database & Migrations (Keep As-Is) ✅
+- ✅ All existing tables (users, gifs, likes, comments)
+- ✅ ActiveStorage tables
+- ✅ JWT allowlist table
+- ✅ All indexes and foreign keys
+- **Add:** New tables for follows, collections, hashtags (per plan)
+
+#### File Storage (Keep As-Is) ✅
+- ✅ ActiveStorage + S3 configuration
+- ✅ Image processing setup (Vips)
+- ✅ File validators
+- ✅ Direct upload support
+
+#### Authentication (Dual Strategy) ✅
+- ✅ **Keep Devise + JWT** for extension API
+- ✅ **Add Devise sessions** for web users
+- ✅ Rate limiting (Rack::Attack)
+- ✅ Password validation
+
+### Frontend Components (Partial Reuse)
+
+#### UI Components (Adapt to ViewComponents)
+The current React components can serve as **design references** for ViewComponents:
+
+- **shadcn/ui components** → Can be reimplemented as ViewComponents with Tailwind
+- **Component patterns** → Button, Card, Avatar, Badge styles can be copied
+- **Layouts** → Navbar, AppLayout structure can be translated to ERB
+
+```ruby
+# Example: Convert React Button to ViewComponent
+# BEFORE (React/TSX)
+<Button variant="primary" size="lg" onClick={handleClick}>
+  Like
+</Button>
+
+# AFTER (ViewComponent + Turbo)
+<%= render ButtonComponent.new(
+  variant: :primary,
+  size: :lg,
+  data: { action: "click->like#toggle" }
+) do %>
+  Like
+<% end %>
+```
+
+#### JavaScript Utilities (Port to Stimulus)
+- **API client helpers** → Not needed (forms submit directly to Rails)
+- **Auth context** → Replace with Devise session helpers
+- **Clipboard utilities** → Port to Stimulus controller
+- **Form validation** → Use Rails validation + Turbo Frame errors
+
+#### Styling (100% Reusable) ✅
+- ✅ **Tailwind CSS classes** - Same utility classes work in ERB
+- ✅ **Design system** - Colors, spacing, typography all portable
+- ✅ **Responsive breakpoints** - Tailwind config can be reused
+
+### Configuration (Keep As-Is) ✅
+- ✅ Vite Rails (for bundling Stimulus controllers + libraries)
+- ✅ Doppler secrets management
+- ✅ CORS configuration
+- ✅ Storage configuration (S3, local, test)
+- ✅ Database configuration
+- ✅ Environment files
+
+### Testing Infrastructure (Adapt) ⚠️
+
+#### Backend Tests (100% Reusable) ✅
+- ✅ All 13 existing Minitest files
+- ✅ Model tests (validations, associations)
+- ✅ Controller tests (adapt for HTML responses)
+- ✅ Job tests
+- ✅ Serializer tests (for API)
+
+#### Frontend Tests (Replace)
+- ❌ Vitest/React Testing Library → Not needed
+- ❌ Playwright → Still useful for system tests
+- ✅ **Add:** Capybara + Selenium for system tests
+- ✅ **Add:** Turbo/Stimulus integration tests
+
+### Migration Effort Summary
+
+| Component | Status | Effort | Notes |
+|-----------|--------|--------|-------|
+| **Models** | ✅ Reuse 100% | 0 days | Perfect as-is, just add Follow, Collection, Hashtag |
+| **API Controllers** | ✅ Keep for extension | 0 days | No changes needed |
+| **Web Controllers** | 🔄 Create new | 3-5 days | Render HTML instead of JSON |
+| **Views** | 🆕 Create from scratch | 10-15 days | ERB templates with Turbo |
+| **JavaScript** | 🔄 Port to Stimulus | 3-5 days | Only for interactive features |
+| **Styling** | ✅ Reuse 100% | 0 days | Tailwind classes work in ERB |
+| **Auth** | ✅ Extend Devise | 1 day | Add session-based auth alongside JWT |
+| **Tests** | 🔄 Adapt backend, rewrite frontend | 3-5 days | Backend tests work, add system tests |
+| **Background Jobs** | ✅ Reuse 100% | 0 days | No changes needed |
+| **Database** | ✅ Reuse + extend | 2 days | Add social feature tables |
+
+**Total Refactoring Effort:** 22-32 days (if choosing Hotwire over React)
+
+---
+
+## 14. Implementation Status (Current App)
+
+### What's Already Built ✅ (Backend: 90% Complete)
+
+| Feature | Status | File/Location |
+|---------|--------|---------------|
+| User authentication (JWT) | ✅ 100% | `app/models/user.rb`, `app/controllers/api/v1/auth/` |
+| User profiles | ✅ 100% | `app/controllers/api/v1/profiles_controller.rb` |
+| User preferences (JSONB) | ✅ 100% | `users.preferences` column |
+| GIF upload API | ✅ 100% | `app/controllers/api/v1/gifs_controller.rb` (238 lines) |
+| GIF metadata storage | ✅ 100% | `app/models/gif.rb` (all fields from plan) |
+| Text overlay data | ✅ 100% | `gifs.text_overlay_data` (JSONB) |
+| Remix support | ✅ 100% | `is_remix`, `parent_gif_id`, `remix_count` |
+| File storage (S3) | ✅ 100% | ActiveStorage + `config/storage.yml` |
+| Thumbnail generation | ✅ 100% | `app/jobs/gif_processing_job.rb` |
+| Like system | ✅ 100% | `app/models/like.rb` with toggle method |
+| Comment system | ✅ 100% | `app/models/comment.rb` (threaded) |
+| Privacy levels | ✅ 100% | `gifs.privacy` enum |
+| Soft delete | ✅ 100% | `gifs.deleted_at`, `comments.deleted_at` |
+| Rate limiting | ✅ 100% | `config/initializers/rack_attack.rb` |
+| Background jobs | ✅ 80% | Sidekiq configured, 2 jobs, needs feed/trending jobs |
+
+### What's Missing ❌
+
+| Feature | Status | Effort | Priority |
+|---------|--------|--------|----------|
+| Follow system | ❌ 0% | 2 days | 🔴 Critical |
+| Collections/Saves | ❌ 0% | 2 days | 🔴 Critical |
+| Hashtags | ❌ 0% | 2 days | 🔴 Critical |
+| Feed algorithm | ❌ 0% | 3-5 days | 🔴 Critical |
+| Trending algorithm | ❌ 0% | 2 days | 🔴 Critical |
+| PgSearch integration | ❌ 0% | 1 day | 🟠 Important |
+| Remix editor (Canvas + GIF.js) | ❌ 0% | 1-2 weeks | 🔴 Critical |
+| Real-time features (Turbo Streams) | ❌ 0% | 1-2 weeks | 🟡 Nice-to-have |
+| Web views (if Hotwire) | ❌ 0% | 2-3 weeks | 🔴 Critical (if refactoring) |
+| Notifications system | ❌ 0% | 1 week | 🟡 Nice-to-have |
+| Email verification | ❌ 0% | 1-2 days | 🟡 Nice-to-have |
+| Password reset | ❌ 0% | 1-2 days | 🟡 Nice-to-have |
+
+### Overall Completion: 55% MVP Ready
+- **Backend API:** 90% complete (excellent foundation)
+- **Frontend (React):** 40% complete (auth, pages stubbed)
+- **Frontend (Hotwire):** 0% complete (if refactoring)
+- **Social features:** 15% complete (likes and comments only)
+- **Discovery/Feed:** 5% complete (no algorithms)
+
+**Estimated time to production-ready MVP:**
+- **If keeping React:** 3-4 weeks (add social models, feed, remix editor)
+- **If refactoring to Hotwire:** 6-8 weeks (add above + rewrite views)
+
+---
+
+## Summary
+
+This Rails 8 + Hotwire architecture transforms ytgify into a **fast, SEO-friendly, real-time social platform** for YouTube GIF creation and remixing.
+
+### Key Takeaways:
+
+1. **Architecture Decision Required:** Choose between React (current, 40% done) or Hotwire (this plan, 0% done)
+2. **Backend is Excellent:** 90% complete, well-designed, production-ready for extension API
+3. **Reusable Components:** Models, jobs, storage, auth can all be reused regardless of frontend choice
+4. **Missing Features:** Social models (follows, collections, hashtags), feed algorithm, remix editor
+5. **Documentation Included:** Comprehensive Hotwire references and code examples for implementation
+
+**If adopting Hotwire, we achieve:**
+- ✅ **Better SEO** for GIF discovery (critical for growth)
+- ✅ **Faster performance** (smaller bundle, quicker initial load)
+- ✅ **Simpler codebase** (one language, no API layer for web app)
+- ✅ **Real-time social features** (Turbo Streams for likes, comments, notifications)
+- ✅ **Mobile-first design** (responsive Tailwind, works everywhere)
+
+The core innovation remains the **remix feature** (Canvas-based editor via Stimulus), allowing users to build on each other's work and creating a viral loop of content creation.
+
+---
+
+## 🤖 Agent Quick Reference Card
+
+**Copy-paste these commands as needed throughout development:**
+
+### Initial Codebase Exploration
+```bash
+@agent-Explore "medium: Analyze overall application structure and current tech stack"
+@agent-Explore "medium: Show all models, associations, and database schema"
+@agent-Explore "quick: Find all API endpoints and controllers"
+```
+
+### Before Building New Features
+```bash
+# Find existing patterns
+@agent-Explore "quick: Find [Model/Controller/Job] to understand the pattern"
+
+# Plan implementation
+@agent-Plan "medium: Design [Feature Name] following existing codebase patterns"
+```
+
+### For Complex Features (Remix Editor, Feed, Real-time)
+```bash
+@agent-Explore "very thorough: Find all code related to [feature area]"
+@agent-Plan "very thorough: Create comprehensive implementation plan for [feature]"
+```
+
+### Performance & Security
+```bash
+@agent-Explore "medium: Find all database queries and check for N+1 issues"
+@agent-Explore "medium: Search for security vulnerabilities in user input handling"
+@agent-Plan "medium: Create performance optimization roadmap"
+```
+
+### Testing & Debugging
+```bash
+@agent-Explore "quick: Find test files for [feature] to understand testing pattern"
+@agent-Explore "medium: Search for code related to [bug description]"
+@agent-Plan "quick: Create test plan for [new feature]"
+```
+
+### Quick Checks
+```bash
+@agent-Explore "quick: Is [gem/library] installed and configured?"
+@agent-Explore "quick: Find the [specific file/class] location"
+@agent-Explore "quick: Show me how [existing feature] is implemented"
+```
+
+**Remember:**
+- Use **"quick"** for simple lookups (1-2 files)
+- Use **"medium"** for standard feature exploration (default)
+- Use **"very thorough"** for complex architectural decisions
+
+**Agent prompts are scattered throughout this plan - look for 🤖 icons!**

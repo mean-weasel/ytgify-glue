@@ -1,0 +1,23 @@
+# Sidekiq-cron schedule configuration
+# Format: "Minute Hour Day-of-Month Month Day-of-Week"
+
+# Update trending GIFs every 15 minutes
+update_trending_gifs:
+  cron: "*/15 * * * *"
+  class: "UpdateTrendingGifsJob"
+  queue: default
+  description: "Calculate and cache trending GIFs"
+
+# Clean up old view events every hour
+cleanup_old_view_events:
+  cron: "0 * * * *"
+  class: "CleanupOldViewEventsJob"
+  queue: low_priority
+  description: "Remove view event data older than 30 days"
+
+# Update user engagement stats every 6 hours
+update_user_engagement_stats:
+  cron: "0 */6 * * *"
+  class: "UpdateUserEngagementStatsJob"
+  queue: low_priority
+  description: "Update cached user engagement metrics"

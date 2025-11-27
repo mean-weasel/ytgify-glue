@@ -1,0 +1,13 @@
+{
+  "name": "ytgify",
+  "private": true,
+  "dependencies": {
+    "playwright": "^1.56.0"
+  },
+  "devDependencies": {
+    "webpack-cli": "^6.0.1"
+  },
+  "scripts": {
+    "test:system": "npx playwright test"
+  }
+}

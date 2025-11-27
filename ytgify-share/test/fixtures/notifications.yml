@@ -1,0 +1,32 @@
+# Notification for alice - bob liked her GIF (unread)
+alice_like_notification:
+  recipient: one  # alice
+  recipient_type: User
+  actor: two  # bob
+  actor_type: User
+  notifiable: bob_like  # like from bob
+  notifiable_type: Like
+  action: like
+  read_at:
+
+# Notification for alice - bob commented (read)
+alice_comment_notification:
+  recipient: one  # alice
+  recipient_type: User
+  actor: two  # bob
+  actor_type: User
+  notifiable: bob_comment_on_alice_gif  # comment from bob
+  notifiable_type: Comment
+  action: comment
+  read_at: <%= 1.hour.ago %>
+
+# Notification for bob - alice followed him (unread)
+bob_follow_notification:
+  recipient: two  # bob
+  recipient_type: User
+  actor: one  # alice
+  actor_type: User
+  notifiable: alice_follows_bob  # follow from alice
+  notifiable_type: Follow
+  action: follow
+  read_at:

@@ -1,0 +1,25 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice_public_collection:
+  user: one  # alice
+  name: "Alice's Favorite GIFs"
+  description: "My collection of favorite moments"
+  is_public: true
+
+alice_private_collection:
+  user: one  # alice
+  name: "Private Collection"
+  description: "Secret GIFs for my eyes only"
+  is_public: false
+
+bob_public_collection:
+  user: two  # bob
+  name: "Bob's Collection"
+  description: "Bob's curated gifs"
+  is_public: true
+
+bob_private_collection:
+  user: two  # bob
+  name: "Bob's Private Stash"
+  description: "Private collection"
+  is_public: false

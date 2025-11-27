@@ -1,0 +1,26 @@
+<%= turbo_frame_tag "like_#{gif.id}", class: "flex items-center" do %>
+  <% if user_signed_in? %>
+    <%= button_to like_gif_path(gif),
+        method: :post,
+        data: {
+          controller: "like",
+          turbo_frame: "_top"
+        },
+        class: "flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors group" do %>
+      <svg class="w-5 h-5 <%= 'fill-current text-red-500' if current_user.liked?(gif) %>"
+           fill="<%= current_user.liked?(gif) ? 'currentColor' : 'none' %>"
+           stroke="currentColor"
+           viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+      <span class="text-sm font-medium" data-like-target="count"><%= gif.like_count %></span>
+    <% end %>
+  <% else %>
+    <%= link_to new_user_session_path, class: "flex items-center space-x-1 text-gray-600 hover:text-red-500 transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+      <span class="text-sm font-medium"><%= gif.like_count %></span>
+    <% end %>
+  <% end %>
+<% end %>

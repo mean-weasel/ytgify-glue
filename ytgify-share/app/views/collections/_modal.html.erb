@@ -1,0 +1,73 @@
+<%# Collection Modal - Add GIF to Collection %>
+<div
+  data-controller="collection-modal"
+  data-action="keyup@window->collection-modal#handleKeyup"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
+  data-collection-modal-target="modal"
+  data-action="click->collection-modal#clickOutside"
+>
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+
+  <!-- Modal Content -->
+  <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">Save to Collection</h3>
+      <button
+        data-action="click->collection-modal#hide"
+        class="text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Collections List -->
+    <div class="overflow-y-auto max-h-[50vh] p-6">
+      <% if current_user.collections.any? %>
+        <div class="space-y-2">
+          <% current_user.collections.order(updated_at: :desc).each do |collection| %>
+            <%= button_to collection_add_gif_path(collection, gif_id: gif.id),
+                method: :post,
+                class: "w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left group" do %>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                  <%= collection.name %>
+                </h4>
+                <p class="text-sm text-gray-500">
+                  <%= collection.gifs.count %> GIFs
+                </p>
+              </div>
+              <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <!-- Empty State -->
+        <div class="text-center py-8">
+          <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          </svg>
+          <p class="text-gray-600 mb-4">You don't have any collections yet</p>
+          <%= link_to new_collection_path, class: "inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" do %>
+            Create Collection
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-gray-200 p-6">
+      <%= link_to new_collection_path, class: "w-full flex items-center justify-center space-x-2 px-4 py-3 border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 font-medium transition-colors" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>New Collection</span>
+      <% end %>
+    </div>
+  </div>
+</div>

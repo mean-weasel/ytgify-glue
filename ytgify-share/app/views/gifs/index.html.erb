@@ -1,0 +1,53 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <% if @query.present? %>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Search Results for "<%= @query %>"</h1>
+        <p class="text-gray-600"><%= @pagy.count %> GIF<%= @pagy.count == 1 ? '' : 's' %> found</p>
+      <% else %>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Browse GIFs</h1>
+        <p class="text-gray-600">Explore all public GIFs</p>
+      <% end %>
+    </div>
+
+    <% if @gifs.any? %>
+      <!-- GIF Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <% @gifs.each do |gif| %>
+          <%= render "gifs/gif_card", gif: gif %>
+        <% end %>
+      </div>
+
+      <!-- Pagination -->
+      <% if @pagy.next %>
+        <div class="text-center">
+          <%= link_to gifs_path(q: @query, page: @pagy.next),
+              class: "inline-block px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors" do %>
+            Load More
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <!-- Empty State -->
+      <div class="text-center py-16">
+        <svg class="mx-auto h-24 w-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <% if @query.present? %>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No GIFs found</h3>
+          <p class="text-gray-500 mb-6">Try a different search term</p>
+          <%= link_to "Clear Search", gifs_path, class: "inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" %>
+        <% else %>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No GIFs yet</h3>
+          <p class="text-gray-500 mb-6">Be the first to upload a GIF!</p>
+          <% if user_signed_in? %>
+            <%= link_to new_gif_path, class: "inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" do %>
+              Upload GIF
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

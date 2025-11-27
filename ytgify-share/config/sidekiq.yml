@@ -1,0 +1,20 @@
+:concurrency: 5
+:max_retries: 3
+
+# Queues configuration
+:queues:
+  - [critical, 4]
+  - [default, 2]
+  - [low_priority, 1]
+
+# Production configuration
+production:
+  :concurrency: 10
+
+# Development configuration
+development:
+  :concurrency: 2
+
+# Test configuration
+test:
+  :concurrency: 1

@@ -1,0 +1,98 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice_public_gif:
+  user: one  # alice
+  title: "Alice's Funny Moment"
+  description: "A funny moment from a video"
+  youtube_video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  youtube_video_title: "Original Video Title"
+  youtube_channel_name: "YouTube Channel"
+  youtube_timestamp_start: 10.0
+  youtube_timestamp_end: 15.0
+  duration: 5.0
+  fps: 30
+  resolution_width: 480
+  resolution_height: 270
+  file_size: 1024000
+  has_text_overlay: false
+  is_remix: false
+  privacy: 0  # public
+  view_count: 100
+  like_count: 10
+  comment_count: 2  # bob_comment_on_alice_gif + deleted_comment
+  share_count: 5
+  remix_count: 1  # bob_remix_of_alice
+  deleted_at:
+
+bob_public_gif:
+  user: two  # bob
+  title: "Bob's Epic Clip"
+  description: "An epic gaming moment"
+  youtube_video_url: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+  youtube_video_title: "Gaming Video"
+  youtube_channel_name: "Gaming Channel"
+  youtube_timestamp_start: 30.0
+  youtube_timestamp_end: 35.0
+  duration: 5.0
+  fps: 60
+  resolution_width: 1920
+  resolution_height: 1080
+  file_size: 2048000
+  has_text_overlay: false
+  is_remix: false
+  privacy: 0  # public
+  view_count: 500
+  like_count: 50
+  comment_count: 3  # alice_comment + 2 replies
+  share_count: 20
+  deleted_at:
+
+bob_remix_of_alice:
+  user: two  # bob
+  parent_gif: alice_public_gif
+  title: "Remix of Alice's GIF"
+  description: "My take on Alice's funny moment"
+  youtube_video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  youtube_video_title: "Original Video Title"
+  youtube_channel_name: "YouTube Channel"
+  youtube_timestamp_start: 10.0
+  youtube_timestamp_end: 15.0
+  duration: 5.0
+  fps: 30
+  resolution_width: 480
+  resolution_height: 270
+  file_size: 1024000
+  has_text_overlay: true
+  text_overlay_data: { "text": "Epic Remix!", "font_family": "Impact", "font_size": 48, "color": "#ffffff" }
+  is_remix: true
+  privacy: 0  # public
+  view_count: 50
+  like_count: 5
+  comment_count: 0
+  share_count: 2
+  deleted_at:
+
+# E2E test GIF - public GIF for system tests
+e2e_public_gif:
+  user: e2e_follower
+  title: "E2E Test Public GIF"
+  description: "A public GIF for e2e testing"
+  youtube_video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  youtube_video_title: "Test Video"
+  youtube_channel_name: "Test Channel"
+  youtube_timestamp_start: 10.5
+  youtube_timestamp_end: 15.0
+  duration: 4.5
+  fps: 30
+  resolution_width: 480
+  resolution_height: 270
+  file_size: 1024000
+  has_text_overlay: false
+  is_remix: false
+  privacy: 0  # public
+  view_count: 50
+  like_count: 3
+  comment_count: 1
+  share_count: 0
+  remix_count: 0
+  deleted_at:

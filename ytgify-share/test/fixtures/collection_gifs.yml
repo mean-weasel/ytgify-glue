@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice_collection_gif1:
+  collection: alice_public_collection
+  gif: alice_public_gif
+  position: 1
+
+bob_collection_gif1:
+  collection: bob_public_collection
+  gif: bob_public_gif
+  position: 1
