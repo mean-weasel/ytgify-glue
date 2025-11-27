@@ -18,7 +18,7 @@
     "lint:fix": "eslint 'src/**/*.ts' 'src/**/*.tsx' --fix",
     "test": "jest --config tests/jest.config.cjs",
     "test:watch": "jest --config tests/jest.config.cjs --watch",
-    "test:coverage": "jest --config tests/jest.config.cjs --coverage",
+    "test:coverage": "jest --config tests/jest.config.cjs --coverage --forceExit",
     "test:e2e": "HEADLESS=true playwright test --config tests/playwright-mock.config.ts",
     "test:e2e:fast": "HEADLESS=true playwright test --config tests/playwright-mock.config.ts --workers=4 --retries=0",
     "test:e2e:headless": "HEADLESS=true playwright test --config tests/playwright-mock.config.ts",
