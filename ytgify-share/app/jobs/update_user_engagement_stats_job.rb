@@ -8,7 +8,7 @@ class UpdateUserEngagementStatsJob < ApplicationJob
   def perform
     # Update engagement stats for active users (users who posted in last 90 days)
     active_users = User.joins(:gifs)
-                       .where('gifs.created_at > ?', 90.days.ago)
+                       .where("gifs.created_at > ?", 90.days.ago)
                        .distinct
 
     active_users.find_each do |user|

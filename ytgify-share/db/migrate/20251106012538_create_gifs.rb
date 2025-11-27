@@ -46,7 +46,7 @@ class CreateGifs < ActiveRecord::Migration[8.0]
     add_foreign_key :gifs, :users
     add_foreign_key :gifs, :gifs, column: :parent_gif_id
     add_index :gifs, :user_id
-    add_index :gifs, [:user_id, :created_at]
+    add_index :gifs, [ :user_id, :created_at ]
     add_index :gifs, :parent_gif_id
     add_index :gifs, :privacy
     add_index :gifs, :deleted_at

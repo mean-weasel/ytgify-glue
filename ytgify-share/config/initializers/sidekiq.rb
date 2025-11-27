@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 Sidekiq.configure_server do |config|
-  config.redis = { url: ENV.fetch('REDIS_URL', 'redis://localhost:6379/0') }
+  config.redis = { url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0") }
 
   # Schedule recurring jobs
   schedule_file = "config/schedule.yml"
@@ -11,7 +11,7 @@ Sidekiq.configure_server do |config|
 end
 
 Sidekiq.configure_client do |config|
-  config.redis = { url: ENV.fetch('REDIS_URL', 'redis://localhost:6379/0') }
+  config.redis = { url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0") }
 end
 
 # Set ActiveJob queue adapter to Sidekiq

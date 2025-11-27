@@ -64,7 +64,7 @@ class UserTest < ActiveSupport::TestCase
       username: "testuser",
       password: "password123"
     )
-    assert_equal 'public', user.default_privacy
+    assert_equal "public", user.default_privacy
     assert_equal [], user.recently_used_tags
   end
 
@@ -74,11 +74,11 @@ class UserTest < ActiveSupport::TestCase
       username: "testuser",
       password: "password123"
     )
-    user.add_recent_tag('funny')
-    user.add_recent_tag('epic')
+    user.add_recent_tag("funny")
+    user.add_recent_tag("epic")
 
-    assert_includes user.recently_used_tags, 'funny'
-    assert_includes user.recently_used_tags, 'epic'
+    assert_includes user.recently_used_tags, "funny"
+    assert_includes user.recently_used_tags, "epic"
   end
 
   # ========================================
@@ -300,9 +300,9 @@ class UserTest < ActiveSupport::TestCase
       password: "password123"
     )
     assert_not_nil user.preferences
-    assert_equal 'public', user.preferences['default_privacy']
-    assert_equal 'show_options', user.preferences['default_upload_behavior']
-    assert_equal [], user.preferences['recently_used_tags']
+    assert_equal "public", user.preferences["default_privacy"]
+    assert_equal "show_options", user.preferences["default_upload_behavior"]
+    assert_equal [], user.preferences["recently_used_tags"]
   end
 
   # ========================================
@@ -351,31 +351,31 @@ class UserTest < ActiveSupport::TestCase
 
   test "default_privacy getter returns default value" do
     user = User.create!(email: "test@example.com", username: "testuser", password: "password123")
-    assert_equal 'public', user.default_privacy
+    assert_equal "public", user.default_privacy
   end
 
   test "default_privacy setter updates preferences" do
     user = User.create!(email: "test@example.com", username: "testuser", password: "password123")
-    user.default_privacy = 'private'
-    assert_equal 'private', user.default_privacy
+    user.default_privacy = "private"
+    assert_equal "private", user.default_privacy
   end
 
   test "add_recent_tag adds tag to beginning of list" do
     user = User.create!(email: "test@example.com", username: "testuser", password: "password123")
-    user.add_recent_tag('tag1')
-    user.add_recent_tag('tag2')
+    user.add_recent_tag("tag1")
+    user.add_recent_tag("tag2")
 
-    assert_equal ['tag2', 'tag1'], user.reload.recently_used_tags
+    assert_equal [ "tag2", "tag1" ], user.reload.recently_used_tags
   end
 
   test "add_recent_tag keeps only unique tags" do
     user = User.create!(email: "test@example.com", username: "testuser", password: "password123")
-    user.add_recent_tag('tag1')
-    user.add_recent_tag('tag2')
-    user.add_recent_tag('tag1')
+    user.add_recent_tag("tag1")
+    user.add_recent_tag("tag2")
+    user.add_recent_tag("tag1")
 
     tags = user.reload.recently_used_tags
-    assert_equal ['tag1', 'tag2'], tags
+    assert_equal [ "tag1", "tag2" ], tags
   end
 
   test "add_recent_tag keeps only last 10 tags" do
@@ -387,8 +387,8 @@ class UserTest < ActiveSupport::TestCase
 
     tags = user.reload.recently_used_tags
     assert_equal 10, tags.length
-    assert_includes tags, 'tag14'
-    assert_not_includes tags, 'tag0'
+    assert_includes tags, "tag14"
+    assert_not_includes tags, "tag0"
   end
 
   # ========================================

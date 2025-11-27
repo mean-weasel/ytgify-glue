@@ -3,9 +3,9 @@
 module Api
   module V1
     class CommentsController < BaseController
-      skip_before_action :authenticate_user!, only: [:index]
-      before_action :set_comment, only: [:update, :destroy]
-      before_action :authorize_comment_owner!, only: [:update, :destroy]
+      skip_before_action :authenticate_user!, only: [ :index ]
+      before_action :set_comment, only: [ :update, :destroy ]
+      before_action :authorize_comment_owner!, only: [ :update, :destroy ]
 
       # GET /api/v1/gifs/:gif_id/comments
       def index
@@ -14,7 +14,7 @@ module Api
 
         # Pagination
         page = params[:page]&.to_i || 1
-        per_page = [params[:per_page]&.to_i || 20, 100].min
+        per_page = [ params[:per_page]&.to_i || 20, 100 ].min
 
         comments = comments.offset((page - 1) * per_page).limit(per_page)
 
@@ -35,12 +35,12 @@ module Api
 
         if comment.save
           render json: {
-            message: 'Comment created successfully',
+            message: "Comment created successfully",
             comment: comment_json(comment)
           }, status: :created
         else
           render json: {
-            error: 'Comment creation failed',
+            error: "Comment creation failed",
             details: comment.errors.full_messages
           }, status: :unprocessable_entity
         end
@@ -50,12 +50,12 @@ module Api
       def update
         if @comment.update(comment_update_params)
           render json: {
-            message: 'Comment updated successfully',
+            message: "Comment updated successfully",
             comment: comment_json(@comment)
           }, status: :ok
         else
           render json: {
-            error: 'Comment update failed',
+            error: "Comment update failed",
             details: @comment.errors.full_messages
           }, status: :unprocessable_entity
         end
@@ -64,7 +64,7 @@ module Api
       # DELETE /api/v1/comments/:id
       def destroy
         @comment.soft_delete!
-        render json: { message: 'Comment deleted successfully' }, status: :ok
+        render json: { message: "Comment deleted successfully" }, status: :ok
       end
 
       private

@@ -3,7 +3,7 @@
 module Api
   module V1
     class AuthController < BaseController
-      skip_before_action :authenticate_user!, only: [:register, :login]
+      skip_before_action :authenticate_user!, only: [ :register, :login ]
 
       # POST /api/v1/auth/register
       def register
@@ -11,15 +11,15 @@ module Api
 
         if user.save
           token = generate_jwt_token(user)
-          response.set_header('Authorization', "Bearer #{token}")
+          response.set_header("Authorization", "Bearer #{token}")
           render json: {
-            message: 'Registration successful',
+            message: "Registration successful",
             user: user_json(user),
             token: token
           }, status: :created
         else
           render json: {
-            error: 'Registration failed',
+            error: "Registration failed",
             details: user.errors.full_messages
           }, status: :unprocessable_entity
         end
@@ -31,16 +31,16 @@ module Api
 
         if user&.valid_password?(login_params[:password])
           token = generate_jwt_token(user)
-          response.set_header('Authorization', "Bearer #{token}")
+          response.set_header("Authorization", "Bearer #{token}")
           render json: {
-            message: 'Login successful',
+            message: "Login successful",
             user: user_json(user),
             token: token
           }, status: :ok
         else
           render json: {
-            error: 'Invalid credentials',
-            message: 'Email or password is incorrect'
+            error: "Invalid credentials",
+            message: "Email or password is incorrect"
           }, status: :unauthorized
         end
       end
@@ -48,15 +48,15 @@ module Api
       # DELETE /api/v1/auth/logout
       def logout
         # JWT will be added to denylist via devise-jwt
-        render json: { message: 'Logout successful' }, status: :ok
+        render json: { message: "Logout successful" }, status: :ok
       end
 
       # POST /api/v1/auth/refresh
       def refresh
         token = generate_jwt_token(current_user)
-        response.set_header('Authorization', "Bearer #{token}")
+        response.set_header("Authorization", "Bearer #{token}")
         render json: {
-          message: 'Token refreshed',
+          message: "Token refreshed",
           token: token
         }, status: :ok
       end
@@ -84,7 +84,7 @@ module Api
           jti: user.jti,
           exp: 15.minutes.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
 
       def user_json(user)

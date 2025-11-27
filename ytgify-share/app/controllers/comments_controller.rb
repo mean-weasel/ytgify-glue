@@ -2,10 +2,10 @@ class CommentsController < ApplicationController
   include ActionView::RecordIdentifier
 
   before_action :authenticate_user!
-  before_action :set_gif, only: [:create]
-  before_action :set_comment, only: [:edit, :update, :destroy]
-  before_action :authorize_comment_owner!, only: [:edit, :update]
-  before_action :authorize_comment_or_gif_owner!, only: [:destroy]
+  before_action :set_gif, only: [ :create ]
+  before_action :set_comment, only: [ :edit, :update, :destroy ]
+  before_action :authorize_comment_owner!, only: [ :edit, :update ]
+  before_action :authorize_comment_or_gif_owner!, only: [ :destroy ]
 
   def create
     @comment = @gif.comments.build(comment_params)
@@ -114,7 +114,7 @@ class CommentsController < ApplicationController
         end
         format.json do
           render json: {
-            message: 'Comment updated successfully',
+            message: "Comment updated successfully",
             comment: {
               id: @comment.id,
               content: @comment.content,
@@ -133,7 +133,7 @@ class CommentsController < ApplicationController
         end
         format.json do
           render json: {
-            error: 'Comment update failed',
+            error: "Comment update failed",
             details: @comment.errors.full_messages
           }, status: :unprocessable_entity
         end

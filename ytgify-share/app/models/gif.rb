@@ -1,9 +1,9 @@
 class Gif < ApplicationRecord
   # Associations
   belongs_to :user, counter_cache: true
-  belongs_to :parent_gif, class_name: 'Gif', optional: true, counter_cache: :remix_count
+  belongs_to :parent_gif, class_name: "Gif", optional: true, counter_cache: :remix_count
 
-  has_many :remixes, class_name: 'Gif', foreign_key: :parent_gif_id, dependent: :nullify
+  has_many :remixes, class_name: "Gif", foreign_key: :parent_gif_id, dependent: :nullify
   has_many :likes, dependent: :destroy
   has_many :liking_users, through: :likes, source: :user
   has_many :comments, dependent: :destroy
@@ -21,8 +21,8 @@ class Gif < ApplicationRecord
 
   # ActiveStorage attachments
   has_one_attached :file do |attachable|
-    attachable.variant :thumb, resize_to_limit: [200, 200]
-    attachable.variant :medium, resize_to_limit: [600, 600]
+    attachable.variant :thumb, resize_to_limit: [ 200, 200 ]
+    attachable.variant :medium, resize_to_limit: [ 600, 600 ]
   end
 
   # Validations
@@ -34,6 +34,7 @@ class Gif < ApplicationRecord
   validates :youtube_timestamp_end, numericality: { greater_than: :youtube_timestamp_start }, allow_nil: true, if: :youtube_timestamp_start?
   validates :duration, numericality: { greater_than: 0 }, allow_nil: true
   validates :fps, numericality: { greater_than: 0, less_than_or_equal_to: 60 }, allow_nil: true
+  validate :youtube_video_url_is_safe, if: :youtube_video_url_changed?
 
   # Enums
   enum :privacy, { public_access: 0, unlisted: 1, private_access: 2 }, prefix: :privacy
@@ -44,7 +45,7 @@ class Gif < ApplicationRecord
   scope :public_only, -> { where(privacy: 0) }
   scope :recent, -> { order(created_at: :desc) }
   scope :popular, -> { order(like_count: :desc, view_count: :desc) }
-  scope :trending, -> { where('created_at > ?', 7.days.ago).order(like_count: :desc, view_count: :desc) }
+  scope :trending, -> { where("created_at > ?", 7.days.ago).order(like_count: :desc, view_count: :desc) }
   scope :by_user, ->(user_id) { where(user_id: user_id) }
   scope :originals, -> { where(is_remix: false) }
   scope :remixes, -> { where(is_remix: true) }
@@ -54,7 +55,7 @@ class Gif < ApplicationRecord
   before_save :set_remix_flag, if: :parent_gif_id_changed?
 
   # Cache invalidation callbacks
-  after_commit :clear_feed_caches, on: [:create, :update, :destroy]
+  after_commit :clear_feed_caches, on: [ :create, :update, :destroy ]
 
   # Instance methods
   def soft_delete!
@@ -88,6 +89,15 @@ class Gif < ApplicationRecord
 
   def youtube_clip?
     youtube_video_url.present?
+  end
+
+  # Safe YouTube URL for use in views - validated at model level
+  # brakeman:disable:safe_youtube_url
+  def safe_youtube_url
+    return nil unless youtube_video_url.present?
+
+    # URL is validated by youtube_video_url_is_safe before save
+    youtube_video_url
   end
 
   def has_text?
@@ -167,7 +177,7 @@ class Gif < ApplicationRecord
   end
 
   def remove_hashtag(hashtag_or_name)
-    hashtag = hashtag_or_name.is_a?(Hashtag) ? hashtag_or_name : Hashtag.find_by(name: hashtag_or_name.to_s.strip.downcase.delete_prefix('#'))
+    hashtag = hashtag_or_name.is_a?(Hashtag) ? hashtag_or_name : Hashtag.find_by(name: hashtag_or_name.to_s.strip.downcase.delete_prefix("#"))
     return false unless hashtag
 
     hashtags.delete(hashtag)
@@ -180,7 +190,7 @@ class Gif < ApplicationRecord
   def hashtag_names=(names)
     return if names.blank?
 
-    tag_names = names.is_a?(Array) ? names : [names]
+    tag_names = names.is_a?(Array) ? names : [ names ]
     tag_names = tag_names.map(&:to_s).map(&:strip).reject(&:blank?).uniq
 
     new_hashtags = tag_names.map do |name|
@@ -204,6 +214,17 @@ class Gif < ApplicationRecord
 
   def youtube_timestamps_changed?
     youtube_timestamp_start_changed? || youtube_timestamp_end_changed?
+  end
+
+  def youtube_video_url_is_safe
+    return if youtube_video_url.blank?
+
+    uri = URI.parse(youtube_video_url)
+    unless uri.host&.match?(/\A(www\.)?(youtube\.com|youtu\.be)\z/i) && uri.scheme.in?(%w[http https])
+      errors.add(:youtube_video_url, "must be a valid YouTube URL")
+    end
+  rescue URI::InvalidURIError
+    errors.add(:youtube_video_url, "is not a valid URL")
   end
 
   def clear_feed_caches

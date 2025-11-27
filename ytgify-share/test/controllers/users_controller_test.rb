@@ -24,25 +24,25 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should show liked tab when requested" do
-    get user_path(@alice.username, tab: 'liked')
+    get user_path(@alice.username, tab: "liked")
     assert_response :success
     assert_select "nav a.border-indigo-600", text: /Liked/
   end
 
   test "should show collections tab when requested" do
-    get user_path(@alice.username, tab: 'collections')
+    get user_path(@alice.username, tab: "collections")
     assert_response :success
     assert_select "nav a.border-indigo-600", text: /Collections/
   end
 
   test "should show followers tab when requested" do
-    get user_path(@alice.username, tab: 'followers')
+    get user_path(@alice.username, tab: "followers")
     assert_response :success
     assert_select "nav a.border-indigo-600", text: /Followers/
   end
 
   test "should show following tab when requested" do
-    get user_path(@alice.username, tab: 'following')
+    get user_path(@alice.username, tab: "following")
     assert_response :success
     assert_select "nav a.border-indigo-600", text: /Following/
   end
@@ -50,7 +50,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   # Removed: Rails handles RecordNotFound with 404 in production
 
   test "should default to gifs tab for invalid tab parameter" do
-    get user_path(@alice.username, tab: 'invalid_tab')
+    get user_path(@alice.username, tab: "invalid_tab")
     assert_response :success
     # Should default to gifs tab
     assert_select "nav a.border-indigo-600", text: /GIFs/
@@ -101,21 +101,21 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   # ========== PRIVACY TESTS ==========
 
   test "should show gifs tab to guests" do
-    get user_path(@alice.username, tab: 'gifs')
+    get user_path(@alice.username, tab: "gifs")
     assert_response :success
     # Guests should only see public GIFs (tested by controller logic)
   end
 
   test "should show all gifs tab to owner" do
     sign_in @alice
-    get user_path(@alice.username, tab: 'gifs')
+    get user_path(@alice.username, tab: "gifs")
     assert_response :success
     # Owner should see all privacy levels (tested by controller logic)
   end
 
   test "should show collections tab to non-owners" do
     sign_in @bob
-    get user_path(@alice.username, tab: 'collections')
+    get user_path(@alice.username, tab: "collections")
     assert_response :success
     # Non-owners should only see public collections (tested by controller logic)
   end
@@ -171,7 +171,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should support turbo frame for tab switching" do
-    get user_path(@alice.username, tab: 'liked')
+    get user_path(@alice.username, tab: "liked")
     assert_response :success
     assert_select "turbo-frame#profile_content"
   end

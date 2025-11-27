@@ -9,7 +9,7 @@ class CreateLikes < ActiveRecord::Migration[8.0]
 
     add_foreign_key :likes, :users
     add_foreign_key :likes, :gifs
-    add_index :likes, [:user_id, :gif_id], unique: true
+    add_index :likes, [ :user_id, :gif_id ], unique: true
     add_index :likes, :gif_id
     add_index :likes, :created_at
   end

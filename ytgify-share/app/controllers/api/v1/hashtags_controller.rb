@@ -3,7 +3,7 @@
 module Api
   module V1
     class HashtagsController < BaseController
-      skip_before_action :authenticate_user!, only: [:index, :show, :trending, :search]
+      skip_before_action :authenticate_user!, only: [ :index, :show, :trending, :search ]
 
       # GET /api/v1/hashtags
       def index
@@ -15,7 +15,7 @@ module Api
 
         render json: {
           hashtags: @hashtags.as_json(
-            only: [:id, :name, :slug, :usage_count, :created_at]
+            only: [ :id, :name, :slug, :usage_count, :created_at ]
           ),
           pagination: pagination_meta(total)
         }
@@ -27,11 +27,11 @@ module Api
                            .offset(offset)
                            .limit(per_page)
 
-        total = Hashtag.where('usage_count > 0').count
+        total = Hashtag.where("usage_count > 0").count
 
         render json: {
           hashtags: @hashtags.as_json(
-            only: [:id, :name, :slug, :usage_count, :created_at]
+            only: [ :id, :name, :slug, :usage_count, :created_at ]
           ),
           pagination: pagination_meta(total)
         }
@@ -50,7 +50,7 @@ module Api
 
         render json: {
           hashtag: @hashtag.as_json(
-            only: [:id, :name, :slug, :usage_count, :created_at]
+            only: [ :id, :name, :slug, :usage_count, :created_at ]
           ),
           gifs: @gifs,
           pagination: pagination_meta(@gifs.count)
@@ -59,8 +59,8 @@ module Api
 
       # GET /api/v1/hashtags/search?q=term
       def search
-        query = params[:q].to_s.strip.delete_prefix('#')
-        limit = [params[:limit]&.to_i || 10, 20].min
+        query = params[:q].to_s.strip.delete_prefix("#")
+        limit = [ params[:limit]&.to_i || 10, 20 ].min
 
         if query.blank?
           # Return trending hashtags when no query
@@ -69,14 +69,14 @@ module Api
           end
         else
           # Search by name prefix (case-insensitive)
-          @hashtags = Hashtag.where('LOWER(name) LIKE ?', "#{query.downcase}%")
+          @hashtags = Hashtag.where("LOWER(name) LIKE ?", "#{query.downcase}%")
                              .order(usage_count: :desc, name: :asc)
                              .limit(limit)
         end
 
         render json: {
           hashtags: @hashtags.as_json(
-            only: [:id, :name, :slug, :usage_count]
+            only: [ :id, :name, :slug, :usage_count ]
           ),
           query: query
         }
@@ -85,11 +85,11 @@ module Api
       private
 
       def page
-        [params[:page]&.to_i || 1, 1].max
+        [ params[:page]&.to_i || 1, 1 ].max
       end
 
       def per_page
-        [[params[:per_page]&.to_i || 20, 1].max, 100].min
+        [ [ params[:per_page]&.to_i || 20, 1 ].max, 100 ].min
       end
 
       def offset

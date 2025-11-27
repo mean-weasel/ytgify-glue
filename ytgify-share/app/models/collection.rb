@@ -17,7 +17,7 @@ class Collection < ApplicationRecord
   scope :private_collections, -> { where(is_public: false) }
   scope :recent, -> { order(created_at: :desc) }
   scope :by_user, ->(user_id) { where(user_id: user_id) }
-  scope :with_gifs, -> { where('gifs_count > 0') }
+  scope :with_gifs, -> { where("gifs_count > 0") }
 
   # Instance methods
   def add_gif(gif, position: nil)

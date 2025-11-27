@@ -48,33 +48,33 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
 
     initial_count = @gif.reload.like_count || 0
 
-    assert_difference('@gif.reload.like_count', 1) do
+    assert_difference("@gif.reload.like_count", 1) do
       post like_gif_path(@gif), as: :json
       assert_response :success
     end
 
     json = JSON.parse(response.body)
-    assert json['liked']
-    assert_equal initial_count + 1, json['like_count']
+    assert json["liked"]
+    assert_equal initial_count + 1, json["like_count"]
   end
 
   test "should destroy like when toggling off" do
     sign_in @bob
     Like.create!(user: @bob, gif: @gif)
 
-    assert_difference('@gif.reload.like_count', -1) do
+    assert_difference("@gif.reload.like_count", -1) do
       post like_gif_path(@gif), as: :json
       assert_response :success
     end
 
     json = JSON.parse(response.body)
-    assert_not json['liked']
+    assert_not json["liked"]
   end
 
   test "toggle creates Like record when none exists" do
     sign_in @bob
 
-    assert_difference('Like.count', 1) do
+    assert_difference("Like.count", 1) do
       post like_gif_path(@gif), as: :json
     end
 
@@ -85,7 +85,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
     Like.create!(user: @bob, gif: @gif)
 
-    assert_difference('Like.count', -1) do
+    assert_difference("Like.count", -1) do
       post like_gif_path(@gif), as: :json
     end
 
@@ -101,18 +101,18 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     json = JSON.parse(response.body)
-    assert_includes json, 'liked'
-    assert_includes json, 'like_count'
-    assert json['liked'].is_a?(TrueClass) || json['liked'].is_a?(FalseClass)
-    assert json['like_count'].is_a?(Integer)
+    assert_includes json, "liked"
+    assert_includes json, "like_count"
+    assert json["liked"].is_a?(TrueClass) || json["liked"].is_a?(FalseClass)
+    assert json["like_count"].is_a?(Integer)
   end
 
   test "should support Turbo Stream format" do
     sign_in @bob
 
-    post like_gif_path(@gif), headers: { 'Accept' => 'text/vnd.turbo-stream.html' }
+    post like_gif_path(@gif), headers: { "Accept" => "text/vnd.turbo-stream.html" }
     assert_response :success
-    assert_equal 'text/vnd.turbo-stream.html; charset=utf-8', response.content_type
+    assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
 
     assert_match /turbo-stream/, response.body
     assert_match /like_#{@gif.id}/, response.body
@@ -124,12 +124,12 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     # First toggle - should like
     post like_gif_path(@gif), as: :json
     json1 = JSON.parse(response.body)
-    assert json1['liked']
+    assert json1["liked"]
 
     # Second toggle - should unlike
     post like_gif_path(@gif), as: :json
     json2 = JSON.parse(response.body)
-    assert_not json2['liked']
+    assert_not json2["liked"]
   end
 
   # ========== COUNTER CACHE TESTS ==========
@@ -163,17 +163,17 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     post like_gif_path(@gif), as: :json
     assert_response :success
     json_bob = JSON.parse(response.body)
-    assert_includes json_bob, 'liked'
+    assert_includes json_bob, "liked"
 
     sign_in @alice
     post like_gif_path(@gif), as: :json
     assert_response :success
     json_alice = JSON.parse(response.body)
-    assert_includes json_alice, 'liked'
+    assert_includes json_alice, "liked"
 
     # Verify both users can successfully toggle likes (regardless of initial state)
-    assert_kind_of Integer, json_bob['like_count']
-    assert_kind_of Integer, json_alice['like_count']
+    assert_kind_of Integer, json_bob["like_count"]
+    assert_kind_of Integer, json_alice["like_count"]
   end
 
   test "user can like multiple gifs" do
@@ -206,7 +206,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     json = JSON.parse(response.body)
-    assert json['liked']
+    assert json["liked"]
   end
 
   test "can like unlisted gif" do
@@ -222,7 +222,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     json = JSON.parse(response.body)
-    assert json['liked']
+    assert json["liked"]
   end
 
   test "can like own gif" do
@@ -232,7 +232,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     json = JSON.parse(response.body)
-    assert json['liked']
+    assert json["liked"]
   end
 
   private

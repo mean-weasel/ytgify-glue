@@ -2,9 +2,9 @@ class Comment < ApplicationRecord
   # Associations
   belongs_to :user
   belongs_to :gif, counter_cache: :comment_count, touch: true
-  belongs_to :parent_comment, class_name: 'Comment', optional: true, counter_cache: :reply_count
+  belongs_to :parent_comment, class_name: "Comment", optional: true, counter_cache: :reply_count
 
-  has_many :replies, class_name: 'Comment', foreign_key: :parent_comment_id, dependent: :destroy
+  has_many :replies, class_name: "Comment", foreign_key: :parent_comment_id, dependent: :destroy
 
   # Validations
   validates :user_id, presence: true
@@ -26,7 +26,7 @@ class Comment < ApplicationRecord
   # Instance methods
   def soft_delete!
     transaction do
-      update(deleted_at: Time.current, content: '[deleted]')
+      update(deleted_at: Time.current, content: "[deleted]")
 
       # Manually decrement counters since soft delete doesn't trigger destroy callbacks
       gif.decrement!(:comment_count)

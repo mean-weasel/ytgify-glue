@@ -18,7 +18,7 @@ class ChangeActiveStorageAttachmentsRecordIdToUuid < ActiveRecord::Migration[8.0
     # Recreate indexes
     add_index :active_storage_attachments, :blob_id
     add_index :active_storage_attachments,
-      [:record_type, :record_id, :name, :blob_id],
+      [ :record_type, :record_id, :name, :blob_id ],
       name: :index_active_storage_attachments_uniqueness,
       unique: true
   end
@@ -39,7 +39,7 @@ class ChangeActiveStorageAttachmentsRecordIdToUuid < ActiveRecord::Migration[8.0
     # Recreate indexes
     add_index :active_storage_attachments, :blob_id
     add_index :active_storage_attachments,
-      [:record_type, :record_id, :name, :blob_id],
+      [ :record_type, :record_id, :name, :blob_id ],
       name: :index_active_storage_attachments_uniqueness,
       unique: true
   end

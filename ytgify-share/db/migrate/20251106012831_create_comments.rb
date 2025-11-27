@@ -24,7 +24,7 @@ class CreateComments < ActiveRecord::Migration[8.0]
     add_index :comments, :user_id
     add_index :comments, :gif_id
     add_index :comments, :parent_comment_id
-    add_index :comments, [:gif_id, :created_at]
+    add_index :comments, [ :gif_id, :created_at ]
     add_index :comments, :deleted_at
     add_index :comments, :created_at
   end

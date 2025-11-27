@@ -3,9 +3,9 @@
 module Api
   module V1
     class GifsController < BaseController
-      skip_before_action :authenticate_user!, only: [:index, :show]
-      before_action :set_gif, only: [:show, :update, :destroy]
-      before_action :authorize_gif_owner!, only: [:update, :destroy]
+      skip_before_action :authenticate_user!, only: [ :index, :show ]
+      before_action :set_gif, only: [ :show, :update, :destroy ]
+      before_action :authorize_gif_owner!, only: [ :update, :destroy ]
 
       # GET /api/v1/gifs
       def index
@@ -15,12 +15,12 @@ module Api
         gifs = gifs.by_user(params[:user_id]) if params[:user_id].present?
 
         # Filter by type
-        gifs = gifs.originals if params[:type] == 'original'
-        gifs = gifs.remixes if params[:type] == 'remix'
+        gifs = gifs.originals if params[:type] == "original"
+        gifs = gifs.remixes if params[:type] == "remix"
 
         # Pagination
         page = params[:page]&.to_i || 1
-        per_page = [params[:per_page]&.to_i || 20, 100].min
+        per_page = [ params[:per_page]&.to_i || 20, 100 ].min
 
         gifs = gifs.offset((page - 1) * per_page).limit(per_page)
 
@@ -59,12 +59,12 @@ module Api
           end
 
           render json: {
-            message: 'GIF created successfully',
+            message: "GIF created successfully",
             gif: gif_json(gif)
           }, status: :created
         else
           render json: {
-            error: 'GIF creation failed',
+            error: "GIF creation failed",
             details: gif.errors.full_messages
           }, status: :unprocessable_entity
         end
@@ -74,12 +74,12 @@ module Api
       def update
         if @gif.update(gif_update_params)
           render json: {
-            message: 'GIF updated successfully',
+            message: "GIF updated successfully",
             gif: gif_json(@gif)
           }, status: :ok
         else
           render json: {
-            error: 'GIF update failed',
+            error: "GIF update failed",
             details: @gif.errors.full_messages
           }, status: :unprocessable_entity
         end
@@ -88,7 +88,7 @@ module Api
       # DELETE /api/v1/gifs/:id
       def destroy
         @gif.soft_delete!
-        render json: { message: 'GIF deleted successfully' }, status: :ok
+        render json: { message: "GIF deleted successfully" }, status: :ok
       end
 
       private

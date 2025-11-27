@@ -11,10 +11,10 @@ class AuthenticationTest < ApplicationSystemTestCase
     visit new_user_registration_path
 
     # Fill in sign up form
-    @page.fill('input[name="user[username]"]', 'newuser123')
-    @page.fill('input[name="user[email]"]', 'newuser@example.com')
-    @page.fill('input[name="user[password]"]', 'password123')
-    @page.fill('input[name="user[password_confirmation]"]', 'password123')
+    @page.fill('input[name="user[username]"]', "newuser123")
+    @page.fill('input[name="user[email]"]', "newuser@example.com")
+    @page.fill('input[name="user[password]"]', "password123")
+    @page.fill('input[name="user[password_confirmation]"]', "password123")
 
     # Submit form using requestSubmit which triggers all form events
     @page.expect_navigation do
@@ -26,7 +26,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     assert_page_has_text "newuser123"
 
     # Verify user was created
-    assert User.find_by(email: 'newuser@example.com').present?
+    assert User.find_by(email: "newuser@example.com").present?
 
     take_screenshot("auth-signup-success")
   end
@@ -37,10 +37,10 @@ class AuthenticationTest < ApplicationSystemTestCase
     visit new_user_registration_path
 
     # Try to sign up with existing email
-    @page.fill('input[name="user[username]"]', 'differentuser')
+    @page.fill('input[name="user[username]"]', "differentuser")
     @page.fill('input[name="user[email]"]', existing_user.email)
-    @page.fill('input[name="user[password]"]', 'password123')
-    @page.fill('input[name="user[password_confirmation]"]', 'password123')
+    @page.fill('input[name="user[password]"]', "password123")
+    @page.fill('input[name="user[password_confirmation]"]', "password123")
 
     @page.evaluate('document.querySelector("form").submit()')
     wait_for_page_load
@@ -61,9 +61,9 @@ class AuthenticationTest < ApplicationSystemTestCase
 
     # Try to sign up with existing username
     @page.fill('input[name="user[username]"]', existing_user.username)
-    @page.fill('input[name="user[email]"]', 'newemail@example.com')
-    @page.fill('input[name="user[password]"]', 'password123')
-    @page.fill('input[name="user[password_confirmation]"]', 'password123')
+    @page.fill('input[name="user[email]"]', "newemail@example.com")
+    @page.fill('input[name="user[password]"]', "password123")
+    @page.fill('input[name="user[password_confirmation]"]', "password123")
 
     @page.evaluate('document.querySelector("form").submit()')
     wait_for_page_load
@@ -77,10 +77,10 @@ class AuthenticationTest < ApplicationSystemTestCase
   test "sign up fails with short password" do
     visit new_user_registration_path
 
-    @page.fill('input[name="user[username]"]', 'newuser456')
-    @page.fill('input[name="user[email]"]', 'short@example.com')
-    @page.fill('input[name="user[password]"]', 'short')  # Too short
-    @page.fill('input[name="user[password_confirmation]"]', 'short')
+    @page.fill('input[name="user[username]"]', "newuser456")
+    @page.fill('input[name="user[email]"]', "short@example.com")
+    @page.fill('input[name="user[password]"]', "short")  # Too short
+    @page.fill('input[name="user[password_confirmation]"]', "short")
 
     @page.evaluate('document.querySelector("form").submit()')
     wait_for_page_load
@@ -115,7 +115,7 @@ class AuthenticationTest < ApplicationSystemTestCase
 
     # Fill in sign in form
     @page.fill('input[name="user[email]"]', user.email)
-    @page.fill('input[name="user[password]"]', 'password123')
+    @page.fill('input[name="user[password]"]', "password123")
 
     # Submit form using requestSubmit which triggers all form events
     @page.expect_navigation do
@@ -132,8 +132,8 @@ class AuthenticationTest < ApplicationSystemTestCase
   test "sign in fails with invalid email" do
     visit new_user_session_path
 
-    @page.fill('input[name="user[email]"]', 'nonexistent@example.com')
-    @page.fill('input[name="user[password]"]', 'password123')
+    @page.fill('input[name="user[email]"]', "nonexistent@example.com")
+    @page.fill('input[name="user[password]"]', "password123")
 
     @page.evaluate('document.querySelector("form").submit()')
     wait_for_page_load
@@ -150,7 +150,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     visit new_user_session_path
 
     @page.fill('input[name="user[email]"]', user.email)
-    @page.fill('input[name="user[password]"]', 'wrongpassword')
+    @page.fill('input[name="user[password]"]', "wrongpassword")
 
     @page.evaluate('document.querySelector("form").submit()')
     wait_for_page_load
@@ -171,7 +171,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     # Sign in
     user = users(:e2e_test_user)
     @page.fill('input[name="user[email]"]', user.email)
-    @page.fill('input[name="user[password]"]', 'password123')
+    @page.fill('input[name="user[password]"]', "password123")
     @page.expect_navigation do
       @page.evaluate('document.querySelector("form").requestSubmit()')
     end

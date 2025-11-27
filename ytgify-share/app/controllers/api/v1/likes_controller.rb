@@ -12,7 +12,7 @@ module Api
           # Unlike (remove like)
           existing_like.destroy
           render json: {
-            message: 'Like removed',
+            message: "Like removed",
             liked: false,
             like_count: gif.reload.like_count
           }, status: :ok
@@ -22,13 +22,13 @@ module Api
 
           if like.save
             render json: {
-              message: 'Like added',
+              message: "Like added",
               liked: true,
               like_count: gif.reload.like_count
             }, status: :created
           else
             render json: {
-              error: 'Failed to like',
+              error: "Failed to like",
               details: like.errors.full_messages
             }, status: :unprocessable_entity
           end
@@ -42,7 +42,7 @@ module Api
 
         like.destroy
         render json: {
-          message: 'Like removed',
+          message: "Like removed",
           liked: false,
           like_count: gif.reload.like_count
         }, status: :ok

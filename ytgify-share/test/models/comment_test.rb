@@ -192,7 +192,7 @@ class CommentTest < ActiveSupport::TestCase
       parent_comment: parent
     )
 
-    assert_difference('Comment.count', -2) do
+    assert_difference("Comment.count", -2) do
       parent.destroy
     end
   end
@@ -244,7 +244,7 @@ class CommentTest < ActiveSupport::TestCase
     sleep 0.01
     comment3 = Comment.create!(user: @alice, gif: @gif, content: "Third")
 
-    recent = Comment.recent.where(id: [comment1.id, comment2.id, comment3.id])
+    recent = Comment.recent.where(id: [ comment1.id, comment2.id, comment3.id ])
     assert_equal comment3.id, recent.first.id
   end
 
@@ -401,7 +401,7 @@ class CommentTest < ActiveSupport::TestCase
 
   test "creates notification after create" do
     # Mock NotificationService to verify it's called
-    assert_difference('Comment.count', 1) do
+    assert_difference("Comment.count", 1) do
       Comment.create!(user: @bob, gif: @gif, content: "Test comment")
     end
     # Notification creation is tested in NotificationService tests
@@ -409,7 +409,7 @@ class CommentTest < ActiveSupport::TestCase
 
   test "handles notification creation failure gracefully" do
     # Should not prevent comment creation if notification fails
-    assert_difference('Comment.count', 1) do
+    assert_difference("Comment.count", 1) do
       comment = Comment.new(user: @bob, gif: @gif, content: "Test")
       comment.save!
     end

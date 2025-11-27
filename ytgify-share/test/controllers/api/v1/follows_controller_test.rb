@@ -49,7 +49,7 @@ module Api
       # ========== TOGGLE FOLLOW SUCCESS TESTS ==========
 
       test "should create follow when not following" do
-        assert_difference('Follow.count', 1) do
+        assert_difference("Follow.count", 1) do
           post api_v1_user_follow_path(user_id: @bob.id),
                headers: auth_headers(@alice),
                as: :json
@@ -65,7 +65,7 @@ module Api
       test "should destroy follow when already following" do
         Follow.create!(follower: @alice, following: @bob)
 
-        assert_difference('Follow.count', -1) do
+        assert_difference("Follow.count", -1) do
           post api_v1_user_follow_path(user_id: @bob.id),
                headers: auth_headers(@alice),
                as: :json
@@ -77,7 +77,7 @@ module Api
       end
 
       test "DELETE should also toggle follow" do
-        assert_difference('Follow.count', 1) do
+        assert_difference("Follow.count", 1) do
           delete api_v1_user_follow_path(user_id: @bob.id) + ".json",
                  headers: auth_headers(@alice)
         end
@@ -117,7 +117,7 @@ module Api
       # ========== SELF-FOLLOW PREVENTION ==========
 
       test "should prevent user from following themselves" do
-        assert_no_difference('Follow.count') do
+        assert_no_difference("Follow.count") do
           post api_v1_user_follow_path(user_id: @alice.id),
                headers: auth_headers(@alice),
                as: :json
@@ -449,7 +449,7 @@ module Api
           jti: user.jti,
           exp: 15.minutes.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
 
       def generate_expired_jwt_token(user)
@@ -461,7 +461,7 @@ module Api
           jti: user.jti,
           exp: 1.hour.ago.to_i  # Expired
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
     end
   end

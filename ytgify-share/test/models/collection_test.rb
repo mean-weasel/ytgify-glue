@@ -56,7 +56,7 @@ class CollectionTest < ActiveSupport::TestCase
   end
 
   test "add_gif should add gif to collection" do
-    assert_difference '@collection.gifs.count', 1 do
+    assert_difference "@collection.gifs.count", 1 do
       @collection.add_gif(@gif)
     end
   end
@@ -64,7 +64,7 @@ class CollectionTest < ActiveSupport::TestCase
   test "add_gif should not add duplicate" do
     @collection.add_gif(@gif)
 
-    assert_no_difference '@collection.gifs.count' do
+    assert_no_difference "@collection.gifs.count" do
       result = @collection.add_gif(@gif)
       assert_not result
     end
@@ -73,7 +73,7 @@ class CollectionTest < ActiveSupport::TestCase
   test "remove_gif should remove gif" do
     @collection.add_gif(@gif)
 
-    assert_difference '@collection.gifs.count', -1 do
+    assert_difference "@collection.gifs.count", -1 do
       @collection.remove_gif(@gif)
     end
   end
@@ -112,7 +112,7 @@ class CollectionTest < ActiveSupport::TestCase
     @collection.add_gif(gif3)
 
     # Reorder: gif3, gif, gif2
-    @collection.reorder_gifs([gif3.id, @gif.id, gif2.id])
+    @collection.reorder_gifs([ gif3.id, @gif.id, gif2.id ])
 
     collection_gifs = @collection.collection_gifs.order(:position)
     assert_equal gif3.id, collection_gifs[0].gif_id
@@ -225,7 +225,7 @@ class CollectionTest < ActiveSupport::TestCase
     @collection.add_gif(gif3)
 
     positions = @collection.collection_gifs.order(:position).pluck(:position)
-    assert_equal [1, 2, 3], positions
+    assert_equal [ 1, 2, 3 ], positions
   end
 
   # ========== REMOVE_GIF EDGE CASES ==========
@@ -260,7 +260,7 @@ class CollectionTest < ActiveSupport::TestCase
     @collection.add_gif(gif3)
 
     # Only reorder gif3 and gif2, leave gif1 position unchanged
-    @collection.reorder_gifs([gif3.id, gif2.id])
+    @collection.reorder_gifs([ gif3.id, gif2.id ])
 
     gif3_position = @collection.collection_gifs.find_by(gif: gif3).position
     gif2_position = @collection.collection_gifs.find_by(gif: gif2).position
@@ -274,7 +274,7 @@ class CollectionTest < ActiveSupport::TestCase
 
     # Try to reorder with non-existent ID
     assert_nothing_raised do
-      @collection.reorder_gifs([99999, @gif.id])
+      @collection.reorder_gifs([ 99999, @gif.id ])
     end
   end
 
@@ -296,7 +296,7 @@ class CollectionTest < ActiveSupport::TestCase
   test "should destroy collection_gifs when collection destroyed" do
     @collection.add_gif(@gif)
 
-    assert_difference('CollectionGif.count', -1) do
+    assert_difference("CollectionGif.count", -1) do
       @collection.destroy
     end
   end

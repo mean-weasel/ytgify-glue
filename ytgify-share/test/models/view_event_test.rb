@@ -18,30 +18,30 @@ class ViewEventTest < ActiveSupport::TestCase
     view_event = ViewEvent.new(
       gif: @gif,
       viewer: @user,
-      viewer_type: 'User'
+      viewer_type: "User"
     )
     assert view_event.valid?
     assert view_event.save
   end
 
   test "should require gif" do
-    view_event = ViewEvent.new(viewer: @user, viewer_type: 'User')
+    view_event = ViewEvent.new(viewer: @user, viewer_type: "User")
     assert_not view_event.valid?
     assert_includes view_event.errors[:gif_id], "can't be blank"
   end
 
   test "viewer_type defaults to User" do
     view_event = ViewEvent.create!(gif: @gif, viewer: @user)
-    assert_equal 'User', view_event.viewer_type
+    assert_equal "User", view_event.viewer_type
   end
 
   test "record_view should create view event" do
-    assert_difference 'ViewEvent.count', 1 do
+    assert_difference "ViewEvent.count", 1 do
       ViewEvent.record_view(
         gif: @gif,
         viewer: @user,
-        ip_address: '127.0.0.1',
-        user_agent: 'Test Browser'
+        ip_address: "127.0.0.1",
+        user_agent: "Test Browser"
       )
     end
   end
@@ -84,12 +84,12 @@ class ViewEventTest < ActiveSupport::TestCase
     view_event = ViewEvent.record_view(
       gif: @gif,
       viewer: nil,
-      ip_address: '127.0.0.1'
+      ip_address: "127.0.0.1"
     )
 
-    assert_equal 'Anonymous', view_event.viewer_type
+    assert_equal "Anonymous", view_event.viewer_type
     assert_nil view_event.viewer_id
-    assert_equal '127.0.0.1', view_event.ip_address
+    assert_equal "127.0.0.1", view_event.ip_address
   end
 
   test "unique_viewers_count should return count of unique views" do
@@ -175,13 +175,13 @@ class ViewEventTest < ActiveSupport::TestCase
   end
 
   test "top_referrers should return most common referrers" do
-    ViewEvent.record_view(gif: @gif, viewer: @user, referer: 'https://example.com')
-    ViewEvent.record_view(gif: @gif, viewer: @user, referer: 'https://example.com')
-    ViewEvent.record_view(gif: @gif, viewer: @user, referer: 'https://other.com')
+    ViewEvent.record_view(gif: @gif, viewer: @user, referer: "https://example.com")
+    ViewEvent.record_view(gif: @gif, viewer: @user, referer: "https://example.com")
+    ViewEvent.record_view(gif: @gif, viewer: @user, referer: "https://other.com")
 
     referrers = ViewEvent.top_referrers(@gif, limit: 10)
 
-    assert_equal 2, referrers['https://example.com']
-    assert_equal 1, referrers['https://other.com']
+    assert_equal 2, referrers["https://example.com"]
+    assert_equal 1, referrers["https://other.com"]
   end
 end

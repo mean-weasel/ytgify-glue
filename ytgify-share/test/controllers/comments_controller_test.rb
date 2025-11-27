@@ -16,7 +16,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   # ========== CREATE ACTION TESTS ==========
 
   test "should require authentication to create comment" do
-    assert_no_difference 'Comment.count' do
+    assert_no_difference "Comment.count" do
       post gif_comments_path(@alice_gif), params: { comment: { content: "Nice!" } }
     end
     assert_redirected_to new_user_session_path
@@ -25,7 +25,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should create top-level comment when authenticated" do
     sign_in @alice
 
-    assert_difference 'Comment.count', 1 do
+    assert_difference "Comment.count", 1 do
       assert_difference -> { @alice_gif.reload.comment_count }, 1 do
         post gif_comments_path(@alice_gif), params: { comment: { content: "Great GIF!" } }, as: :turbo_stream
       end
@@ -43,7 +43,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
     parent_comment = @alice_comment
 
-    assert_difference 'Comment.count', 1 do
+    assert_difference "Comment.count", 1 do
       assert_difference -> { parent_comment.reload.reply_count }, 1 do
         assert_difference -> { @bob_gif.reload.comment_count }, 1 do
           post gif_comments_path(@bob_gif),
@@ -87,7 +87,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should not create comment with empty content" do
     sign_in @alice
 
-    assert_no_difference 'Comment.count' do
+    assert_no_difference "Comment.count" do
       post gif_comments_path(@alice_gif),
            params: { comment: { content: "" } },
            as: :turbo_stream
@@ -262,7 +262,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   # ========== DESTROY ACTION TESTS ==========
 
   test "should require authentication to destroy comment" do
-    assert_no_difference 'Comment.count' do
+    assert_no_difference "Comment.count" do
       delete comment_path(@alice_comment)
     end
     assert_redirected_to new_user_session_path
@@ -271,7 +271,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should allow comment owner to soft delete their comment" do
     sign_in @alice
 
-    assert_no_difference 'Comment.count' do
+    assert_no_difference "Comment.count" do
       delete comment_path(@alice_comment), as: :turbo_stream
     end
 
@@ -282,7 +282,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should allow gif owner to delete comments on their gif" do
     sign_in @bob  # Bob owns the gif
 
-    assert_no_difference 'Comment.count' do
+    assert_no_difference "Comment.count" do
       delete comment_path(@alice_comment), as: :turbo_stream  # Alice's comment on Bob's gif
     end
 
@@ -390,7 +390,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     # Create a reply to an existing reply
-    assert_difference 'Comment.count', 1 do
+    assert_difference "Comment.count", 1 do
       post gif_comments_path(@bob_gif),
            params: { comment: { content: "Deep reply", parent_comment_id: @bob_reply.id } },
            as: :turbo_stream

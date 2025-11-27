@@ -368,12 +368,12 @@ module Api
 
       test "all feed endpoints return consistent JSON structure" do
         endpoints = [
-          [:get, api_v1_feed_path, auth_headers(@alice)],
-          [:get, api_v1_feed_public_path, {}],
-          [:get, api_v1_feed_trending_path, {}],
-          [:get, api_v1_feed_recent_path, {}],
-          [:get, api_v1_feed_popular_path, {}],
-          [:get, api_v1_feed_following_path, auth_headers(@alice)]
+          [ :get, api_v1_feed_path, auth_headers(@alice) ],
+          [ :get, api_v1_feed_public_path, {} ],
+          [ :get, api_v1_feed_trending_path, {} ],
+          [ :get, api_v1_feed_recent_path, {} ],
+          [ :get, api_v1_feed_popular_path, {} ],
+          [ :get, api_v1_feed_following_path, auth_headers(@alice) ]
         ]
 
         endpoints.each do |method, path, headers|
@@ -404,7 +404,7 @@ module Api
           jti: user.jti,
           exp: 15.minutes.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
 
       def generate_expired_jwt_token(user)
@@ -416,7 +416,7 @@ module Api
           jti: user.jti,
           exp: 1.hour.ago.to_i  # Expired
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
     end
   end

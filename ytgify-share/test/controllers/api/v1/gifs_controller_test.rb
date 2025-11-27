@@ -48,7 +48,7 @@ module Api
         patch api_v1_gif_path(gif),
               params: {
                 gif: {
-                  hashtag_names: ["updated", "newtag"]
+                  hashtag_names: [ "updated", "newtag" ]
                 }
               },
               headers: @auth_headers,
@@ -69,7 +69,7 @@ module Api
           privacy: :public_access
         )
         # Add hashtags after creation
-        gif.update!(hashtag_names: ["showtest", "visible"])
+        gif.update!(hashtag_names: [ "showtest", "visible" ])
 
         get api_v1_gif_path(gif), as: :json
 
@@ -88,7 +88,7 @@ module Api
           title: "Public GIF with Tags",
           privacy: :public_access
         )
-        gif.update!(hashtag_names: ["indextest", "public"])
+        gif.update!(hashtag_names: [ "indextest", "public" ])
 
         get api_v1_gifs_path, as: :json
 
@@ -152,7 +152,7 @@ module Api
           sub: user.id,
           exp: 24.hours.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
     end
   end

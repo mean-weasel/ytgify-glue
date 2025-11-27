@@ -70,7 +70,7 @@ class HashtagTest < ActiveSupport::TestCase
   end
 
   test "find_or_create_by_name should create new hashtag" do
-    assert_difference 'Hashtag.count', 1 do
+    assert_difference "Hashtag.count", 1 do
       Hashtag.find_or_create_by_name("newhashtag")
     end
   end

@@ -160,10 +160,10 @@
         </div>
 
         <!-- Video Source -->
-        <% if @gif.youtube_video_url.present? %>
+        <% if @gif.safe_youtube_url.present? %>
           <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
             <h3 class="font-semibold text-gray-900 mb-3">Source</h3>
-            <%= link_to @gif.youtube_video_url,
+            <%= link_to @gif.safe_youtube_url,
                 target: "_blank",
                 rel: "noopener noreferrer",
                 class: "flex items-center space-x-2 text-indigo-600 hover:text-indigo-700" do %>

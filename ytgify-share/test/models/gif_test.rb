@@ -638,7 +638,7 @@ class GifTest < ActiveSupport::TestCase
       resolution_height: 270
     )
 
-    popular = Gif.popular.where(id: [gif1.id, gif2.id])
+    popular = Gif.popular.where(id: [ gif1.id, gif2.id ])
     assert_equal gif1.id, popular.first.id
   end
 
@@ -709,7 +709,7 @@ class GifTest < ActiveSupport::TestCase
   end
 
   test "hashtag_names setter creates and associates hashtags" do
-    @public_gif.hashtag_names = ["newhashtag1", "newhashtag2"]
+    @public_gif.hashtag_names = [ "newhashtag1", "newhashtag2" ]
     @public_gif.save!
 
     @public_gif.reload

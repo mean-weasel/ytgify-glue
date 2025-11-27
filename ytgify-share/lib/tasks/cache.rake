@@ -16,13 +16,13 @@ namespace :cache do
     start_time = Time.current
 
     # Warm trending cache (first 3 pages)
-    Rake::Task['cache:warm:trending'].invoke
+    Rake::Task["cache:warm:trending"].invoke
 
     # Warm popular cache (first 3 pages)
-    Rake::Task['cache:warm:popular'].invoke
+    Rake::Task["cache:warm:popular"].invoke
 
     # Warm trending hashtags cache
-    Rake::Task['cache:warm:hashtags'].invoke
+    Rake::Task["cache:warm:hashtags"].invoke
 
     elapsed = (Time.current - start_time).round(2)
     puts "✅ All caches warmed successfully in #{elapsed}s"
@@ -99,8 +99,8 @@ namespace :cache do
   task refresh: :environment do
     puts "♻️  Refreshing all caches..."
 
-    Rake::Task['cache:clear'].invoke
-    Rake::Task['cache:warm'].invoke
+    Rake::Task["cache:clear"].invoke
+    Rake::Task["cache:warm"].invoke
 
     puts "✅ All caches refreshed"
   end

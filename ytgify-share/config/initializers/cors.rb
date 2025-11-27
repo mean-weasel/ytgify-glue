@@ -14,14 +14,14 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       origins(
         /chrome-extension:\/\/.*/,
         /moz-extension:\/\/.*/,
-        ENV.fetch('FRONTEND_URL', 'https://ytgify.com'),  # Production web app domain
+        ENV.fetch("FRONTEND_URL", "https://ytgify.com"),  # Production web app domain
         /https:\/\/ytgify\.(com|app)/  # Allow both .com and .app domains
       )
 
-      resource '/api/*',
+      resource "/api/*",
         headers: :any,
-        methods: [:get, :post, :put, :patch, :delete, :options, :head],
-        expose: ['Authorization'],
+        methods: [ :get, :post, :put, :patch, :delete, :options, :head ],
+        expose: [ "Authorization" ],
         credentials: true,  # Allow credentials with specific origins
         max_age: 3600
     end
@@ -30,12 +30,12 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
   # Development: Allow all origins for easier testing
   if Rails.env.development?
     allow do
-      origins '*'
+      origins "*"
 
-      resource '*',
+      resource "*",
         headers: :any,
-        methods: [:get, :post, :put, :patch, :delete, :options, :head],
-        expose: ['Authorization'],
+        methods: [ :get, :post, :put, :patch, :delete, :options, :head ],
+        expose: [ "Authorization" ],
         credentials: false,  # Must be false when using wildcard
         max_age: 3600
     end

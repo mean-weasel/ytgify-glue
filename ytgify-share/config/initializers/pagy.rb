@@ -2,4 +2,4 @@
 # Customize Pagy's behavior and enable extras
 # See https://ddnexus.github.io/pagy/docs/api/pagy
 
-require 'pagy/extras/array'
+require "pagy/extras/array"

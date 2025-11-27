@@ -13,9 +13,9 @@ class ViewEvent < ApplicationRecord
   scope :for_viewer, ->(viewer) { where(viewer: viewer) }
   scope :unique_views, -> { where(is_unique: true) }
   scope :in_period, ->(start_time, end_time) { where(created_at: start_time..end_time) }
-  scope :today, -> { where('created_at >= ?', Time.current.beginning_of_day) }
-  scope :this_week, -> { where('created_at >= ?', Time.current.beginning_of_week) }
-  scope :this_month, -> { where('created_at >= ?', Time.current.beginning_of_month) }
+  scope :today, -> { where("created_at >= ?", Time.current.beginning_of_day) }
+  scope :this_week, -> { where("created_at >= ?", Time.current.beginning_of_week) }
+  scope :this_month, -> { where("created_at >= ?", Time.current.beginning_of_month) }
 
   # Class methods
   def self.record_view(gif:, viewer: nil, ip_address: nil, user_agent: nil, referer: nil)
@@ -29,7 +29,7 @@ class ViewEvent < ApplicationRecord
     view_event = create!(
       gif: gif,
       viewer: viewer,
-      viewer_type: viewer ? viewer.class.name : 'Anonymous',
+      viewer_type: viewer ? viewer.class.name : "Anonymous",
       ip_address: ip_address,
       user_agent: user_agent,
       referer: referer,
@@ -56,7 +56,7 @@ class ViewEvent < ApplicationRecord
 
   def self.views_by_day(gif, days: 7)
     where(gif: gif)
-      .where('created_at >= ?', days.days.ago)
+      .where("created_at >= ?", days.days.ago)
       .group("DATE(created_at)")
       .count
   end

@@ -262,7 +262,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert first_notification.key?("message")
     assert first_notification.key?("read")
     assert first_notification.key?("created_at")
-    assert [true, false].include?(first_notification["read"])
+    assert [ true, false ].include?(first_notification["read"])
   end
 
   test "mark_as_read should update read_at timestamp" do

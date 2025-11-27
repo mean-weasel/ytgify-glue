@@ -14,7 +14,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
   test "create_remix_notification creates notification" do
     remix = create_remix(@bob, @source_gif)
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_remix_notification(remix)
     end
 
@@ -29,7 +29,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
   test "create_remix_notification does not notify when remixing own gif" do
     remix = create_remix(@alice, @source_gif)
 
-    assert_no_difference('Notification.count') do
+    assert_no_difference("Notification.count") do
       NotificationService.create_remix_notification(remix)
     end
   end
@@ -52,7 +52,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
       resolution_height: 270
     )
 
-    assert_no_difference('Notification.count') do
+    assert_no_difference("Notification.count") do
       NotificationService.create_remix_notification(remix)
     end
   end
@@ -77,7 +77,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
 
     like = Like.create!(user: @bob, gif: @source_gif)
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_like_notification(like)
     end
 
@@ -94,7 +94,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
 
     like = Like.create!(user: @alice, gif: @source_gif)
 
-    assert_no_difference('Notification.count') do
+    assert_no_difference("Notification.count") do
       NotificationService.create_like_notification(like)
     end
   end
@@ -108,7 +108,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
       content: "Great GIF!"
     )
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_comment_notification(comment)
     end
 
@@ -125,7 +125,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
       content: "My own comment"
     )
 
-    assert_no_difference('Notification.count') do
+    assert_no_difference("Notification.count") do
       NotificationService.create_comment_notification(comment)
     end
   end
@@ -138,7 +138,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
 
     follow = Follow.create!(follower_id: @bob.id, following_id: @alice.id)
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_follow_notification(follow)
     end
 
@@ -168,7 +168,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
       position: 0
     )
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_collection_add_notification(collection_gif)
     end
 
@@ -195,7 +195,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
       position: 0
     )
 
-    assert_no_difference('Notification.count') do
+    assert_no_difference("Notification.count") do
       NotificationService.create_collection_add_notification(collection_gif)
     end
   end
@@ -245,7 +245,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
 
     like = Like.create!(user: @bob, gif: private_gif)
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_like_notification(like)
     end
 
@@ -266,7 +266,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
       content: "Test comment"
     )
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_comment_notification(comment)
     end
   end
@@ -283,7 +283,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
     like1 = Like.create!(user: @bob, gif: @source_gif)
     like2 = Like.create!(user: user3, gif: @source_gif)
 
-    assert_difference('Notification.count', 2) do
+    assert_difference("Notification.count", 2) do
       NotificationService.create_like_notification(like1)
       NotificationService.create_like_notification(like2)
     end
@@ -293,7 +293,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
     comment1 = Comment.create!(user: @bob, gif: @source_gif, content: "First")
     comment2 = Comment.create!(user: @bob, gif: @source_gif, content: "Second")
 
-    assert_difference('Notification.count', 2) do
+    assert_difference("Notification.count", 2) do
       NotificationService.create_comment_notification(comment1)
       NotificationService.create_comment_notification(comment2)
     end
@@ -304,7 +304,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
     remix1 = create_remix(@bob, @source_gif)
     remix2 = create_remix(@alice, remix1)
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_remix_notification(remix2)
     end
 
@@ -369,7 +369,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
 
     follow = Follow.create!(follower_id: @bob.id, following_id: user3.id)
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_follow_notification(follow)
     end
 
@@ -391,7 +391,7 @@ class NotificationServiceTest < ActiveSupport::TestCase
       position: 0
     )
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       NotificationService.create_collection_add_notification(collection_gif)
     end
 

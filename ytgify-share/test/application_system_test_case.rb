@@ -22,16 +22,16 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     @test_server_url = "http://#{Capybara.server_host}:#{@capybara_server.port}"
 
     # Start Playwright
-    @playwright = Playwright.create(playwright_cli_executable_path: 'npx playwright')
+    @playwright = Playwright.create(playwright_cli_executable_path: "npx playwright")
     @browser = @playwright.playwright.chromium.launch(
       headless: true,  # Set to false for debugging
-      args: ['--disable-dev-shm-usage', '--no-sandbox']
+      args: [ "--disable-dev-shm-usage", "--no-sandbox" ]
     )
 
     # Create browser context with viewport
     @context = @browser.new_context(
       viewport: { width: 1400, height: 1400 },
-      locale: 'en-US'
+      locale: "en-US"
     )
 
     # Create page
@@ -65,12 +65,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   def wait_for_page_load
     # Wait for page to be fully loaded including JavaScript
-    @page.wait_for_load_state(state: 'domcontentloaded', timeout: 10000)
-    @page.wait_for_load_state(state: 'networkidle', timeout: 10000)
+    @page.wait_for_load_state(state: "domcontentloaded", timeout: 10000)
+    @page.wait_for_load_state(state: "networkidle", timeout: 10000)
 
     # Wait for Turbo to be ready
     begin
-      @page.wait_for_function('() => window.Turbo !== undefined', timeout: 5000)
+      @page.wait_for_function("() => window.Turbo !== undefined", timeout: 5000)
     rescue Playwright::TimeoutError
       # Turbo may not be loaded on all pages
     end
@@ -83,7 +83,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
     # Fill in form
     @page.fill('input[name="user[email]"]', user.email)
-    @page.fill('input[name="user[password]"]', 'password123')
+    @page.fill('input[name="user[password]"]', "password123")
 
     # Submit form using requestSubmit which triggers all form events
     @page.expect_navigation do
@@ -109,7 +109,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   def wait_for_turbo
     # Wait for Turbo progress bar to disappear
     begin
-      @page.wait_for_selector('.turbo-progress-bar', state: 'hidden', timeout: 5000)
+      @page.wait_for_selector(".turbo-progress-bar", state: "hidden", timeout: 5000)
     rescue Playwright::TimeoutError
       # Progress bar may not appear for fast requests
     end
@@ -122,13 +122,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # ========== ASSERTION HELPERS ==========
 
   def assert_page_has_text(text)
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert body_text.include?(text),
            "Expected page to contain '#{text}', but page contains:\n#{body_text[0..500]}"
   end
 
   def assert_page_missing_text(text)
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert !body_text.include?(text),
            "Expected page NOT to contain '#{text}', but it was found"
   end
@@ -159,7 +159,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     timeout = options[:timeout] || 1000
 
     begin
-      @page.wait_for_selector(selector, state: 'hidden', timeout: timeout)
+      @page.wait_for_selector(selector, state: "hidden", timeout: timeout)
       # Element not found or hidden - good!
     rescue Playwright::TimeoutError
       # Element still visible - assertion failed
@@ -170,7 +170,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   # ========== UTILITY HELPERS ==========
 
   def take_screenshot(name = "screenshot")
-    FileUtils.mkdir_p('tmp/screenshots')
+    FileUtils.mkdir_p("tmp/screenshots")
     timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
     filename = "#{name}-#{timestamp}.png"
     @page.screenshot(path: "tmp/screenshots/#{filename}")
@@ -179,7 +179,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   def accept_confirm(&block)
     # Handle JavaScript confirm dialogs
-    @page.once('dialog', ->(dialog) {
+    @page.once("dialog", ->(dialog) {
       dialog.accept
     })
     yield
@@ -187,7 +187,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   def dismiss_confirm(&block)
     # Handle JavaScript confirm dialogs
-    @page.once('dialog', ->(dialog) {
+    @page.once("dialog", ->(dialog) {
       dialog.dismiss
     })
     yield

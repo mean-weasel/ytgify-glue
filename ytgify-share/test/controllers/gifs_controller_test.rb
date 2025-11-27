@@ -65,7 +65,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   # ========== CREATE ACTION TESTS ==========
 
   test "should require authentication to create gif" do
-    assert_no_difference('Gif.count') do
+    assert_no_difference("Gif.count") do
       post gifs_path, params: {
         gif: { title: "New GIF" }
       }
@@ -76,7 +76,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should create gif with minimal params" do
     sign_in @alice
 
-    assert_difference('Gif.count', 1) do
+    assert_difference("Gif.count", 1) do
       post gifs_path, params: {
         gif: {
           title: "New Test GIF"
@@ -92,7 +92,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should create gif with full params" do
     sign_in @alice
 
-    assert_difference('Gif.count', 1) do
+    assert_difference("Gif.count", 1) do
       post gifs_path, params: {
         gif: {
           title: "Complete Test GIF",
@@ -109,7 +109,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should reject gif creation with title exceeding max length" do
     sign_in @alice
 
-    assert_no_difference('Gif.count') do
+    assert_no_difference("Gif.count") do
       post gifs_path, params: {
         gif: { title: "A" * 101 }
       }
@@ -124,7 +124,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   # ========== DESTROY ACTION TESTS ==========
 
   test "should require authentication to destroy gif" do
-    assert_no_difference('Gif.count') do
+    assert_no_difference("Gif.count") do
       delete gif_path(@alice_gif)
     end
     assert_redirected_to new_user_session_path
@@ -133,7 +133,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should allow owner to destroy their gif" do
     sign_in @alice
 
-    assert_difference('Gif.count', -1) do
+    assert_difference("Gif.count", -1) do
       delete gif_path(@alice_gif)
     end
 
@@ -144,7 +144,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should not allow non-owner to delete gif" do
     sign_in @bob
 
-    assert_no_difference('Gif.count') do
+    assert_no_difference("Gif.count") do
       delete gif_path(@alice_gif)
     end
 
@@ -215,11 +215,11 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     patch gif_path(@alice_gif), params: {
-      gif: { hashtag_names: ["new", "tags", "here"] }
+      gif: { hashtag_names: [ "new", "tags", "here" ] }
     }
 
     assert_redirected_to @alice_gif
-    assert_equal ["here", "new", "tags"], @alice_gif.reload.hashtag_names.sort
+    assert_equal [ "here", "new", "tags" ], @alice_gif.reload.hashtag_names.sort
   end
 
   test "should update privacy" do
@@ -295,7 +295,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
         title: new_title,
         description: new_description,
         privacy: new_privacy,
-        hashtag_names: ["multi", "update"]
+        hashtag_names: [ "multi", "update" ]
       }
     }
 
@@ -304,7 +304,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     assert_equal new_title, @alice_gif.title
     assert_equal new_description, @alice_gif.description
     assert @alice_gif.privacy_private_access?
-    assert_equal ["multi", "update"], @alice_gif.hashtag_names.sort
+    assert_equal [ "multi", "update" ], @alice_gif.hashtag_names.sort
   end
 
   test "should preserve unchanged fields when updating" do
@@ -363,7 +363,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     patch gif_path(@alice_gif), params: {
-      gif: { hashtag_names: ["  spaces  ", "UPPERCASE", "MiXeD"] }
+      gif: { hashtag_names: [ "  spaces  ", "UPPERCASE", "MiXeD" ] }
     }
 
     assert_redirected_to @alice_gif

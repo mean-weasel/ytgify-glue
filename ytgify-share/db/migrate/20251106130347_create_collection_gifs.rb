@@ -6,9 +6,9 @@ class CreateCollectionGifs < ActiveRecord::Migration[8.0]
       t.integer :position, default: 0, null: false
       t.datetime :added_at, default: -> { 'CURRENT_TIMESTAMP' }
 
-      t.index [:collection_id, :gif_id], unique: true, name: 'index_collection_gifs_unique'
+      t.index [ :collection_id, :gif_id ], unique: true, name: 'index_collection_gifs_unique'
       t.index :gif_id
-      t.index [:collection_id, :position]
+      t.index [ :collection_id, :position ]
     end
 
     add_foreign_key :collection_gifs, :collections

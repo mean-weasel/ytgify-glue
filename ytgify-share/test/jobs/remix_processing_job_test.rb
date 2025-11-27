@@ -51,11 +51,11 @@ class RemixProcessingJobTest < ActiveJob::TestCase
     )
 
     # THEN attach a test file using StringIO for more reliable attachment in parallel tests
-    test_file_path = Rails.root.join('test', 'fixtures', 'files', 'test.gif')
+    test_file_path = Rails.root.join("test", "fixtures", "files", "test.gif")
     @remix.file.attach(
       io: StringIO.new(File.binread(test_file_path)),
-      filename: 'test.gif',
-      content_type: 'image/gif'
+      filename: "test.gif",
+      content_type: "image/gif"
     )
     @remix.save!
 
@@ -113,11 +113,11 @@ class RemixProcessingJobTest < ActiveJob::TestCase
     initial_count = fresh_source.remix_count || 0
 
     # Attach file so job doesn't skip processing (use StringIO for reliable parallel test uploads)
-    file_path = Rails.root.join('test', 'fixtures', 'files', 'test.gif')
+    file_path = Rails.root.join("test", "fixtures", "files", "test.gif")
     fresh_remix.file.attach(
       io: StringIO.new(File.binread(file_path)),
-      filename: 'test.gif',
-      content_type: 'image/gif'
+      filename: "test.gif",
+      content_type: "image/gif"
     )
     fresh_remix.save!
 
@@ -137,8 +137,8 @@ class RemixProcessingJobTest < ActiveJob::TestCase
   test "job runs successfully with attached file" do
     # Attach a test file
     @remix.file.attach(
-      io: Rack::Test::UploadedFile.new(Rails.root.join('test', 'fixtures', 'files', 'test.gif'), 'image/gif'),
-      filename: 'test.gif'
+      io: Rack::Test::UploadedFile.new(Rails.root.join("test", "fixtures", "files", "test.gif"), "image/gif"),
+      filename: "test.gif"
     )
     @remix.save!
 
@@ -205,7 +205,7 @@ class RemixProcessingJobTest < ActiveJob::TestCase
       resolution_height: 270
     )
 
-    assert [0, nil].include?(new_gif.remix_count)
+    assert [ 0, nil ].include?(new_gif.remix_count)
   end
 
   test "multiple remix jobs increment counter correctly" do
@@ -265,19 +265,19 @@ class RemixProcessingJobTest < ActiveJob::TestCase
 
     # Attach files so jobs don't skip processing
     # Use StringIO with fresh binary data to avoid IO stream conflicts
-    test_file_path = Rails.root.join('test', 'fixtures', 'files', 'test.gif')
+    test_file_path = Rails.root.join("test", "fixtures", "files", "test.gif")
 
     remix1.file.attach(
       io: StringIO.new(File.binread(test_file_path)),
-      filename: 'test.gif',
-      content_type: 'image/gif'
+      filename: "test.gif",
+      content_type: "image/gif"
     )
     remix1.save!
 
     remix2.file.attach(
       io: StringIO.new(File.binread(test_file_path)),
-      filename: 'test.gif',
-      content_type: 'image/gif'
+      filename: "test.gif",
+      content_type: "image/gif"
     )
     remix2.save!
 
@@ -295,7 +295,7 @@ class RemixProcessingJobTest < ActiveJob::TestCase
     # Verify counter increments - only if files were successfully attached
     # Note: In tests, ActiveStorage attachments can be flaky, so jobs may skip processing
     final_count = fresh_source.reload.remix_count
-    files_attached_count = [remix1.file.attached?, remix2.file.attached?].count(true)
+    files_attached_count = [ remix1.file.attached?, remix2.file.attached? ].count(true)
 
     # Counter should increment by the number of successfully attached files
     assert_equal count_after_creates + files_attached_count, final_count,

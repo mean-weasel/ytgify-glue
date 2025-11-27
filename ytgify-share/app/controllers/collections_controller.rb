@@ -1,7 +1,7 @@
 class CollectionsController < ApplicationController
-  before_action :authenticate_user!, except: [:index, :show]
-  before_action :set_collection, only: [:show, :edit, :update, :destroy, :add_gif, :remove_gif]
-  before_action :authorize_collection!, only: [:edit, :update, :destroy, :add_gif, :remove_gif]
+  before_action :authenticate_user!, except: [ :index, :show ]
+  before_action :set_collection, only: [ :show, :edit, :update, :destroy, :add_gif, :remove_gif ]
+  before_action :authorize_collection!, only: [ :edit, :update, :destroy, :add_gif, :remove_gif ]
 
   def index
     @pagy, @collections = pagy(Collection.where(is_public: true)
@@ -50,7 +50,7 @@ class CollectionsController < ApplicationController
 
   def destroy
     @collection.destroy
-    redirect_to user_path(current_user.username, tab: 'collections'), notice: "Collection deleted."
+    redirect_to user_path(current_user.username, tab: "collections"), notice: "Collection deleted."
   end
 
   # Add a GIF to the collection

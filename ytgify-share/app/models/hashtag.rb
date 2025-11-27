@@ -13,17 +13,17 @@ class Hashtag < ApplicationRecord
   before_validation :normalize_name
 
   # Cache invalidation callbacks
-  after_commit :clear_hashtag_caches, on: [:create, :update, :destroy]
+  after_commit :clear_hashtag_caches, on: [ :create, :update, :destroy ]
 
   # Scopes
-  scope :trending, -> { where('usage_count > 0').order(usage_count: :desc, name: :asc) }
+  scope :trending, -> { where("usage_count > 0").order(usage_count: :desc, name: :asc) }
   scope :recent, -> { order(created_at: :desc) }
   scope :popular, -> { order(usage_count: :desc, name: :asc) }
   scope :alphabetical, -> { order(name: :asc) }
 
   # Class methods
   def self.find_or_create_by_name(name)
-    normalized = name.to_s.strip.downcase.delete_prefix('#')
+    normalized = name.to_s.strip.downcase.delete_prefix("#")
     return nil if normalized.blank?
 
     slug = normalized.parameterize
@@ -63,7 +63,7 @@ class Hashtag < ApplicationRecord
   end
 
   def normalize_name
-    self.name = name.to_s.strip.downcase.delete_prefix('#') if name.present?
+    self.name = name.to_s.strip.downcase.delete_prefix("#") if name.present?
   end
 
   def clear_hashtag_caches

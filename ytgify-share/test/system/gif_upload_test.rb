@@ -20,7 +20,7 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Fill in credentials
     @page.fill('input[name="user[email]"]', @user.email)
-    @page.fill('input[name="user[password]"]', 'password123')
+    @page.fill('input[name="user[password]"]', "password123")
 
     # Submit using requestSubmit (triggers Turbo properly)
     @page.expect_navigation do
@@ -43,14 +43,14 @@ class GifUploadTest < ApplicationSystemTestCase
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
 
     # Fill in timestamps
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '5.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '10.0')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "5.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "10.0")
 
     # Fill in title
-    @page.fill('input[name="gif[title]"]', 'My E2E Test GIF')
+    @page.fill('input[name="gif[title]"]', "My E2E Test GIF")
 
     # Fill in description (optional)
-    @page.fill('textarea[name="gif[description]"]', 'This is a test GIF created during e2e testing')
+    @page.fill('textarea[name="gif[description]"]', "This is a test GIF created during e2e testing")
 
     take_screenshot("gif-create-form-filled")
 
@@ -80,9 +80,9 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Fill in required fields
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
-    @page.fill('input[name="gif[title]"]', 'Unlisted Test GIF')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
+    @page.fill('input[name="gif[title]"]', "Unlisted Test GIF")
 
     # Select unlisted privacy
     @page.click('input[value="unlisted"]')
@@ -106,9 +106,9 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Fill in required fields
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '3.0')
-    @page.fill('input[name="gif[title]"]', 'Private Test GIF')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "3.0")
+    @page.fill('input[name="gif[title]"]', "Private Test GIF")
 
     # Select private privacy
     @page.click('input[value="private_access"]')
@@ -138,9 +138,9 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Create a public GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
-    @page.fill('input[name="gif[title]"]', 'Public Feed Test GIF')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
+    @page.fill('input[name="gif[title]"]', "Public Feed Test GIF")
     @page.click('input[value="public_access"]')
 
     @page.expect_navigation do
@@ -161,9 +161,9 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Create public GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
-    @page.fill('input[name="gif[title]"]', 'Public Visibility Test')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
+    @page.fill('input[name="gif[title]"]', "Public Visibility Test")
 
     @page.expect_navigation do
       @page.click('[data-gif-form-target="submitButton"]')
@@ -187,9 +187,9 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Create unlisted GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
-    @page.fill('input[name="gif[title]"]', 'Unlisted Visibility Test')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
+    @page.fill('input[name="gif[title]"]', "Unlisted Visibility Test")
     @page.click('input[value="unlisted"]')
 
     @page.expect_navigation do
@@ -201,7 +201,7 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Check it's NOT in public feed
     visit root_path
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert !body_text.include?("Unlisted Visibility Test"), "Unlisted GIF should not appear in feed"
 
     take_screenshot("gif-unlisted-not-in-feed")
@@ -218,9 +218,9 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Create private GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
-    @page.fill('input[name="gif[title]"]', 'Private Owner Test')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
+    @page.fill('input[name="gif[title]"]', "Private Owner Test")
     @page.click('input[value="private_access"]')
 
     @page.expect_navigation do
@@ -243,16 +243,16 @@ class GifUploadTest < ApplicationSystemTestCase
     sign_in_via_redirect(new_gif_path)
 
     # Fill in everything except YouTube URL
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
-    @page.fill('input[name="gif[title]"]', 'No URL Test')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
+    @page.fill('input[name="gif[title]"]', "No URL Test")
 
     # Try to submit
     @page.evaluate('document.querySelector("form").requestSubmit()')
     sleep 0.5  # Give time for validation
 
     # Should show validation error
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert(
       body_text.include?("YouTube") ||
       body_text.include?("can't be blank") ||
@@ -273,15 +273,15 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Fill in everything except title
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
 
     # Try to submit
     @page.evaluate('document.querySelector("form").requestSubmit()')
     sleep 0.5
 
     # Should show validation error
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert(
       body_text.include?("Title") ||
       body_text.include?("can't be blank") ||
@@ -297,15 +297,15 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Fill in everything except start timestamp
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')
-    @page.fill('input[name="gif[title]"]', 'No Start Time Test')
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")
+    @page.fill('input[name="gif[title]"]', "No Start Time Test")
 
     # Try to submit
     @page.evaluate('document.querySelector("form").requestSubmit()')
     sleep 0.5
 
     # Should show validation error
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert(
       body_text.include?("start") ||
       body_text.include?("timestamp") ||
@@ -321,15 +321,15 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Fill in everything except end timestamp
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '0.0')
-    @page.fill('input[name="gif[title]"]', 'No End Time Test')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
+    @page.fill('input[name="gif[title]"]', "No End Time Test")
 
     # Try to submit
     @page.evaluate('document.querySelector("form").requestSubmit()')
     sleep 0.5
 
     # Should show validation error
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert(
       body_text.include?("end") ||
       body_text.include?("timestamp") ||
@@ -345,16 +345,16 @@ class GifUploadTest < ApplicationSystemTestCase
 
     # Fill in with invalid timestamp range
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
-    @page.fill('input[name="gif[youtube_timestamp_start]"]', '10.0')
-    @page.fill('input[name="gif[youtube_timestamp_end]"]', '5.0')  # Less than start
-    @page.fill('input[name="gif[title]"]', 'Invalid Range Test')
+    @page.fill('input[name="gif[youtube_timestamp_start]"]', "10.0")
+    @page.fill('input[name="gif[youtube_timestamp_end]"]', "5.0")  # Less than start
+    @page.fill('input[name="gif[title]"]', "Invalid Range Test")
 
     # Try to submit
     @page.evaluate('document.querySelector("form").requestSubmit()')
     sleep 0.5
 
     # Should show validation error
-    body_text = @page.text_content('body')
+    body_text = @page.text_content("body")
     assert(
       body_text.include?("greater") ||
       body_text.include?("must be") ||

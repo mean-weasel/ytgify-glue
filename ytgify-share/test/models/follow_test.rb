@@ -33,7 +33,7 @@ class FollowTest < ActiveSupport::TestCase
   end
 
   test "toggle creates follow if none exists" do
-    assert_difference 'Follow.count', 1 do
+    assert_difference "Follow.count", 1 do
       result = Follow.toggle(@user1, @user2)
       assert result # returns true when following
     end
@@ -42,14 +42,14 @@ class FollowTest < ActiveSupport::TestCase
   test "toggle destroys follow if exists" do
     Follow.create!(follower: @user1, following: @user2)
 
-    assert_difference 'Follow.count', -1 do
+    assert_difference "Follow.count", -1 do
       result = Follow.toggle(@user1, @user2)
       assert_not result # returns false when unfollowing
     end
   end
 
   test "toggle returns false for self-follow" do
-    assert_no_difference 'Follow.count' do
+    assert_no_difference "Follow.count" do
       result = Follow.toggle(@user1, @user1)
       assert_not result
     end

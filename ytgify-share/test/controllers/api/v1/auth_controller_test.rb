@@ -17,7 +17,7 @@ module Api
       # ========== REGISTER ENDPOINT TESTS ==========
 
       test "register should create user with valid params" do
-        assert_difference('User.count', 1) do
+        assert_difference("User.count", 1) do
           post api_v1_auth_register_path, params: {
             user: {
               email: "newuser@example.com",
@@ -53,12 +53,12 @@ module Api
 
         assert_not_nil token
         # Verify token is valid JWT
-        decoded = JWT.decode(token, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production')).first
+        decoded = JWT.decode(token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
         assert_equal User.find_by(email: "tokentest@example.com").id, decoded["sub"]
       end
 
       test "register should fail with duplicate email" do
-        assert_no_difference('User.count') do
+        assert_no_difference("User.count") do
           post api_v1_auth_register_path, params: {
             user: {
               email: @alice.email,
@@ -76,7 +76,7 @@ module Api
       end
 
       test "register should fail with duplicate username" do
-        assert_no_difference('User.count') do
+        assert_no_difference("User.count") do
           post api_v1_auth_register_path, params: {
             user: {
               email: "unique@example.com",
@@ -93,7 +93,7 @@ module Api
       end
 
       test "register should fail with missing email" do
-        assert_no_difference('User.count') do
+        assert_no_difference("User.count") do
           post api_v1_auth_register_path, params: {
             user: {
               username: "noemailu ser",
@@ -107,7 +107,7 @@ module Api
       end
 
       test "register should fail with short password" do
-        assert_no_difference('User.count') do
+        assert_no_difference("User.count") do
           post api_v1_auth_register_path, params: {
             user: {
               email: "short@example.com",
@@ -122,7 +122,7 @@ module Api
       end
 
       test "register should fail with password confirmation mismatch" do
-        assert_no_difference('User.count') do
+        assert_no_difference("User.count") do
           post api_v1_auth_register_path, params: {
             user: {
               email: "mismatch@example.com",
@@ -199,7 +199,7 @@ module Api
 
         assert_not_nil token
         # Verify token is valid
-        decoded = JWT.decode(token, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production')).first
+        decoded = JWT.decode(token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
         assert_equal @alice.id, decoded["sub"]
         assert_not_nil decoded["exp"]
       end
@@ -254,7 +254,7 @@ module Api
         }, as: :json
 
         # Should either return 400 (parameter missing) or 401 (unauthorized)
-        assert_includes [400, 401], response.status
+        assert_includes [ 400, 401 ], response.status
       end
 
       test "login should handle missing email parameter" do
@@ -265,7 +265,7 @@ module Api
         }, as: :json
 
         # Should either return 400 (parameter missing) or 401 (unauthorized)
-        assert_includes [400, 401], response.status
+        assert_includes [ 400, 401 ], response.status
       end
 
       # ========== LOGOUT ENDPOINT TESTS ==========
@@ -311,8 +311,8 @@ module Api
         assert_not_nil new_token
 
         # Verify new token is valid and has updated expiration
-        old_decoded = JWT.decode(old_token, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production')).first
-        new_decoded = JWT.decode(new_token, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production')).first
+        old_decoded = JWT.decode(old_token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
+        new_decoded = JWT.decode(new_token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
 
         assert_equal @alice.id, new_decoded["sub"]
         # New token should have later expiration time
@@ -410,7 +410,7 @@ module Api
         }, as: :json
 
         json = JSON.parse(response.body)
-        decoded = JWT.decode(json["token"], ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production')).first
+        decoded = JWT.decode(json["token"], ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
 
         assert_not_nil decoded["exp"]
         assert decoded["exp"] > Time.now.to_i
@@ -451,7 +451,7 @@ module Api
           jti: user.jti,
           exp: 15.minutes.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
 
       def generate_expired_jwt_token(user)
@@ -463,7 +463,7 @@ module Api
           jti: user.jti,
           exp: 1.hour.ago.to_i  # Expired
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
     end
   end

@@ -2,8 +2,8 @@
 
 class Follow < ApplicationRecord
   # Associations
-  belongs_to :follower, class_name: 'User', counter_cache: :following_count
-  belongs_to :following, class_name: 'User', counter_cache: :follower_count
+  belongs_to :follower, class_name: "User", counter_cache: :following_count
+  belongs_to :following, class_name: "User", counter_cache: :follower_count
 
   # Validations
   validates :follower_id, presence: true

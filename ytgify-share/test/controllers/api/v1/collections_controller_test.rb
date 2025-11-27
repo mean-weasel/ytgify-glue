@@ -207,7 +207,7 @@ module Api
       end
 
       test "create should create collection with valid params" do
-        assert_difference('@alice.collections.count', 1) do
+        assert_difference("@alice.collections.count", 1) do
           post api_v1_collections_path,
                params: {
                  collection: {
@@ -228,7 +228,7 @@ module Api
       end
 
       test "create should fail with missing name" do
-        assert_no_difference('Collection.count') do
+        assert_no_difference("Collection.count") do
           post api_v1_collections_path,
                params: { collection: { name: "" } },
                headers: auth_headers(@alice),
@@ -312,7 +312,7 @@ module Api
       end
 
       test "destroy should allow owner to delete collection" do
-        assert_difference('Collection.count', -1) do
+        assert_difference("Collection.count", -1) do
           delete api_v1_collection_path(@alice_public_collection) + ".json",
                  headers: auth_headers(@alice)
         end
@@ -321,7 +321,7 @@ module Api
       end
 
       test "destroy should prevent non-owner from deleting" do
-        assert_no_difference('Collection.count') do
+        assert_no_difference("Collection.count") do
           delete api_v1_collection_path(@alice_public_collection) + ".json",
                  headers: auth_headers(@bob)
         end
@@ -472,7 +472,7 @@ module Api
         @alice_public_collection.add_gif(gif2)
 
         patch reorder_api_v1_collection_path(@alice_public_collection),
-              params: { gif_ids: [gif2.id, gif1.id] },
+              params: { gif_ids: [ gif2.id, gif1.id ] },
               headers: auth_headers(@alice),
               as: :json
 
@@ -563,7 +563,7 @@ module Api
           jti: user.jti,
           exp: 15.minutes.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
 
       def generate_expired_jwt_token(user)
@@ -575,7 +575,7 @@ module Api
           jti: user.jti,
           exp: 1.hour.ago.to_i  # Expired
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
     end
   end

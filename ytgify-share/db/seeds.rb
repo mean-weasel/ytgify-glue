@@ -57,7 +57,7 @@ gifs = []
 users.each_with_index do |user, user_index|
   # Each user creates 6 GIFs
   6.times do |gif_index|
-    privacy = [:public_access, :public_access, :public_access, :unlisted, :private_access][gif_index % 5]
+    privacy = [ :public_access, :public_access, :public_access, :unlisted, :private_access ][gif_index % 5]
     video_id = youtube_ids.sample
     start_time = rand(0..60)
     end_time = rand(61..120)
@@ -100,7 +100,7 @@ puts "\n#️⃣ Creating hashtags..."
 
 # Create hashtags
 hashtags = []
-hashtag_names = ['funny', 'animals', 'music', 'dance', 'gaming', 'sports', 'memes', 'reaction', 'tutorial', 'vlog']
+hashtag_names = [ 'funny', 'animals', 'music', 'dance', 'gaming', 'sports', 'memes', 'reaction', 'tutorial', 'vlog' ]
 hashtag_names.each do |name|
   hashtag = Hashtag.find_or_create_by!(name: name)
   hashtags << hashtag
@@ -171,7 +171,7 @@ puts "\n👥 Creating follows..."
 follow_count = 0
 users.each do |user|
   # Each user follows 2-4 other users
-  other_users = users - [user]
+  other_users = users - [ user ]
   other_users.sample(rand(2..4)).each do |followed_user|
     Follow.find_or_create_by!(follower: user, following: followed_user) do
       follow_count += 1
@@ -187,7 +187,7 @@ collections = []
 users.each_with_index do |user, index|
   # Each user creates 1-2 collections
   rand(1..2).times do |col_index|
-    is_public = [true, true, false].sample
+    is_public = [ true, true, false ].sample
 
     collection = Collection.create!(
       user: user,

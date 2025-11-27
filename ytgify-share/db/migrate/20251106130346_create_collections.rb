@@ -9,7 +9,7 @@ class CreateCollections < ActiveRecord::Migration[8.0]
       t.timestamps
 
       t.index :user_id
-      t.index [:user_id, :created_at]
+      t.index [ :user_id, :created_at ]
       t.index :is_public
     end
 

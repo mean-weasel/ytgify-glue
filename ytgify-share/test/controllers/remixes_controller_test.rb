@@ -75,7 +75,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   # ========== CREATE_REMIX ACTION TESTS ==========
 
   test "should require authentication to create remix" do
-    assert_no_difference('Gif.count') do
+    assert_no_difference("Gif.count") do
       post create_remix_gif_path(@public_gif), params: {
         remix: remix_params
       }
@@ -86,7 +86,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should create remix with valid params" do
     sign_in @bob
 
-    assert_difference('Gif.count', 1) do
+    assert_difference("Gif.count", 1) do
       post create_remix_gif_path(@public_gif), params: {
         remix: remix_params
       }, as: :json
@@ -130,7 +130,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     post create_remix_gif_path(@public_gif), params: {
       remix: {
         title: "Test Remix",
-        file: fixture_file_upload('test.gif', 'image/gif'),
+        file: fixture_file_upload("test.gif", "image/gif"),
         text_overlay_data: {
           text: "Test"
           # Missing other fields
@@ -159,7 +159,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should not create notification when remixing own gif" do
     sign_in @alice
 
-    assert_no_difference('Notification.count') do
+    assert_no_difference("Notification.count") do
       post create_remix_gif_path(@public_gif), params: {
         remix: remix_params
       }, as: :json
@@ -169,7 +169,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should create notification for original creator" do
     sign_in @bob
 
-    assert_difference('Notification.count', 1) do
+    assert_difference("Notification.count", 1) do
       post create_remix_gif_path(@public_gif), params: {
         remix: remix_params
       }, as: :json
@@ -188,7 +188,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should not allow remix of private gif in create action" do
     sign_in @bob
 
-    assert_no_difference('Gif.count') do
+    assert_no_difference("Gif.count") do
       post create_remix_gif_path(@private_gif), params: {
         remix: remix_params
       }
@@ -201,7 +201,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     # GIF creation succeeds even without file, but processing job will skip it
-    assert_difference('Gif.count', 1) do
+    assert_difference("Gif.count", 1) do
       post create_remix_gif_path(@public_gif), params: {
         remix: {
           title: "Test",
@@ -290,7 +290,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     post create_remix_gif_path(@public_gif), params: {
       remix: {
         title: "Test",
-        file: fixture_file_upload('test.gif', 'image/gif')
+        file: fixture_file_upload("test.gif", "image/gif")
         # No text_overlay_data
       }
     }, as: :json
@@ -331,7 +331,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   def remix_params
     {
       title: "My Remix",
-      file: fixture_file_upload('test.gif', 'image/gif'),
+      file: fixture_file_upload("test.gif", "image/gif"),
       text_overlay_data: {
         text: "Hello World",
         font_family: "Impact",

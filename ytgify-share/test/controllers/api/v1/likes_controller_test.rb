@@ -46,7 +46,7 @@ module Api
       # ========== TOGGLE LIKE SUCCESS TESTS ==========
 
       test "should create like when not exists" do
-        assert_difference('Like.count', 1) do
+        assert_difference("Like.count", 1) do
           post api_v1_gif_likes_path(@gif),
                headers: auth_headers(@bob),
                as: :json
@@ -62,7 +62,7 @@ module Api
       test "should remove like when exists" do
         Like.create!(user: @bob, gif: @gif)
 
-        assert_difference('Like.count', -1) do
+        assert_difference("Like.count", -1) do
           post api_v1_gif_likes_path(@gif),
                headers: auth_headers(@bob),
                as: :json
@@ -284,7 +284,7 @@ module Api
           jti: user.jti,
           exp: 15.minutes.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
 
       def generate_expired_jwt_token(user)
@@ -296,7 +296,7 @@ module Api
           jti: user.jti,
           exp: 1.hour.ago.to_i  # Expired
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
     end
   end

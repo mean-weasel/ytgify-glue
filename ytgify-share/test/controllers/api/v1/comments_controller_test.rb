@@ -160,7 +160,7 @@ module Api
       end
 
       test "create should create a comment with valid params" do
-        assert_difference('@gif.comments.count', 1) do
+        assert_difference("@gif.comments.count", 1) do
           post api_v1_gif_comments_path(gif_id: @gif.id),
                params: { comment: { content: "Bob's new comment" } },
                headers: auth_headers(@bob),
@@ -186,7 +186,7 @@ module Api
       end
 
       test "create should support parent_comment_id for replies" do
-        assert_difference('@alice_comment.replies.count', 1) do
+        assert_difference("@alice_comment.replies.count", 1) do
           post api_v1_gif_comments_path(gif_id: @gif.id),
                params: {
                  comment: {
@@ -204,7 +204,7 @@ module Api
       end
 
       test "create should fail with missing content" do
-        assert_no_difference('@gif.comments.count') do
+        assert_no_difference("@gif.comments.count") do
           post api_v1_gif_comments_path(gif_id: @gif.id),
                params: { comment: { content: "" } },
                headers: auth_headers(@bob),
@@ -218,7 +218,7 @@ module Api
       end
 
       test "create requires comment parameter with content" do
-        assert_no_difference('@gif.comments.count') do
+        assert_no_difference("@gif.comments.count") do
           post api_v1_gif_comments_path(gif_id: @gif.id),
                params: { comment: {} },
                headers: auth_headers(@bob),
@@ -467,7 +467,7 @@ module Api
           jti: user.jti,
           exp: 15.minutes.from_now.to_i
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
 
       def generate_expired_jwt_token(user)
@@ -479,7 +479,7 @@ module Api
           jti: user.jti,
           exp: 1.hour.ago.to_i  # Expired
         }
-        JWT.encode(payload, ENV.fetch('JWT_SECRET_KEY', 'changeme-in-production'))
+        JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
       end
     end
   end

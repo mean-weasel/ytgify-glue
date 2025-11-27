@@ -6,7 +6,7 @@ class CreateGifHashtags < ActiveRecord::Migration[8.0]
 
       t.timestamps
 
-      t.index [:gif_id, :hashtag_id], unique: true, name: 'index_gif_hashtags_unique'
+      t.index [ :gif_id, :hashtag_id ], unique: true, name: 'index_gif_hashtags_unique'
       t.index :hashtag_id
       t.index :created_at
     end

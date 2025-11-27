@@ -35,7 +35,7 @@ class NotificationsController < ApplicationController
     current_user.notifications.unread.update_all(read_at: Time.current)
 
     respond_to do |format|
-      format.html { redirect_to notifications_path, notice: 'All notifications marked as read' }
+      format.html { redirect_to notifications_path, notice: "All notifications marked as read" }
       format.json { render json: { success: true } }
       format.turbo_stream
     end

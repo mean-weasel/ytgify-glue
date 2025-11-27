@@ -1,9 +1,9 @@
 class GifsController < ApplicationController
   include ActionView::RecordIdentifier
 
-  before_action :authenticate_user!, except: [:index, :show]
-  before_action :set_gif, only: [:show, :edit, :update, :destroy]
-  before_action :authorize_user!, only: [:edit, :update, :destroy]
+  before_action :authenticate_user!, except: [ :index, :show ]
+  before_action :set_gif, only: [ :show, :edit, :update, :destroy ]
+  before_action :authorize_user!, only: [ :edit, :update, :destroy ]
 
   def index
     @query = params[:q]

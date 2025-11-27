@@ -24,7 +24,7 @@ class FeedService
                          .not_deleted
                          .public_only
                          .includes(:user, :hashtags)
-                         .where.not(user_id: following_ids + [user.id])
+                         .where.not(user_id: following_ids + [ user.id ])
                          .limit(per_page / 2)
 
       # Combine and shuffle

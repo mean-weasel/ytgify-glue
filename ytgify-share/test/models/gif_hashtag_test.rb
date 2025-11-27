@@ -16,13 +16,13 @@ class GifHashtagTest < ActiveSupport::TestCase
   end
 
   test "should add hashtag to gif" do
-    assert_difference '@gif.hashtags.count', 1 do
+    assert_difference "@gif.hashtags.count", 1 do
       @gif.add_hashtag(@hashtag)
     end
   end
 
   test "should add hashtag by name" do
-    assert_difference '@gif.hashtags.count', 1 do
+    assert_difference "@gif.hashtags.count", 1 do
       @gif.add_hashtag("awesome")
     end
   end
@@ -30,7 +30,7 @@ class GifHashtagTest < ActiveSupport::TestCase
   test "should not add duplicate hashtag" do
     @gif.add_hashtag(@hashtag)
 
-    assert_no_difference '@gif.hashtags.count' do
+    assert_no_difference "@gif.hashtags.count" do
       result = @gif.add_hashtag(@hashtag)
       assert_not result
     end
@@ -39,7 +39,7 @@ class GifHashtagTest < ActiveSupport::TestCase
   test "should remove hashtag from gif" do
     @gif.add_hashtag(@hashtag)
 
-    assert_difference '@gif.hashtags.count', -1 do
+    assert_difference "@gif.hashtags.count", -1 do
       @gif.remove_hashtag(@hashtag)
     end
   end
@@ -47,7 +47,7 @@ class GifHashtagTest < ActiveSupport::TestCase
   test "should remove hashtag by name" do
     @gif.add_hashtag(@hashtag)
 
-    assert_difference '@gif.hashtags.count', -1 do
+    assert_difference "@gif.hashtags.count", -1 do
       @gif.remove_hashtag("funny")
     end
   end

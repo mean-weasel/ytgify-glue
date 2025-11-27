@@ -15,10 +15,10 @@ class User < ApplicationRecord
   has_many :comments, dependent: :destroy
 
   # Follow associations
-  has_many :following_relationships, class_name: 'Follow',
-           foreign_key: 'follower_id', dependent: :destroy
-  has_many :follower_relationships, class_name: 'Follow',
-           foreign_key: 'following_id', dependent: :destroy
+  has_many :following_relationships, class_name: "Follow",
+           foreign_key: "follower_id", dependent: :destroy
+  has_many :follower_relationships, class_name: "Follow",
+           foreign_key: "following_id", dependent: :destroy
   has_many :following, through: :following_relationships, source: :following
   has_many :followers, through: :follower_relationships, source: :follower
 
@@ -57,9 +57,9 @@ class User < ApplicationRecord
 
     case variant
     when :thumb
-      avatar.variant(resize_to_limit: [100, 100])
+      avatar.variant(resize_to_limit: [ 100, 100 ])
     when :medium
-      avatar.variant(resize_to_limit: [300, 300])
+      avatar.variant(resize_to_limit: [ 300, 300 ])
     else
       avatar
     end
@@ -67,22 +67,22 @@ class User < ApplicationRecord
 
   # Preference getters/setters
   def default_privacy
-    preferences['default_privacy'] || 'public'
+    preferences["default_privacy"] || "public"
   end
 
   def default_privacy=(value)
-    self.preferences = preferences.merge('default_privacy' => value)
+    self.preferences = preferences.merge("default_privacy" => value)
   end
 
   def recently_used_tags
-    preferences['recently_used_tags'] || []
+    preferences["recently_used_tags"] || []
   end
 
   def add_recent_tag(tag)
     tags = recently_used_tags
     tags.unshift(tag).uniq!
     tags = tags.first(10) # Keep only last 10
-    self.preferences = preferences.merge('recently_used_tags' => tags)
+    self.preferences = preferences.merge("recently_used_tags" => tags)
     save
   end
 
@@ -115,9 +115,9 @@ class User < ApplicationRecord
 
   def set_default_preferences
     self.preferences ||= {
-      'default_privacy' => 'public',
-      'default_upload_behavior' => 'show_options',
-      'recently_used_tags' => []
+      "default_privacy" => "public",
+      "default_upload_behavior" => "show_options",
+      "recently_used_tags" => []
     }
   end
 end

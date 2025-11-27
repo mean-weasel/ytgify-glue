@@ -28,21 +28,21 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should sort hashtags alphabetically" do
-    get hashtags_path(sort: 'alphabetical')
+    get hashtags_path(sort: "alphabetical")
     assert_response :success
     # Check that sort button is active
     assert_select "a.bg-indigo-600", text: "A-Z"
   end
 
   test "should sort hashtags by popularity" do
-    get hashtags_path(sort: 'popular')
+    get hashtags_path(sort: "popular")
     assert_response :success
     # Check that popular sort button is active
     assert_select "a.bg-indigo-600", text: "Most Popular"
   end
 
   test "should sort hashtags by recency" do
-    get hashtags_path(sort: 'recent')
+    get hashtags_path(sort: "recent")
     assert_response :success
     # Check that recent sort button is active
     assert_select "a.bg-indigo-600", text: "Recently Added"

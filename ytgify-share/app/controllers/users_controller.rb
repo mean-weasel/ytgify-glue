@@ -108,9 +108,9 @@ class UsersController < ApplicationController
 
   def viewable_privacy_levels
     if viewing_own_profile?
-      ["public_access", "unlisted", "private_access"]
+      [ "public_access", "unlisted", "private_access" ]
     else
-      ["public_access"]
+      [ "public_access" ]
     end
   end
 

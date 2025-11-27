@@ -109,7 +109,7 @@ class NotificationTest < ActiveSupport::TestCase
   # ========== ADDITIONAL VALIDATION TESTS ==========
 
   test "should accept all valid action values" do
-    valid_actions = ["like", "comment", "follow", "collection_add", "remix"]
+    valid_actions = [ "like", "comment", "follow", "collection_add", "remix" ]
 
     valid_actions.each do |action|
       notification = Notification.new(

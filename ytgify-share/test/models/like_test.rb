@@ -75,7 +75,7 @@ class LikeTest < ActiveSupport::TestCase
   # ========== COUNTER CACHE TESTS ==========
 
   test "should increment gif like_count on create" do
-    assert_difference('@gif.reload.like_count', 1) do
+    assert_difference("@gif.reload.like_count", 1) do
       Like.create!(user: @bob, gif: @gif)
     end
   end
@@ -123,7 +123,7 @@ class LikeTest < ActiveSupport::TestCase
     gif2 = Gif.create!(user: @alice, title: "GIF 2", privacy: :public_access)
     like2 = Like.create!(user: @bob, gif: gif2)
 
-    recent = Like.recent.where(id: [like1.id, like2.id])
+    recent = Like.recent.where(id: [ like1.id, like2.id ])
     assert_equal like2.id, recent.first.id
   end
 
@@ -154,14 +154,14 @@ class LikeTest < ActiveSupport::TestCase
   test "creates notification after create" do
     # Notification creation is tested in NotificationService tests
     # Just verify the like creates without raising errors
-    assert_difference('Like.count', 1) do
+    assert_difference("Like.count", 1) do
       Like.create!(user: @bob, gif: @gif)
     end
   end
 
   test "handles notification creation failure gracefully" do
     # Should not prevent like creation if notification fails
-    assert_difference('Like.count', 1) do
+    assert_difference("Like.count", 1) do
       like = Like.new(user: @bob, gif: @gif)
       like.save!
     end
@@ -186,7 +186,7 @@ class LikeTest < ActiveSupport::TestCase
       password: "password123"
     )
 
-    assert_difference('@gif.reload.like_count', 2) do
+    assert_difference("@gif.reload.like_count", 2) do
       Like.create!(user: @bob, gif: @gif)
       Like.create!(user: user3, gif: @gif)
     end

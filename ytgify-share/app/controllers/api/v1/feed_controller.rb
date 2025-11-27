@@ -3,7 +3,7 @@
 module Api
   module V1
     class FeedController < BaseController
-      skip_before_action :authenticate_user!, only: [:public, :trending, :recent, :popular]
+      skip_before_action :authenticate_user!, only: [ :public, :trending, :recent, :popular ]
 
       # GET /api/v1/feed
       # Personalized feed for authenticated users
@@ -101,11 +101,11 @@ module Api
       private
 
       def page
-        [params[:page]&.to_i || 1, 1].max
+        [ params[:page]&.to_i || 1, 1 ].max
       end
 
       def per_page
-        [[params[:per_page]&.to_i || 20, 1].max, 100].min
+        [ [ params[:per_page]&.to_i || 20, 1 ].max, 100 ].min
       end
 
       def offset
