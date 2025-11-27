@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      run_chrome:
+        description: 'Run Chrome CI'
+        type: boolean
+        default: true
+      run_firefox:
+        description: 'Run Firefox CI'
+        type: boolean
+        default: true
+      run_rails:
+        description: 'Run Rails CI'
+        type: boolean
+        default: true
+      run_integration:
+        description: 'Run Integration Tests'
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      chrome: ${{ steps.filter.outputs.chrome }}
+      firefox: ${{ steps.filter.outputs.firefox }}
+      rails: ${{ steps.filter.outputs.rails }}
+      integration: ${{ steps.filter.outputs.integration }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            chrome:
+              - 'ytgify/**'
+              - 'ytgify-share/**'
+              - 'package.json'
+              - 'package-lock.json'
+            firefox:
+              - 'ytgify-firefox/**'
+              - 'package.json'
+              - 'package-lock.json'
+            rails:
+              - 'ytgify-share/**'
+            integration:
+              - 'ytgify/**'
+              - 'ytgify-share/**'
+
+  chrome:
+    name: Chrome Extension
+    needs: changes
+    if: |
+      needs.changes.outputs.chrome == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_chrome)
+    uses: ./.github/workflows/chrome-extension.yml
+
+  firefox:
+    name: Firefox Extension
+    needs: changes
+    if: |
+      needs.changes.outputs.firefox == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_firefox)
+    uses: ./.github/workflows/firefox-extension.yml
+
+  rails:
+    name: Rails Backend
+    needs: changes
+    if: |
+      needs.changes.outputs.rails == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_rails)
+    uses: ./.github/workflows/rails-backend.yml
+
+  integration:
+    name: Integration Tests
+    needs: [changes, chrome, rails]
+    if: |
+      always() &&
+      (needs.changes.outputs.integration == 'true' || (github.event_name == 'workflow_dispatch' && inputs.run_integration)) &&
+      (needs.chrome.result == 'success' || needs.chrome.result == 'skipped') &&
+      (needs.rails.result == 'success' || needs.rails.result == 'skipped')
+    uses: ./.github/workflows/integration-tests.yml
+
+  ci-success:
+    name: CI Success
+    needs: [changes, chrome, firefox, rails, integration]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check status
+        run: |
+          if [[ "${{ needs.chrome.result }}" == "failure" ]] || \
+             [[ "${{ needs.firefox.result }}" == "failure" ]] || \
+             [[ "${{ needs.rails.result }}" == "failure" ]] || \
+             [[ "${{ needs.integration.result }}" == "failure" ]]; then
+            echo "One or more CI jobs failed"
+            exit 1
+          fi
+          echo "All CI checks passed"

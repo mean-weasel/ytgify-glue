@@ -1,0 +1,71 @@
+name: Rails Backend CI
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: ytgify-share
+
+jobs:
+  scan_ruby:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version-file: ytgify-share/.ruby-version
+          bundler-cache: true
+          working-directory: ytgify-share
+
+      - name: Scan for security vulnerabilities
+        run: bin/brakeman --no-pager
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version-file: ytgify-share/.ruby-version
+          bundler-cache: true
+          working-directory: ytgify-share
+
+      - name: Lint code for consistent style
+        run: bin/rubocop -f github
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config
+
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version-file: ytgify-share/.ruby-version
+          bundler-cache: true
+          working-directory: ytgify-share
+
+      - name: Run tests
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+        run: bin/rails db:test:prepare test

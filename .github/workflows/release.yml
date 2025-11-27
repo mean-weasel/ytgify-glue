@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'chrome/v*'
+      - 'firefox/v*'
+      - 'backend/v*'
+
+jobs:
+  parse-tag:
+    name: Parse Release Tag
+    runs-on: ubuntu-latest
+    outputs:
+      component: ${{ steps.parse.outputs.component }}
+      version: ${{ steps.parse.outputs.version }}
+    steps:
+      - name: Parse tag
+        id: parse
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          COMPONENT=$(echo "$TAG" | cut -d'/' -f1)
+          VERSION=$(echo "$TAG" | cut -d'/' -f2)
+          echo "component=$COMPONENT" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Releasing $COMPONENT version $VERSION"
+
+  release-chrome:
+    name: Release Chrome Extension
+    needs: parse-tag
+    if: needs.parse-tag.outputs.component == 'chrome'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production extension
+        run: npm run build:production
+        working-directory: ytgify
+
+      - name: Create release artifact
+        run: |
+          cd ytgify/dist-production
+          zip -r ../ytgify-${{ needs.parse-tag.outputs.version }}-chrome.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ytgify/ytgify-*.zip
+          name: Chrome Extension ${{ needs.parse-tag.outputs.version }}
+          generate_release_notes: true
+
+  release-firefox:
+    name: Release Firefox Extension
+    needs: parse-tag
+    if: needs.parse-tag.outputs.component == 'firefox'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build
+        working-directory: ytgify-firefox
+
+      - name: Package extension
+        run: npm run package
+        working-directory: ytgify-firefox
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ytgify-firefox/web-ext-artifacts/*.zip
+          name: Firefox Extension ${{ needs.parse-tag.outputs.version }}
+          generate_release_notes: true
+
+  release-backend:
+    name: Release Backend
+    needs: parse-tag
+    if: needs.parse-tag.outputs.component == 'backend'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Backend ${{ needs.parse-tag.outputs.version }}
+          generate_release_notes: true
+          body: |
+            ## Backend Release ${{ needs.parse-tag.outputs.version }}
+
+            This release includes updates to the ytgify-share Rails backend.
+
+            ### Deployment
+            Deploy this version to your production environment.

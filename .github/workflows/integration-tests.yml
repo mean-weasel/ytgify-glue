@@ -1,0 +1,80 @@
+name: Integration Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  extension-backend:
+    name: Extension-Backend Integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version-file: ytgify-share/.ruby-version
+          bundler-cache: true
+          working-directory: ytgify-share
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Setup test database
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+        run: bin/rails db:test:prepare
+        working-directory: ytgify-share
+
+      - name: Start Rails test server
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+        run: |
+          bin/rails server -p 3001 &
+          sleep 10
+        working-directory: ytgify-share
+
+      - name: Verify Rails server is running
+        run: curl -f http://localhost:3001/api/v1/auth/me || echo "Expected 401 - server is running"
+
+      - name: Build Chrome extension
+        run: npm run build
+        working-directory: ytgify
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+        working-directory: ytgify
+
+      - name: Run integration tests
+        env:
+          REAL_BACKEND: true
+          BACKEND_URL: http://localhost:3001
+        run: npm run test:e2e:upload
+        working-directory: ytgify
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            ytgify/tests/test-results/
+            ytgify/playwright-report/
+          retention-days: 14

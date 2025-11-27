@@ -10,7 +10,13 @@
     "backend:start": "cd ytgify-share && bin/rails server",
     "backend:test": "cd ytgify-share && RAILS_ENV=test bin/rails server -p 3001",
     "extension:build": "cd ytgify && npm run build",
-    "extension:build:dev": "cd ytgify && npm run dev"
+    "extension:build:dev": "cd ytgify && npm run dev",
+    "ci:chrome": "cd ytgify && npm run lint && npm run typecheck && npm run test:coverage && npm run build",
+    "ci:firefox": "cd ytgify-firefox && npm run lint:code && npm run typecheck && npm run test:coverage && npm run build",
+    "ci:rails": "cd ytgify-share && bin/rails test",
+    "ci:all": "npm run ci:chrome && npm run ci:firefox && npm run ci:rails",
+    "release:chrome": "git tag chrome/v$(node -p \"require('./ytgify/package.json').version\")",
+    "release:firefox": "git tag firefox/v$(node -p \"require('./ytgify-firefox/package.json').version\")"
   },
   "workspaces": [
     "ytgify",
