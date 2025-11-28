@@ -57,6 +57,7 @@ development:
 test:
   <<: *default
   database: ytgify_share_test
+  url: <%= ENV.fetch("DATABASE_URL", nil) %>
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
