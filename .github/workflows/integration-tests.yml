@@ -49,12 +49,12 @@ jobs:
 
       - name: Start Rails test server
         run: |
-          bin/rails server -p 3001 &
+          bin/rails server -p 3000 &
           sleep 10
         working-directory: ytgify-share
 
       - name: Verify Rails server is running
-        run: curl -f http://localhost:3001/api/v1/auth/me || echo "Expected 401 - server is running"
+        run: curl -f http://localhost:3000/api/v1/auth/me || echo "Expected 401 - server is running"
 
       - name: Build Chrome extension
         run: npm run build
@@ -79,7 +79,7 @@ jobs:
       - name: Run integration tests
         env:
           REAL_BACKEND: true
-          BACKEND_URL: http://localhost:3001
+          BACKEND_URL: http://localhost:3000
         run: npm run test:e2e:upload
         working-directory: ytgify
 
