@@ -27,8 +27,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     end
   end
 
-  # Development: Allow all origins for easier testing
-  if Rails.env.development?
+  # Development and Test: Allow all origins for easier testing
+  if Rails.env.development? || Rails.env.test?
     allow do
       origins "*"
 
