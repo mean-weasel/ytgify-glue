@@ -220,6 +220,12 @@ class Gif < ApplicationRecord
     return if youtube_video_url.blank?
 
     uri = URI.parse(youtube_video_url)
+
+    # Allow localhost URLs in test/development environments for E2E tests
+    if (Rails.env.test? || Rails.env.development?) && uri.host == "localhost"
+      return
+    end
+
     unless uri.host&.match?(/\A(www\.)?(youtube\.com|youtu\.be)\z/i) && uri.scheme.in?(%w[http https])
       errors.add(:youtube_video_url, "must be a valid YouTube URL")
     end
