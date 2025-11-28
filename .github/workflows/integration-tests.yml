@@ -42,14 +42,14 @@ jobs:
       - name: Setup test database
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/ytgify_share_test
         run: bin/rails db:test:prepare
         working-directory: ytgify-share
 
       - name: Start Rails test server
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/ytgify_share_test
         run: |
           bin/rails server -p 3001 &
           sleep 10
