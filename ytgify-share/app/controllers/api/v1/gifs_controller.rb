@@ -55,7 +55,8 @@ module Api
           if file_param
             gif.file.attach(file_param)
             # Queue GIF processing job only if file attached
-            GifProcessingJob.perform_later(gif.id)
+            # Skip in test environment (libvips not available in CI)
+            GifProcessingJob.perform_later(gif.id) unless Rails.env.test?
           end
 
           render json: {

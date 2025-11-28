@@ -53,7 +53,8 @@ class GifsController < ApplicationController
 
     if @gif.save
       # Process GIF asynchronously (thumbnail, etc.)
-      GifProcessingJob.perform_later(@gif.id) if @gif.file.attached?
+      # Skip in test environment (libvips not available in CI)
+      GifProcessingJob.perform_later(@gif.id) if @gif.file.attached? && !Rails.env.test?
 
       redirect_to @gif, notice: "GIF uploaded successfully!"
     else
