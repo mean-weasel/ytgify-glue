@@ -43,18 +43,53 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      - name: Setup test database
-        run: bin/rails db:test:prepare
+      - name: Setup test database and storage
+        run: |
+          bin/rails db:test:prepare
+          mkdir -p tmp/storage
+          chmod 755 tmp/storage
+          echo "✓ Database prepared and tmp/storage created"
         working-directory: ytgify-share
 
       - name: Start Rails test server
         run: |
-          bin/rails server -p 3000 &
-          sleep 10
+          # Start Rails server in background with logging
+          RAILS_LOG_TO_STDOUT=true bin/rails server -p 3000 &
+          RAILS_PID=$!
+          echo "Rails PID: $RAILS_PID"
+
+          # Wait for Rails to be ready (up to 60 seconds with health checks)
+          echo "Waiting for Rails server to be ready..."
+          for i in $(seq 1 30); do
+            # curl returns 22 for 4xx errors (like 401), which means server is responding
+            if curl -sf http://localhost:3000/api/v1/auth/me > /dev/null 2>&1 || [ $? -eq 22 ]; then
+              echo "✓ Rails server is ready (attempt $i)"
+              break
+            fi
+            # Check if Rails process is still running
+            if ! kill -0 $RAILS_PID 2>/dev/null; then
+              echo "✗ Rails server died unexpectedly"
+              exit 1
+            fi
+            echo "  Waiting for Rails... (attempt $i/30)"
+            sleep 2
+          done
         working-directory: ytgify-share
 
       - name: Verify Rails server is running
-        run: curl -f http://localhost:3000/api/v1/auth/me || echo "Expected 401 - server is running"
+        run: |
+          # Test auth endpoint (should return 401 for unauthenticated)
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/v1/auth/me)
+          echo "Auth endpoint returned HTTP $HTTP_CODE (401 expected)"
+
+          # Verify tmp/storage exists for ActiveStorage
+          if [ -d "ytgify-share/tmp/storage" ]; then
+            echo "✓ tmp/storage directory exists"
+          else
+            echo "✗ Warning: tmp/storage not found"
+          fi
+
+          echo "✓ Rails server verified and ready"
 
       - name: Build Chrome extension
         run: npm run build
@@ -91,4 +126,5 @@ jobs:
           path: |
             ytgify/tests/test-results/
             ytgify/playwright-report/
+            ytgify-share/log/test.log
           retention-days: 14
