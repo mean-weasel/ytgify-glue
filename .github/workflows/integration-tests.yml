@@ -11,6 +11,7 @@ jobs:
   extension-backend:
     name: Extension-Backend Integration
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres
@@ -59,6 +60,18 @@ jobs:
 
       - name: Build Chrome extension
         run: npm run build
+        working-directory: ytgify
+
+      - name: Install FFmpeg
+        timeout-minutes: 3
+        run: |
+          for i in 1 2 3; do
+            sudo apt-get update && break || sleep 5
+          done
+          sudo apt-get install -y ffmpeg
+
+      - name: Generate test videos
+        run: npm run generate:test-videos
         working-directory: ytgify
 
       - name: Install Playwright browsers
