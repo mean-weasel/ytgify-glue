@@ -25,3 +25,43 @@
 .animate-fade-out {
   animation: fade-out 0.3s ease-out;
 }
+
+/* ========== Focus-visible styles for accessibility ========== */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+/* Remove default outline when using mouse */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ========== Button press animation ========== */
+@keyframes button-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.animate-button-press {
+  animation: button-press 0.15s ease-out;
+}
+
+/* Active state for interactive elements */
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled),
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Smooth transitions for interactive elements */
+a, button, [role="button"] {
+  transition: transform 0.1s ease-out;
+}

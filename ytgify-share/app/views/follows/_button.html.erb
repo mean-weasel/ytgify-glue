@@ -17,7 +17,7 @@
             follow_username_value: user.username,
             turbo_frame: "follow_button_#{user.id}"
           },
-          class: "group relative px-4 py-2 rounded-lg font-medium transition-all duration-200 #{is_following ? 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700' : 'bg-indigo-600 text-white hover:bg-indigo-700'}" do %>
+          class: "group relative px-4 py-2 min-h-[44px] rounded-lg font-medium transition-all duration-200 #{is_following ? 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700' : 'bg-indigo-600 text-white hover:bg-indigo-700'}" do %>
 
         <span class="follow-button-text">
           <% if is_following %>
@@ -47,6 +47,6 @@
     <!-- Show sign-in prompt for non-authenticated users -->
     <%= link_to "Follow",
         new_user_session_path,
-        class: "px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg font-medium transition-colors inline-block" %>
+        class: "px-4 py-2 min-h-[44px] inline-flex items-center bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg font-medium transition-colors" %>
   <% end %>
 <% end %>

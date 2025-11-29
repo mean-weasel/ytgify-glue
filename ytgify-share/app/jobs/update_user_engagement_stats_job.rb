@@ -21,10 +21,10 @@ class UpdateUserEngagementStatsJob < ApplicationJob
   private
 
   def update_user_stats(user)
-    # Recalculate counter caches in case they're out of sync
-    User.reset_counters(user.id, :gifs, :total_likes_received)
+    # Recalculate gifs counter cache in case it's out of sync
+    User.reset_counters(user.id, :gifs)
 
-    # These will be implemented when Follow model exists:
-    # User.reset_counters(user.id, :followers, :following)
+    # Note: total_likes_received is a denormalized column, not a counter_cache
+    # It would need to be recalculated manually if needed
   end
 end

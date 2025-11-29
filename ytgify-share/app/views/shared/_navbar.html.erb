@@ -12,9 +12,9 @@
 
         <!-- Main Navigation -->
         <div class="hidden md:flex space-x-6">
-          <%= link_to "Feed", root_path, class: "text-gray-700 hover:text-indigo-600 font-medium" %>
-          <%= link_to "Trending", trending_path, class: "text-gray-700 hover:text-indigo-600 font-medium" %>
-          <%= link_to "Collections", collections_path, class: "text-gray-700 hover:text-indigo-600 font-medium" %>
+          <%= link_to "Feed", root_path, class: "font-medium transition-colors #{current_page?(root_path) ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'}" %>
+          <%= link_to "Trending", trending_path, class: "font-medium transition-colors #{current_page?(trending_path) ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'}" %>
+          <%= link_to "Collections", collections_path, class: "font-medium transition-colors #{request.path.start_with?('/collections') ? 'text-indigo-600 border-b-2 border-indigo-600 pb-1' : 'text-gray-700 hover:text-indigo-600'}" %>
         </div>
       </div>
 
@@ -22,7 +22,7 @@
       <div class="md:hidden ml-auto mr-4" data-controller="mobile-menu">
         <button
           data-action="click->mobile-menu#toggle"
-          class="p-2 text-gray-600 hover:text-gray-900 rounded-lg">
+          class="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 rounded-lg">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -36,7 +36,7 @@
           <!-- Header -->
           <div class="flex items-center justify-between p-4 border-b">
             <span class="text-xl font-bold text-indigo-600">ytgify</span>
-            <button data-action="click->mobile-menu#toggle" class="p-2 text-gray-600 hover:text-gray-900 rounded-lg">
+            <button data-action="click->mobile-menu#toggle" class="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 rounded-lg">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -45,7 +45,7 @@
 
           <!-- Navigation Links -->
           <nav class="p-4 space-y-2">
-            <%= link_to root_path, class: "block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg font-medium" do %>
+            <%= link_to root_path, class: "block py-3 px-4 rounded-lg font-medium #{current_page?(root_path) ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-100'}" do %>
               <div class="flex items-center">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -53,7 +53,7 @@
                 Feed
               </div>
             <% end %>
-            <%= link_to trending_path, class: "block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg font-medium" do %>
+            <%= link_to trending_path, class: "block py-3 px-4 rounded-lg font-medium #{current_page?(trending_path) ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-100'}" do %>
               <div class="flex items-center">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -61,7 +61,7 @@
                 Trending
               </div>
             <% end %>
-            <%= link_to collections_path, class: "block py-3 px-4 text-gray-700 hover:bg-gray-100 rounded-lg font-medium" do %>
+            <%= link_to collections_path, class: "block py-3 px-4 rounded-lg font-medium #{request.path.start_with?('/collections') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-700 hover:bg-gray-100'}" do %>
               <div class="flex items-center">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -183,7 +183,7 @@
           <% end %>
 
           <!-- Notifications -->
-          <%= link_to notifications_path, class: "relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg", id: "notifications_bell" do %>
+          <%= link_to notifications_path, class: "relative p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg", id: "notifications_bell" do %>
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
@@ -199,7 +199,7 @@
           <div class="relative" data-controller="dropdown">
             <button
               data-action="click->dropdown#toggle"
-              class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg">
+              class="flex items-center space-x-2 p-2 min-h-[44px] hover:bg-gray-100 rounded-lg">
               <div class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold">
                 <%= current_user.username.first.upcase %>
               </div>

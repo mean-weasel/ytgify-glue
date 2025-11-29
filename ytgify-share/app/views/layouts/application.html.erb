@@ -14,6 +14,7 @@
 
   <body class="bg-gray-50">
     <%= render "shared/navbar" if user_signed_in? %>
+    <%= render "shared/scroll_to_top" %>
 
     <main class="<%= user_signed_in? ? 'pt-16' : '' %>">
       <div id="flash_messages">
