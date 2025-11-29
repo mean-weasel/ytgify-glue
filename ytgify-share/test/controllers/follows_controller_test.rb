@@ -204,6 +204,32 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "User not found", json["error"]
   end
 
+  test "nonexistent user returns not found for turbo stream" do
+    sign_in @alice
+
+    post follow_user_path("nonexistent"), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :not_found
+  end
+
+  test "nonexistent user redirects for html" do
+    sign_in @alice
+
+    post follow_user_path("nonexistent"), headers: { "Accept" => "text/html" }
+
+    assert_response :redirect
+    assert_redirected_to root_path
+  end
+
+  # Self-Follow HTML Tests
+  test "self-follow redirects back for html" do
+    sign_in @alice
+
+    post follow_user_path(@alice.username), headers: { "Accept" => "text/html" }
+
+    assert_response :redirect
+  end
+
   # Edge Cases
   test "double follow doesn't create duplicate" do
     sign_in @alice

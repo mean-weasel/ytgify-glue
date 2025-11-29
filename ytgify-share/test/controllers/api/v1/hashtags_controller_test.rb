@@ -3,6 +3,8 @@ require "test_helper"
 module Api
   module V1
     class HashtagsControllerTest < ActionDispatch::IntegrationTest
+      fixtures :users, :gifs
+
       setup do
         # Clear all hashtags before each test
         Hashtag.destroy_all
@@ -15,7 +17,127 @@ module Api
         @testing_hashtag = Hashtag.create!(name: "testing", slug: "testing", usage_count: 10)
       end
 
-      # Search endpoint tests
+      # ========== INDEX ENDPOINT TESTS ==========
+
+      test "index returns all hashtags with pagination" do
+        get api_v1_hashtags_path
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        assert json["hashtags"].is_a?(Array)
+        assert json["pagination"].is_a?(Hash)
+        assert_equal 1, json["pagination"]["page"]
+        assert json["pagination"]["total"] >= 5
+      end
+
+      test "index returns hashtags alphabetically" do
+        get api_v1_hashtags_path
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        names = json["hashtags"].map { |h| h["name"] }
+        assert_equal names, names.sort, "Hashtags should be sorted alphabetically"
+      end
+
+      test "index supports pagination params" do
+        get api_v1_hashtags_path, params: { page: 1, per_page: 2 }
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        assert_equal 2, json["hashtags"].length
+        assert_equal 1, json["pagination"]["page"]
+        assert_equal 2, json["pagination"]["per_page"]
+      end
+
+      test "index works without authentication" do
+        get api_v1_hashtags_path
+
+        assert_response :success
+      end
+
+      # ========== TRENDING ENDPOINT TESTS ==========
+
+      test "trending returns hashtags by usage count" do
+        get trending_api_v1_hashtags_path
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        assert json["hashtags"].is_a?(Array)
+
+        # Should be sorted by usage_count descending
+        if json["hashtags"].length >= 2
+          first_count = json["hashtags"].first["usage_count"]
+          second_count = json["hashtags"].second["usage_count"]
+          assert first_count >= second_count, "Trending should be sorted by usage_count desc"
+        end
+      end
+
+      test "trending returns hashtags with pagination" do
+        get trending_api_v1_hashtags_path
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        assert json["pagination"].is_a?(Hash)
+        assert json["pagination"]["total"] >= 0
+      end
+
+      test "trending supports pagination params" do
+        get trending_api_v1_hashtags_path, params: { page: 1, per_page: 3 }
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        assert json["hashtags"].length <= 3
+        assert_equal 3, json["pagination"]["per_page"]
+      end
+
+      test "trending works without authentication" do
+        get trending_api_v1_hashtags_path
+
+        assert_response :success
+      end
+
+      # ========== SHOW ENDPOINT TESTS ==========
+
+      test "show returns hashtag by slug" do
+        get api_v1_hashtag_path(@test_hashtag.slug)
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        assert_equal "test", json["hashtag"]["name"]
+        assert_equal "test", json["hashtag"]["slug"]
+        assert_equal 25, json["hashtag"]["usage_count"]
+      end
+
+      test "show returns hashtag gifs" do
+        get api_v1_hashtag_path(@test_hashtag.slug)
+
+        assert_response :success
+        json = JSON.parse(response.body)
+
+        assert json["gifs"].is_a?(Array)
+        assert json["pagination"].is_a?(Hash)
+      end
+
+      test "show returns 404 for non-existent hashtag" do
+        get api_v1_hashtag_path("nonexistent")
+
+        assert_response :not_found
+      end
+
+      test "show works without authentication" do
+        get api_v1_hashtag_path(@trending_hashtag.slug)
+
+        assert_response :success
+      end
+
+      # ========== Search endpoint tests ==========
       test "should search hashtags by prefix" do
         get search_api_v1_hashtags_path, params: { q: "test" }
 
