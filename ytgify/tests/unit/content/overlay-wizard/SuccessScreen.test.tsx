@@ -204,10 +204,11 @@ describe('SuccessScreen', () => {
     });
 
     it('should render without metadata when not provided', () => {
-      render(<SuccessScreen {...defaultProps} />);
+      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
 
       expect(screen.getByText('Your GIF is ready!')).toBeInTheDocument();
-      expect(screen.queryByText('×')).not.toBeInTheDocument(); // No dimensions
+      // When no metadata, no dimension text like "640×480" should appear
+      expect(screen.queryByText(/\d+×\d+/)).not.toBeInTheDocument();
     });
 
     it('should apply correct CSS classes to main containers', () => {
@@ -408,10 +409,11 @@ describe('SuccessScreen', () => {
 
     it('should handle missing gifMetadata gracefully', () => {
       const gifDataUrl = 'data:image/gif;base64,test';
-      render(<SuccessScreen {...defaultProps} gifDataUrl={gifDataUrl} />);
+      render(<SuccessScreen {...defaultProps} gifDataUrl={gifDataUrl} isAuthenticated={true} />);
 
       expect(screen.getByAltText('Created GIF')).toBeInTheDocument();
-      expect(screen.queryByText('×')).not.toBeInTheDocument();
+      // When no metadata, no dimension text like "640×480" should appear
+      expect(screen.queryByText(/\d+×\d+/)).not.toBeInTheDocument();
     });
 
     it('should continue rendering when all callbacks are undefined', () => {
@@ -1054,14 +1056,17 @@ describe('SuccessScreen', () => {
       });
       mockEngagementTracker.shouldShowPrompt.mockResolvedValue(true);
 
-      render(<SuccessScreen {...defaultProps} />);
+      // Pass isAuthenticated to hide sign-up CTA and avoid multiple × buttons
+      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
 
       await waitFor(() => {
         expect(screen.getByText('Leave us a review!')).toBeInTheDocument();
       });
 
       expect(screen.getByText('Enjoying YTGify?')).toBeInTheDocument();
-      expect(screen.getByText('×')).toBeInTheDocument(); // Dismiss button
+      // Use specific class to find footer dismiss button
+      const footerDismiss = document.querySelector('.ytgif-wizard-footer .dismiss-btn');
+      expect(footerDismiss).toBeInTheDocument();
     });
 
     it('should hide footer when user does not qualify (<5 GIFs)', async () => {
@@ -1137,13 +1142,15 @@ describe('SuccessScreen', () => {
       });
       mockEngagementTracker.shouldShowPrompt.mockResolvedValue(true);
 
-      render(<SuccessScreen {...defaultProps} />);
+      // Pass isAuthenticated to hide sign-up CTA and avoid multiple × buttons
+      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
 
       await waitFor(() => {
         expect(screen.getByText('Leave us a review!')).toBeInTheDocument();
       });
 
-      const dismissBtn = screen.getByText('×');
+      // Use the dismiss-btn class to find the footer dismiss button specifically
+      const dismissBtn = screen.getByRole('button', { name: '×' });
       fireEvent.click(dismissBtn);
 
       // Verify recordDismissal was called
@@ -1153,6 +1160,117 @@ describe('SuccessScreen', () => {
       await waitFor(() => {
         expect(screen.queryByText('Leave us a review!')).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Sign-up CTA for Unauthenticated Users', () => {
+    beforeEach(() => {
+      // Default: CTA not dismissed
+      (global as any).chrome = {
+        storage: {
+          local: {
+            get: jest.fn().mockImplementation(() => Promise.resolve({})),
+            set: jest.fn().mockImplementation(() => Promise.resolve()),
+          },
+        },
+      };
+    });
+
+    it('should show sign-up CTA when not authenticated', async () => {
+      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Want to save to the cloud?')).toBeInTheDocument();
+        expect(screen.getByText('Sign up for a free account')).toBeInTheDocument();
+      });
+    });
+
+    it('should not show sign-up CTA when authenticated', async () => {
+      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
+        expect(screen.queryByText('Sign up for a free account')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should hide sign-up CTA when dismiss button clicked and persist to storage', async () => {
+      const mockSet = jest.fn();
+      (global as any).chrome = {
+        storage: {
+          local: {
+            get: jest.fn().mockImplementation(() => Promise.resolve({})),
+            set: mockSet.mockImplementation(() => Promise.resolve()),
+          },
+        },
+      };
+
+      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Want to save to the cloud?')).toBeInTheDocument();
+      });
+
+      // Find the dismiss button within the signup CTA (it has aria-label="Dismiss")
+      const dismissBtn = screen.getByRole('button', { name: 'Dismiss' });
+      fireEvent.click(dismissBtn);
+
+      // CTA should be hidden
+      await waitFor(() => {
+        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
+      });
+
+      // Should persist dismissal to storage
+      expect(mockSet).toHaveBeenCalledWith({ signupCtaDismissed: true });
+    });
+
+    it('should not show sign-up CTA if previously dismissed', async () => {
+      (global as any).chrome = {
+        storage: {
+          local: {
+            get: jest.fn().mockImplementation(() => Promise.resolve({ signupCtaDismissed: true })),
+            set: jest.fn(),
+          },
+        },
+      };
+
+      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should not show sign-up CTA when upload is in progress', async () => {
+      render(<SuccessScreen {...defaultProps} isAuthenticated={false} uploadStatus="uploading" />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should not show sign-up CTA when upload succeeded', async () => {
+      render(<SuccessScreen {...defaultProps} isAuthenticated={false} uploadStatus="success" />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should open signup page when sign-up link clicked', async () => {
+      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Sign up for a free account')).toBeInTheDocument();
+      });
+
+      const signupLink = screen.getByText('Sign up for a free account');
+      fireEvent.click(signupLink);
+
+      // Should call openExternalLink with signup URL (Devise route: /users/sign_up)
+      expect(links.openExternalLink).toHaveBeenCalledWith(
+        expect.stringContaining('/users/sign_up?source=extension-wizard')
+      );
     });
   });
 });
