@@ -43,6 +43,10 @@ export default class extends Controller {
     this.gif = null
     this.encodingQuality = 10
 
+    // Accumulator canvas for proper frame compositing
+    this.accumulatorCanvas = null
+    this.accumulatorCtx = null
+
     // Default text overlay settings
     this.textSettings = {
       text: "",
@@ -82,8 +86,23 @@ export default class extends Controller {
       // Parse GIF frames
       this.gifData = await this.parseGifFrames(this.sourceGifUrlValue)
 
-      // Create canvas from first frame for preview
-      this.sourceImage = await this.createImageFromFrame(this.gifData.frames[0])
+      // Use actual GIF dimensions, not defaults
+      this.widthValue = this.gifData.width
+      this.heightValue = this.gifData.height
+
+      console.log(`Source GIF dimensions: ${this.gifData.width}x${this.gifData.height}`)
+
+      // Initialize accumulator canvas at full GIF size
+      this.accumulatorCanvas = document.createElement('canvas')
+      this.accumulatorCanvas.width = this.gifData.width
+      this.accumulatorCanvas.height = this.gifData.height
+      this.accumulatorCtx = this.accumulatorCanvas.getContext('2d')
+
+      // Render first frame to accumulator
+      this.renderFrameToAccumulator(this.gifData.frames[0], 0)
+
+      // Create preview image from accumulator
+      this.sourceImage = await this.createImageFromCanvas(this.accumulatorCanvas)
       this.renderPreview()
 
       console.log(`Loaded source GIF: ${this.gifData.frames.length} frames`)
@@ -116,6 +135,62 @@ export default class extends Controller {
     }
   }
 
+  // Render a frame to the accumulator canvas with proper disposal handling
+  renderFrameToAccumulator(frameData, frameIndex) {
+    const ctx = this.accumulatorCtx
+
+    // Handle disposal from PREVIOUS frame (before rendering current)
+    if (frameIndex > 0) {
+      const prevFrame = this.gifData.frames[frameIndex - 1]
+      const disposal = prevFrame.disposalType || 0
+
+      if (disposal === 2) {
+        // Restore to background color (clear previous frame area)
+        ctx.clearRect(
+          prevFrame.dims.left,
+          prevFrame.dims.top,
+          prevFrame.dims.width,
+          prevFrame.dims.height
+        )
+      } else if (disposal === 3) {
+        // Restore to previous state - rare, we'd need to save/restore canvas
+        // Most GIFs use disposal 0 or 2, so this is a simplified implementation
+        console.warn('GIF uses disposal method 3 (restore to previous) - may not render perfectly')
+      }
+      // disposal 0 or 1: do nothing, keep previous content (combine mode)
+    }
+
+    // Create ImageData from frame patch
+    const imageData = new ImageData(
+      new Uint8ClampedArray(frameData.patch),
+      frameData.dims.width,
+      frameData.dims.height
+    )
+
+    // Create temp canvas for this frame's patch
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = frameData.dims.width
+    tempCanvas.height = frameData.dims.height
+    const tempCtx = tempCanvas.getContext('2d')
+    tempCtx.putImageData(imageData, 0, 0)
+
+    // Draw patch at correct offset onto accumulator
+    ctx.drawImage(tempCanvas, frameData.dims.left, frameData.dims.top)
+
+    return this.accumulatorCanvas
+  }
+
+  // Create an Image from a canvas
+  createImageFromCanvas(canvas) {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = reject
+      img.src = canvas.toDataURL()
+    })
+  }
+
+  // Legacy method - kept for compatibility but uses new approach
   createImageFromFrame(frameData) {
     return new Promise((resolve, reject) => {
       // Create ImageData from frame
@@ -242,11 +317,11 @@ export default class extends Controller {
     const canvas = this.canvasTarget
     const ctx = canvas.getContext('2d')
 
-    // Set canvas size
+    // Set canvas to actual GIF dimensions (maintain aspect ratio)
     canvas.width = this.widthValue
     canvas.height = this.heightValue
 
-    // Draw source image
+    // Draw source image at native size (no stretching!)
     ctx.drawImage(this.sourceImage, 0, 0, canvas.width, canvas.height)
 
     // Draw text overlay if present
@@ -258,7 +333,7 @@ export default class extends Controller {
   drawTextOverlay(ctx) {
     const { text, fontFamily, fontSize, fontWeight, color, outlineColor, outlineWidth, position } = this.textSettings
 
-    // Calculate absolute position
+    // Calculate absolute position based on actual dimensions
     const x = position.x * this.widthValue
     const y = position.y * this.heightValue
 
@@ -280,23 +355,43 @@ export default class extends Controller {
     ctx.fillText(text, x, y)
   }
 
-  async renderFrameWithText(frameData) {
-    // Create canvas for this frame
-    const canvas = document.createElement('canvas')
-    canvas.width = this.widthValue
-    canvas.height = this.heightValue
-    const ctx = canvas.getContext('2d')
+  // Render a complete frame with text overlay for encoding
+  async renderFrameWithText(frameIndex) {
+    // Render frame to accumulator with proper disposal handling
+    this.renderFrameToAccumulator(this.gifData.frames[frameIndex], frameIndex)
 
-    // Draw frame image
-    const frameImage = await this.createImageFromFrame(frameData)
-    ctx.drawImage(frameImage, 0, 0, this.widthValue, this.heightValue)
+    // Create output canvas at actual GIF dimensions
+    const outputCanvas = document.createElement('canvas')
+    outputCanvas.width = this.gifData.width
+    outputCanvas.height = this.gifData.height
+    const outputCtx = outputCanvas.getContext('2d')
 
-    // Draw text overlay (reuse existing method)
+    // Copy accumulator to output
+    outputCtx.drawImage(this.accumulatorCanvas, 0, 0)
+
+    // Draw text overlay if present
     if (this.textSettings.text.trim()) {
-      this.drawTextOverlay(ctx)
+      const { text, fontFamily, fontSize, fontWeight, color, outlineColor, outlineWidth, position } = this.textSettings
+
+      const x = position.x * this.gifData.width
+      const y = position.y * this.gifData.height
+
+      outputCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}`
+      outputCtx.textAlign = 'center'
+      outputCtx.textBaseline = 'middle'
+
+      if (outlineWidth > 0) {
+        outputCtx.strokeStyle = outlineColor
+        outputCtx.lineWidth = outlineWidth * 2
+        outputCtx.lineJoin = 'round'
+        outputCtx.strokeText(text, x, y)
+      }
+
+      outputCtx.fillStyle = color
+      outputCtx.fillText(text, x, y)
     }
 
-    return canvas
+    return outputCanvas
   }
 
   // ========== CANVAS DRAGGING ==========
@@ -387,18 +482,23 @@ export default class extends Controller {
     this.showCancelButton()
 
     try {
+      // Reset accumulator for fresh encoding
+      this.accumulatorCtx.clearRect(0, 0, this.gifData.width, this.gifData.height)
+
       // Determine optimal worker count (2-4 based on CPU cores)
       const workerCount = Math.min(Math.max(navigator.hardwareConcurrency || 2, 2), 4)
       console.log(`Using ${workerCount} workers for encoding`)
 
-      // Initialize GIF encoder with selected quality
+      // Initialize GIF encoder with ACTUAL GIF dimensions
       this.gif = new GIF({
         workers: workerCount,
         quality: this.encodingQuality,
         workerScript: '/javascripts/gif.worker.js',
-        width: this.widthValue,
-        height: this.heightValue,
-        repeat: 0  // Loop forever
+        width: this.gifData.width,    // Use actual width
+        height: this.gifData.height,  // Use actual height
+        repeat: 0,  // Loop forever
+        dither: false,  // Disable dithering for cleaner output
+        transparent: null  // No transparency
       })
 
       // Track progress
@@ -412,11 +512,12 @@ export default class extends Controller {
 
       // Render each frame with text overlay
       const frameCount = this.gifData.frames.length
-      console.log(`Rendering ${frameCount} frames with quality ${this.encodingQuality}...`)
+      console.log(`Rendering ${frameCount} frames at ${this.gifData.width}x${this.gifData.height} with quality ${this.encodingQuality}...`)
       this.showProgress(0, `Rendering ${frameCount} frames...`)
 
       for (let i = 0; i < frameCount; i++) {
-        const frameCanvas = await this.renderFrameWithText(this.gifData.frames[i])
+        // Render frame with proper compositing and text overlay
+        const frameCanvas = await this.renderFrameWithText(i)
         const delay = this.gifData.frames[i].delay || 100  // Default 100ms
 
         this.gif.addFrame(frameCanvas, { delay: delay, copy: true })
@@ -519,7 +620,8 @@ export default class extends Controller {
       formData.append('remix[title]', title)
 
       // Add CSRF token
-      const csrfToken = document.querySelector("[name='csrf-token']").content
+      const csrfMeta = document.querySelector("[name='csrf-token']")
+      const csrfToken = csrfMeta ? csrfMeta.content : ''
 
       // Upload via fetch
       const response = await fetch(`/gifs/${this.sourceGifIdValue}/create_remix`, {
