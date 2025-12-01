@@ -9,22 +9,26 @@ permissions:
 
 jobs:
   extension-backend:
-    name: Extension-Backend Integration
+    name: Integration Shard ${{ matrix.shard }}/4
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     env:
       RAILS_ENV: test
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/ytgify_share_test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/ytgify_share_test_${{ matrix.shard }}
     services:
       postgres:
         image: postgres
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: ytgify_share_test
+          POSTGRES_DB: ytgify_share_test_${{ matrix.shard }}
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready -U postgres -d ytgify_share_test" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - uses: actions/checkout@v4
@@ -43,30 +47,25 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      - name: Setup test database and storage
+      - name: Setup test database shard ${{ matrix.shard }}
         run: |
           bin/rails db:test:prepare
           mkdir -p tmp/storage
           chmod 755 tmp/storage
-          echo "✓ Database prepared and tmp/storage created"
+          echo "✓ Database shard ${{ matrix.shard }} prepared"
         working-directory: ytgify-share
 
       - name: Start Rails test server
         run: |
-          # Start Rails server in background with logging
           RAILS_LOG_TO_STDOUT=true bin/rails server -p 3000 &
           RAILS_PID=$!
           echo "Rails PID: $RAILS_PID"
-
-          # Wait for Rails to be ready (up to 60 seconds with health checks)
           echo "Waiting for Rails server to be ready..."
           for i in $(seq 1 30); do
-            # curl returns 22 for 4xx errors (like 401), which means server is responding
             if curl -sf http://localhost:3000/api/v1/auth/me > /dev/null 2>&1 || [ $? -eq 22 ]; then
               echo "✓ Rails server is ready (attempt $i)"
               break
             fi
-            # Check if Rails process is still running
             if ! kill -0 $RAILS_PID 2>/dev/null; then
               echo "✗ Rails server died unexpectedly"
               exit 1
@@ -78,17 +77,11 @@ jobs:
 
       - name: Verify Rails server is running
         run: |
-          # Test auth endpoint (should return 401 for unauthenticated)
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/v1/auth/me)
           echo "Auth endpoint returned HTTP $HTTP_CODE (401 expected)"
-
-          # Verify tmp/storage exists for ActiveStorage
           if [ -d "ytgify-share/tmp/storage" ]; then
             echo "✓ tmp/storage directory exists"
-          else
-            echo "✗ Warning: tmp/storage not found"
           fi
-
           echo "✓ Rails server verified and ready"
 
       - name: Build Chrome extension
@@ -111,18 +104,18 @@ jobs:
         run: npx playwright install chromium --with-deps
         working-directory: ytgify
 
-      - name: Run integration tests
+      - name: Run integration tests (Shard ${{ matrix.shard }}/4)
         env:
           REAL_BACKEND: true
           BACKEND_URL: http://localhost:3000
-        run: npm run test:e2e:upload
+        run: npm run test:e2e:upload -- --shard=${{ matrix.shard }}/4
         working-directory: ytgify
 
       - name: Upload test results on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-test-results
+          name: integration-test-results-shard-${{ matrix.shard }}
           path: |
             ytgify/tests/test-results/
             ytgify/playwright-report/

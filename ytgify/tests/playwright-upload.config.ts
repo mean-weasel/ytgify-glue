@@ -23,10 +23,10 @@ const __dirname = dirname(__filename);
 
 export default defineConfig({
   testDir: './e2e-upload',
-  fullyParallel: false, // Sequential execution (backend state management)
+  fullyParallel: true, // Enable parallel execution (each shard has isolated DB)
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: 1, // Single worker to avoid upload conflicts
+  retries: process.env.CI ? 1 : 0, // Reduced from 2 to 1 (faster with sharding)
+  workers: process.env.CI ? 2 : 1, // 2 workers per shard in CI, 1 locally
 
   reporter: [
     ['list'],
