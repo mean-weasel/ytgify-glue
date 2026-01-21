@@ -1,0 +1,21 @@
+<div class="min-h-screen bg-[#0a0a0a] grid-pattern flex flex-col">
+  <div class="flex-1 flex items-center justify-center p-6">
+    <div class="max-w-2xl text-center relative">
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-red-500/20 via-orange-500/20 to-yellow-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+      <p class="text-gray-500 text-sm tracking-widest uppercase mb-8 relative">YTgify</p>
+      <h1 class="text-5xl sm:text-7xl font-bold text-white mb-6 leading-[1.1] relative">
+        Your corner of YouTube.<br/><span class="bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">All GIF'd up.</span>
+      </h1>
+      <p class="text-gray-400 text-xl mb-12 max-w-md mx-auto relative">
+        GIFs you won't find anywhere else. Made by the YouTube-obsessed.
+      </p>
+      <div class="relative max-w-md mx-auto">
+        <%= render "marketing/shared/email_capture_form", source: "share_page", button_text: "Join the Waitlist", success_message: "You're on the list!", placeholder: "you@example.com" %>
+      </div>
+      <p class="text-gray-600 text-sm mt-6 relative">
+        No spam. We'll only email you when sharing launches.
+      </p>
+    </div>
+  </div>
+  <%= render "marketing/shared/footer" %>
+</div>

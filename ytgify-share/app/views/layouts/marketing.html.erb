@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= @page_title || "YTgify - Free YouTube to GIF Converter" %></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="<%= @page_description || "Create animated GIFs from any YouTube video in seconds - no watermark, no uploads." %>">
+    <meta name="keywords" content="youtube to gif, youtube to gif converter, youtube to gif no watermark, youtube to gif chrome extension, gif maker from youtube video, animated gif maker from video, create gif from youtube, convert youtube video to gif, gif meme maker">
+    <meta name="author" content="Jeremy Watt">
+    <meta name="publisher" content="YTgify">
+
+    <% if @noindex %>
+      <meta name="robots" content="noindex, nofollow">
+    <% else %>
+      <meta name="robots" content="index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1">
+    <% end %>
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="<%= request.original_url.split('?').first %>">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<%= request.original_url %>">
+    <meta property="og:title" content="<%= @page_title || "YTgify - Free YouTube to GIF Converter" %>">
+    <meta property="og:description" content="<%= @page_description || "Free YouTube to GIF converter. Create animated GIFs from any YouTube video - no watermark, no uploads. Perfect for memes and social sharing." %>">
+    <meta property="og:image" content="<%= @og_image || image_url('marketing/og-image.png') %>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="YTgify">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= @page_title || "YTgify - Free YouTube to GIF Converter | No Watermark" %>">
+    <meta name="twitter:description" content="<%= @page_description || "Free YouTube to GIF converter. Create animated GIFs from any video - no watermark, no uploads. Perfect for memes." %>">
+    <meta name="twitter:image" content="<%= @og_image || image_url('marketing/twitter-image.png') %>">
+
+    <!-- Favicon -->
+    <link rel="icon" href="<%= asset_url('marketing/ytgify-logo.svg') %>" type="image/svg+xml">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "YTgify",
+      "url": "<%= request.base_url %>",
+      "description": "Free YouTube to GIF converter Chrome extension. Create animated GIFs from any YouTube video in seconds - no watermark, no uploads.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Chrome, Firefox",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Convert YouTube videos to GIF",
+        "Custom text overlay",
+        "FPS control",
+        "Multiple resolutions",
+        "MP4 to GIF conversion"
+      ],
+      "screenshot": "<%= image_url('marketing/og-image.png') %>",
+      "creator": {
+        "@type": "Person",
+        "name": "Jeremy Watt"
+      }
+    }
+    </script>
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+
+    <!-- Google Analytics -->
+    <% if Rails.env.production? %>
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-VSY2S87253"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-VSY2S87253');
+      </script>
+    <% end %>
+
+    <!-- Google Ads (conversion tracking for welcome page) -->
+    <% if @google_ads_conversion %>
+      <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17812979843"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'AW-17812979843');
+      </script>
+    <% end %>
+  </head>
+
+  <body class="marketing-page min-h-screen bg-[#0a0a0a] antialiased">
+    <main>
+      <%= yield %>
+    </main>
+  </body>
+</html>
