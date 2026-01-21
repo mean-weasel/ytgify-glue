@@ -10,6 +10,24 @@ import { browserMock, resetBrowserMocks } from '../__mocks__/browser-mocks';
 // Mock CSS imports
 jest.mock('../../../src/popup/styles-modern.css', () => ({}));
 
+// Mock features module
+jest.mock('../../../src/constants/features', () => ({
+  EXTERNAL_SURVEY_URL: 'https://forms.gle/mock-survey-id',
+  PROPOSED_FEATURES: [],
+}));
+
+// Mock feedback tracker
+jest.mock('../../../src/shared/feedback-tracker', () => ({
+  feedbackTracker: {
+    shouldShowTimeFeedback: jest.fn(() => Promise.resolve(false)),
+    recordSurveyClicked: jest.fn(() => Promise.resolve()),
+    recordFeedbackShown: jest.fn(() => Promise.resolve()),
+  },
+}));
+
+// Get reference to mocked feedback tracker
+import { feedbackTracker as mockFeedbackTracker } from '../../../src/shared/feedback-tracker';
+
 describe('PopupApp Component', () => {
   beforeEach(() => {
     // Reset all mocks before each test
@@ -969,6 +987,114 @@ describe('PopupApp Component', () => {
       render(<PopupApp />);
       await waitFor(() => {
         expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Tab Navigation', () => {
+    test('renders Create and Support tabs', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=test', 'Test - YouTube');
+      render(<PopupApp />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Create/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Support/i })).toBeInTheDocument();
+      });
+    });
+
+    test('Create tab is active by default', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=test', 'Test - YouTube');
+      render(<PopupApp />);
+
+      await waitFor(() => {
+        const createTab = screen.getByRole('button', { name: /Create/i });
+        expect(createTab).toHaveClass('popup-tab--active');
+      });
+    });
+
+    test('clicking Support tab switches view', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=test', 'Test - YouTube');
+      render(<PopupApp />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Support/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Support/i }));
+
+      await waitFor(() => {
+        const supportTab = screen.getByRole('button', { name: /Support/i });
+        expect(supportTab).toHaveClass('popup-tab--active');
+      });
+    });
+  });
+
+  describe('Support Tab Content', () => {
+    test('Support tab shows Discord, Survey, and Review buttons', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=test', 'Test - YouTube');
+      render(<PopupApp />);
+
+      // Switch to Support tab
+      fireEvent.click(screen.getByRole('button', { name: /Support/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Join Discord/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Take Survey/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Leave a Review/i })).toBeInTheDocument();
+      });
+    });
+
+    test('Support tab available from non-YouTube pages', async () => {
+      mockTabWithUrl('https://www.example.com', 'Example Website');
+      render(<PopupApp />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Support/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /Support/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Join Discord/i })).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Take Survey Button', () => {
+    beforeEach(() => {
+      jest.mocked(mockFeedbackTracker.shouldShowTimeFeedback).mockClear();
+      jest.mocked(mockFeedbackTracker.recordSurveyClicked).mockClear();
+      jest.mocked(mockFeedbackTracker.recordFeedbackShown).mockClear();
+    });
+
+    test('Take Survey button renders in Support tab', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=test', 'Test - YouTube');
+      render(<PopupApp />);
+
+      // Switch to Support tab
+      fireEvent.click(screen.getByRole('button', { name: /Support/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Take Survey/i })).toBeInTheDocument();
+      });
+    });
+
+    test('clicking Take Survey records survey click', async () => {
+      mockTabWithUrl('https://www.youtube.com/watch?v=test', 'Test - YouTube');
+      render(<PopupApp />);
+
+      // Switch to Support tab
+      fireEvent.click(screen.getByRole('button', { name: /Support/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Take Survey/i })).toBeInTheDocument();
+      });
+
+      const surveyButton = screen.getByRole('button', { name: /Take Survey/i });
+      fireEvent.click(surveyButton);
+
+      await waitFor(() => {
+        expect(mockFeedbackTracker.recordSurveyClicked).toHaveBeenCalled();
       });
     });
   });
