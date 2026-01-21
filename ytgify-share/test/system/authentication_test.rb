@@ -22,7 +22,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     end
 
     # Should redirect to home page and show username
-    assert_current_path root_path
+    assert_current_path app_feed_path
     assert_page_has_text "newuser123"
 
     # Verify user was created
@@ -123,7 +123,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     end
 
     # Should redirect to home page and show username
-    assert_current_path root_path
+    assert_current_path app_feed_path
     assert_page_has_text user.username
 
     take_screenshot("auth-signin-success")
@@ -165,7 +165,7 @@ class AuthenticationTest < ApplicationSystemTestCase
   test "sign in redirects to originally requested page" do
     skip "Playwright/Turbo/Devise navigation timeout - tracking for future fix"
     # Try to access a page that requires authentication
-    visit new_gif_path
+    visit new_app_gif_path
 
     # Should redirect to sign in page
     assert @page.url.include?("/users/sign_in")
@@ -200,7 +200,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     wait_for_page_load
 
     # Should redirect to home page
-    assert_current_path root_path
+    assert_current_path app_feed_path
 
     # Should not show username anymore (check for sign in link instead)
     assert_page_has_text "Sign In"
@@ -220,7 +220,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     wait_for_page_load
 
     # Try to access authenticated page
-    visit new_gif_path
+    visit new_app_gif_path
 
     # Should redirect to sign in page
     assert @page.url.include?("/users/sign_in")

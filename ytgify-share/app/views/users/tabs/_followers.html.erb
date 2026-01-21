@@ -4,7 +4,7 @@
     <% followers.each do |follower| %>
       <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-indigo-200 transition-all">
         <!-- User Info -->
-        <%= link_to user_path(follower.username), class: "flex items-center space-x-4 flex-1 min-w-0" do %>
+        <%= link_to app_user_path(follower.username), class: "flex items-center space-x-4 flex-1 min-w-0" do %>
           <!-- Avatar -->
           <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0">
             <%= follower.username.first.upcase %>

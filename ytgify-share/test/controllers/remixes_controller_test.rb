@@ -28,13 +28,13 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   # ========== NEW ACTION TESTS ==========
 
   test "should require authentication to access remix editor" do
-    get remix_gif_path(@public_gif)
+    get remix_app_gif_path(@public_gif)
     assert_redirected_to new_user_session_path
   end
 
   test "should show remix editor for public gif when authenticated" do
     sign_in @bob
-    get remix_gif_path(@public_gif)
+    get remix_app_gif_path(@public_gif)
     assert_response :success
     assert_select "h1", text: "Remix GIF"
     assert_select "canvas[data-remix-editor-target='canvas']"
@@ -42,28 +42,28 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
 
   test "should not allow remix of private gif by non-owner" do
     sign_in @bob
-    get remix_gif_path(@private_gif)
-    assert_redirected_to gif_path(@private_gif)
+    get remix_app_gif_path(@private_gif)
+    assert_redirected_to app_gif_path(@private_gif)
     assert_equal "This GIF cannot be remixed", flash[:alert]
   end
 
   test "should allow owner to remix their own private gif" do
     sign_in @alice
-    get remix_gif_path(@private_gif)
+    get remix_app_gif_path(@private_gif)
     assert_response :success
     assert_select "h1", text: "Remix GIF"
   end
 
   test "should redirect if gif not found" do
     sign_in @alice
-    get remix_gif_path(id: "00000000-0000-0000-0000-000000000000")
+    get remix_app_gif_path(id: "00000000-0000-0000-0000-000000000000")
     assert_redirected_to root_path
     assert_equal "GIF not found", flash[:alert]
   end
 
   test "should load source gif data in editor" do
     sign_in @bob
-    get remix_gif_path(@public_gif)
+    get remix_app_gif_path(@public_gif)
     assert_response :success
 
     # Check data attributes are present
@@ -76,7 +76,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
 
   test "should require authentication to create remix" do
     assert_no_difference("Gif.count") do
-      post create_remix_gif_path(@public_gif), params: {
+      post create_remix_app_gif_path(@public_gif), params: {
         remix: remix_params
       }
     end
@@ -87,7 +87,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     assert_difference("Gif.count", 1) do
-      post create_remix_gif_path(@public_gif), params: {
+      post create_remix_app_gif_path(@public_gif), params: {
         remix: remix_params
       }, as: :json
     end
@@ -108,7 +108,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should validate text overlay data" do
     sign_in @bob
 
-    post create_remix_gif_path(@public_gif), params: {
+    post create_remix_app_gif_path(@public_gif), params: {
       remix: remix_params.merge(
         text_overlay_data: {
           text: "Test",
@@ -127,7 +127,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should set default values for missing text overlay data" do
     sign_in @bob
 
-    post create_remix_gif_path(@public_gif), params: {
+    post create_remix_app_gif_path(@public_gif), params: {
       remix: {
         title: "Test Remix",
         file: fixture_file_upload("test.gif", "image/gif"),
@@ -150,7 +150,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     assert_enqueued_with(job: RemixProcessingJob) do
-      post create_remix_gif_path(@public_gif), params: {
+      post create_remix_app_gif_path(@public_gif), params: {
         remix: remix_params
       }, as: :json
     end
@@ -160,7 +160,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_no_difference("Notification.count") do
-      post create_remix_gif_path(@public_gif), params: {
+      post create_remix_app_gif_path(@public_gif), params: {
         remix: remix_params
       }, as: :json
     end
@@ -170,7 +170,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     assert_difference("Notification.count", 1) do
-      post create_remix_gif_path(@public_gif), params: {
+      post create_remix_app_gif_path(@public_gif), params: {
         remix: remix_params
       }, as: :json
     end
@@ -189,12 +189,12 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     assert_no_difference("Gif.count") do
-      post create_remix_gif_path(@private_gif), params: {
+      post create_remix_app_gif_path(@private_gif), params: {
         remix: remix_params
       }
     end
 
-    assert_redirected_to gif_path(@private_gif)
+    assert_redirected_to app_gif_path(@private_gif)
   end
 
   test "should create gif even without file but won't be processed" do
@@ -202,7 +202,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
 
     # GIF creation succeeds even without file, but processing job will skip it
     assert_difference("Gif.count", 1) do
-      post create_remix_gif_path(@public_gif), params: {
+      post create_remix_app_gif_path(@public_gif), params: {
         remix: {
           title: "Test",
           # Missing file
@@ -223,7 +223,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should return json response with gif url on success" do
     sign_in @bob
 
-    post create_remix_gif_path(@public_gif), params: {
+    post create_remix_app_gif_path(@public_gif), params: {
       remix: remix_params
     }, as: :json
 
@@ -239,7 +239,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
     @public_gif.soft_delete!
 
-    get remix_gif_path(@public_gif)
+    get remix_app_gif_path(@public_gif)
     assert_redirected_to root_path
     assert_equal "GIF not found", flash[:alert]
   end
@@ -247,7 +247,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should preserve position data from 0 to 1" do
     sign_in @bob
 
-    post create_remix_gif_path(@public_gif), params: {
+    post create_remix_app_gif_path(@public_gif), params: {
       remix: remix_params.merge(
         text_overlay_data: {
           text: "Test",
@@ -265,7 +265,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should clamp position values outside range" do
     sign_in @bob
 
-    post create_remix_gif_path(@public_gif), params: {
+    post create_remix_app_gif_path(@public_gif), params: {
       remix: remix_params.merge(
         text_overlay_data: {
           text: "Test",
@@ -287,7 +287,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should handle empty text overlay data" do
     sign_in @bob
 
-    post create_remix_gif_path(@public_gif), params: {
+    post create_remix_app_gif_path(@public_gif), params: {
       remix: {
         title: "Test",
         file: fixture_file_upload("test.gif", "image/gif")
@@ -304,7 +304,7 @@ class RemixesControllerTest < ActionDispatch::IntegrationTest
   test "should strip whitespace from text" do
     sign_in @bob
 
-    post create_remix_gif_path(@public_gif), params: {
+    post create_remix_app_gif_path(@public_gif), params: {
       remix: remix_params.merge(
         text_overlay_data: {
           text: "  Test Text  "

@@ -9,7 +9,7 @@
     <% if current_user == user %>
       <!-- Don't show follow button for own profile -->
     <% else %>
-      <%= button_to follow_user_path(user.username),
+      <%= button_to follow_app_user_path(user.username),
           method: :post,
           data: {
             controller: "follow",

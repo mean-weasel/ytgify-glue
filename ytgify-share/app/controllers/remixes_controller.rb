@@ -45,7 +45,7 @@ class RemixesController < ApplicationController
             locals: { remix: @remix }
           )
         end
-        format.json { render json: { id: @remix.id, url: gif_path(@remix) }, status: :created }
+        format.json { render json: { id: @remix.id, url: app_gif_path(@remix) }, status: :created }
         format.html { redirect_to @remix, notice: "Remix created! Processing..." }
       end
     else
@@ -73,7 +73,7 @@ class RemixesController < ApplicationController
 
   def verify_remix_permissions
     unless @source_gif.remixable_by?(current_user)
-      redirect_to @source_gif, alert: "This GIF cannot be remixed"
+      redirect_to app_gif_path(@source_gif), alert: "This GIF cannot be remixed"
     end
   end
 

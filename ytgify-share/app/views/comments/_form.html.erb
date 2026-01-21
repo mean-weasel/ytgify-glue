@@ -1,5 +1,5 @@
 <%= form_with model: [gif, comment || gif.comments.build],
-              url: gif_comments_path(gif),
+              url: app_gif_comments_path(gif),
               data: { turbo_frame: "_top" },
               class: "mb-8" do |f| %>
   <div class="flex space-x-3">
