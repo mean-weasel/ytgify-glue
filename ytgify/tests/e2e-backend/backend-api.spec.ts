@@ -19,11 +19,12 @@ const __dirname = path.dirname(__filename);
  *
  * Requirements:
  * - Backend running at BACKEND_URL (default: http://localhost:3000)
- * - Test user seeded: test@example.com / password123
+ * - Test user seeded: integration-test@example.com / password123
+ *   (defined in ytgify-share/test/fixtures/users.yml)
  */
 
 const TEST_USER = {
-  email: 'test@example.com',
+  email: 'integration-test@example.com',
   password: 'password123',
 };
 

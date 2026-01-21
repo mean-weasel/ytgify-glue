@@ -58,9 +58,9 @@ e2e_follower:
   preferences: { default_privacy: 'public', default_upload_behavior: 'show_options', recently_used_tags: [] }
 
 # Integration test user - matches extension backend-api.spec.ts
-# Email must match what extension backend-api.spec.ts expects (test@example.com)
+# Email must match what extension backend-api.spec.ts expects
 integration_test_user:
-  email: test@example.com
+  email: integration-test@example.com
   username: integration_tester
   display_name: Integration Test User
   bio: Integration test user for extension ↔ backend testing
