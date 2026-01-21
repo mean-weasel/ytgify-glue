@@ -5,12 +5,15 @@ import { jest } from '@jest/globals';
 import SuccessScreen from '../../../../src/content/overlay-wizard/screens/SuccessScreen';
 import * as links from '../../../../src/constants/links';
 import * as engagementTrackerModule from '../../../../src/shared/engagement-tracker';
+import * as feedbackTrackerModule from '../../../../src/shared/feedback-tracker';
 
 // Mock dependencies
 jest.mock('../../../../src/constants/links', () => ({
   openExternalLink: jest.fn(),
   getGitHubStarLink: jest.fn(() => 'https://github.com/neonwatty/ytgify'),
   getReviewLink: jest.fn(() => 'https://chromewebstore.google.com/detail/ytgify/mock-id/reviews'),
+  getWaitlistLink: jest.fn(() => 'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist'),
+  LINKS: { DISCORD_INVITE: 'https://discord.gg/test' },
 }));
 
 jest.mock('../../../../src/shared/engagement-tracker', () => ({
@@ -19,6 +22,19 @@ jest.mock('../../../../src/shared/engagement-tracker', () => ({
     shouldShowPrompt: jest.fn(),
     recordDismissal: jest.fn(),
   },
+}));
+
+jest.mock('../../../../src/shared/feedback-tracker', () => ({
+  feedbackTracker: {
+    shouldShowPostSuccessFeedback: jest.fn(),
+    recordFeedbackShown: jest.fn(),
+    recordSurveyClicked: jest.fn(),
+    recordPermanentDismiss: jest.fn(),
+  },
+}));
+
+jest.mock('../../../../src/constants/features', () => ({
+  EXTERNAL_SURVEY_URL: 'https://forms.gle/test-survey-id',
 }));
 
 describe('SuccessScreen', () => {
@@ -41,6 +57,7 @@ describe('SuccessScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
 
     // Default mock implementation - footer hidden (not qualified)
     const mockEngagementTracker = engagementTrackerModule.engagementTracker as any;
@@ -50,6 +67,17 @@ describe('SuccessScreen', () => {
     });
     mockEngagementTracker.shouldShowPrompt.mockResolvedValue(false);
     mockEngagementTracker.recordDismissal.mockResolvedValue(undefined);
+
+    // Default mock implementation - feedback modal hidden
+    const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+    mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(false);
+    mockFeedbackTracker.recordFeedbackShown.mockResolvedValue(undefined);
+    mockFeedbackTracker.recordSurveyClicked.mockResolvedValue(undefined);
+    mockFeedbackTracker.recordPermanentDismiss.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   describe('Basic Rendering & UI Elements', () => {
@@ -1021,16 +1049,47 @@ describe('SuccessScreen', () => {
   });
 
   describe('Bottom Action Buttons', () => {
+    it('should render Share This GIF button', () => {
+      render(<SuccessScreen {...defaultProps} />);
+      expect(screen.getByText('Share This GIF')).toBeInTheDocument();
+    });
+
     it('should render Join Discord button', () => {
       render(<SuccessScreen {...defaultProps} />);
       expect(screen.getByText('Join Discord')).toBeInTheDocument();
     });
 
-    it('should render only one bottom action button', () => {
+    it('should render two bottom action buttons', () => {
       const { container } = render(<SuccessScreen {...defaultProps} />);
       const buttons = container.querySelectorAll('.ytgif-success-bottom-actions button');
-      expect(buttons.length).toBe(1);
-      expect(buttons[0].textContent).toContain('Join Discord');
+      expect(buttons.length).toBe(2);
+      expect(buttons[0].textContent).toContain('Share This GIF');
+      expect(buttons[1].textContent).toContain('Join Discord');
+    });
+
+    it('should open waitlist link when Share This GIF is clicked', () => {
+      render(<SuccessScreen {...defaultProps} />);
+
+      const shareButton = screen.getByText('Share This GIF').closest('button');
+      fireEvent.click(shareButton!);
+
+      expect(links.openExternalLink).toHaveBeenCalledWith(
+        'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist'
+      );
+    });
+
+    it('should show waitlist subtext for Share This GIF', () => {
+      render(<SuccessScreen {...defaultProps} />);
+      expect(screen.getByText('Be first to know when sharing launches')).toBeInTheDocument();
+    });
+
+    it('should open Discord link when Join Discord is clicked', () => {
+      render(<SuccessScreen {...defaultProps} />);
+
+      const discordButton = screen.getByText('Join Discord').closest('button');
+      fireEvent.click(discordButton!);
+
+      expect(links.openExternalLink).toHaveBeenCalledWith('https://discord.gg/test');
     });
   });
 
@@ -1141,6 +1200,121 @@ describe('SuccessScreen', () => {
       // Footer should be hidden
       await waitFor(() => {
         expect(screen.queryByText('Leave us a review!')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Feedback Modal', () => {
+    beforeEach(() => {
+      // Use real timers for feedback modal tests since they involve complex async behavior
+      jest.useRealTimers();
+    });
+
+    afterEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should show feedback modal when shouldShowPostSuccessFeedback returns true', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      // Wait for the 2 second delay + async operations
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      expect(mockFeedbackTracker.recordFeedbackShown).toHaveBeenCalledWith('post-success');
+    });
+
+    it('should not show feedback modal when shouldShowPostSuccessFeedback returns false', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(false);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      // Wait a bit and verify modal never appears
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+      expect(mockFeedbackTracker.recordFeedbackShown).not.toHaveBeenCalled();
+    });
+
+    it('should close feedback modal when close button is clicked', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      // Wait for modal to appear
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      // Click close button
+      const closeButton = screen.getByLabelText('Close');
+      fireEvent.click(closeButton);
+
+      // Modal should be hidden
+      await waitFor(() => {
+        expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should close feedback modal when Take Survey is clicked', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      // Wait for modal to appear
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      // Click Take Survey
+      const surveyButton = screen.getByText('Take Survey');
+      fireEvent.click(surveyButton);
+
+      // Modal should be hidden and survey click recorded
+      await waitFor(() => {
+        expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+        expect(mockFeedbackTracker.recordSurveyClicked).toHaveBeenCalled();
+      });
+    });
+
+    it('should close feedback modal and record permanent dismiss when Dont show again is clicked', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      // Wait for modal to appear
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      // Click Don't show again
+      const dismissButton = screen.getByText("Don't show again");
+      fireEvent.click(dismissButton);
+
+      // Modal should be hidden and permanent dismiss recorded
+      await waitFor(() => {
+        expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+        expect(mockFeedbackTracker.recordPermanentDismiss).toHaveBeenCalled();
       });
     });
   });

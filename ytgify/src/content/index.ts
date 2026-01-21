@@ -25,7 +25,6 @@ import {
   ErrorResponse,
 } from '@/types';
 import { GifSettings } from '@/types/storage';
-import { StorageAdapter } from '@/lib/storage/storage-adapter';
 import { youTubeDetector, YouTubeNavigationEvent } from './youtube-detector';
 import { injectionManager } from './injection-manager';
 import { extensionStateManager } from '@/shared';
@@ -64,16 +63,8 @@ class YouTubeGifMaker {
   private isWizardMode = false;
   private wizardUpdateInterval: NodeJS.Timeout | null = null;
   private createdGifData:
-    | {
-        dataUrl: string;
-        size: number;
-        metadata: Record<string, unknown>;
-        uploadStatus?: 'uploading' | 'success' | 'failed' | 'disabled';
-        uploadError?: string;
-      }
+    | { dataUrl: string; size: number; metadata: Record<string, unknown> }
     | undefined = undefined;
-  private currentGifBlob: Blob | null = null; // Store GIF blob for manual upload
-  private currentGifSelection: { startTime: number; endTime: number } | null = null; // Store time selection
   private buttonVisible = false; // Track button visibility state - default to hidden
   private cssInjected = false; // Track if CSS has been injected
   private cssLinkElement: HTMLLinkElement | null = null; // Reference to injected CSS link
@@ -142,7 +133,7 @@ class YouTubeGifMaker {
     this.setupThemeSystem();
     this.setupStorageListener();
     await this.loadButtonVisibility();
-    // setupInjectionSystem is called from loadButtonVisibility after storage loads
+    // setupInjectionSystem now called from loadButtonVisibility after storage loads
     this.setupFrameExtraction();
     this.findVideoElement();
   }
@@ -296,9 +287,19 @@ class YouTubeGifMaker {
         this.log('debug', `[Content] Received message: ${message.type}`, { message });
 
         switch (message.type) {
-          case 'SHOW_TIMELINE':
-            this.showTimelineOverlay(message as ShowTimelineRequest);
+          case 'SHOW_TIMELINE': {
+            // Get actual video state to override placeholder values from popup
+            const videoState = this.getCurrentVideoState();
+            const updatedMessage: ShowTimelineRequest = {
+              type: 'SHOW_TIMELINE',
+              data: {
+                videoDuration: videoState?.duration || (message as ShowTimelineRequest).data.videoDuration,
+                currentTime: videoState?.currentTime ?? (message as ShowTimelineRequest).data.currentTime,
+              },
+            };
+            this.showTimelineOverlay(updatedMessage);
             break;
+          }
           case 'SHOW_WIZARD_DIRECT':
             // Handle direct wizard activation from extension icon
 
@@ -857,7 +858,6 @@ class YouTubeGifMaker {
             this.handleCreateGif(selection, textOverlays, resolution, frameRate);
           },
           onSeekTo: this.handleSeekTo.bind(this),
-          onUploadToCloud: this.triggerCloudUpload,
           isCreating: this.isCreatingGif,
           processingStatus: this.processingStatus,
           gifData: this.createdGifData,
@@ -933,7 +933,6 @@ class YouTubeGifMaker {
             this.handleCreateGif(selection, textOverlays, resolution, frameRate);
           },
           onSeekTo: this.handleSeekTo.bind(this),
-          onUploadToCloud: this.triggerCloudUpload,
           isCreating: this.isCreatingGif,
           processingStatus: this.processingStatus,
           gifData: this.createdGifData,
@@ -1425,20 +1424,11 @@ class YouTubeGifMaker {
         tags: [],
       };
 
-      // Store GIF blob and selection for manual upload
-      this.currentGifBlob = result.blob;
-      this.currentGifSelection = { startTime, endTime };
-
-      // Check if user is authenticated to determine upload status
-      const isAuthenticated = await StorageAdapter.isAuthenticated();
-
-      // Store GIF data for preview with initial upload status
+      // Store GIF data for preview
       this.createdGifData = {
         dataUrl: gifDataUrl,
         size: result.blob.size,
         metadata: gifMetadata,
-        // Manual upload: 'disabled' for authenticated users, undefined for anonymous users
-        uploadStatus: isAuthenticated ? 'disabled' : undefined,
       };
 
       // Show success feedback
@@ -1452,9 +1442,6 @@ class YouTubeGifMaker {
 
       // Force immediate update to pass GIF data to wizard
       this.updateTimelineOverlay();
-
-      // Phase 2: Manual upload - do not trigger automatically
-      // Upload is now triggered via triggerCloudUpload() method when user clicks "Upload to Cloud" button
 
       // If we're in wizard mode, don't hide the overlay - let the success screen handle it
       if (!this.isWizardMode) {
@@ -1532,137 +1519,6 @@ class YouTubeGifMaker {
     }
   }
 
-  /**
-   * Public method to trigger manual cloud upload
-   * Called when user clicks "Upload to Cloud" button in success screen
-   */
-  public triggerCloudUpload = async (): Promise<void> => {
-    try {
-      // Verify we have the necessary data
-      if (!this.currentGifBlob || !this.currentGifSelection || !this.createdGifData) {
-        this.log('error', '[Content] Cannot upload: missing blob or selection data');
-        return;
-      }
-
-      // Update status to uploading (create new object for React to detect change)
-      this.createdGifData = {
-        ...this.createdGifData,
-        uploadStatus: 'uploading',
-      };
-      this.log('info', '[Content] Upload status changed to uploading');
-      this.updateTimelineOverlay();
-
-      // Trigger the upload with forceUpload=true to bypass autoUpload preference check
-      await this.handleCloudUpload(
-        this.currentGifBlob,
-        this.createdGifData.metadata,
-        this.currentGifSelection,
-        true // forceUpload: manual upload via button, ignore autoUpload preference
-      );
-    } catch (error) {
-      this.log('error', '[Content] Upload trigger failed', { error });
-
-      // Ensure UI shows failed state even if handleCloudUpload doesn't catch it
-      if (this.createdGifData) {
-        this.createdGifData = {
-          ...this.createdGifData,
-          uploadStatus: 'failed',
-          uploadError: error instanceof Error ? error.message : 'Upload failed',
-        };
-        this.updateTimelineOverlay();
-      }
-    }
-  };
-
-  /**
-   * Phase 2: Handle cloud upload of GIF
-   * Runs asynchronously after GIF creation, updates upload status in createdGifData
-   */
-  private async handleCloudUpload(
-    blob: Blob,
-    metadata: Record<string, unknown>,
-    selection: { startTime: number; endTime: number },
-    forceUpload: boolean = false
-  ): Promise<void> {
-    try {
-      this.log('info', '[Content] Starting cloud upload...');
-
-      // Get video metadata for upload
-      const videoUrl = window.location.href;
-      const videoTitle = this.extractVideoTitle();
-      const channelName = this.extractChannelName();
-
-      const uploadParams = {
-        title: (metadata.title as string) || `GIF from ${videoTitle || 'YouTube'}`,
-        youtubeUrl: videoUrl,
-        timestampStart: selection.startTime,
-        timestampEnd: selection.endTime,
-        youtubeVideoTitle: videoTitle,
-        youtubeChannelName: channelName,
-        description: (metadata.description as string) || undefined,
-      };
-
-      // Call gifProcessor's saveGifWithCloudUpload
-      const result = await gifProcessor.saveGifWithCloudUpload(
-        blob,
-        {
-          fps: (metadata.frameRate as number) || 5,
-          width: (metadata.width as number) || 640,
-          height: (metadata.height as number) || 360,
-          duration: (metadata.duration as number) || 5,
-          frameCount: (metadata.frameCount as number) || 0,
-          fileSize: blob.size,
-          id: (metadata.id as string) || `gif-${Date.now()}`,
-        },
-        uploadParams,
-        forceUpload
-      );
-
-      // Update status based on result (create new object for React to detect change)
-      if (this.createdGifData) {
-        if (result.uploadSuccess) {
-          this.createdGifData = {
-            ...this.createdGifData,
-            uploadStatus: 'success',
-          };
-          this.log('info', '[Content] ✅ Cloud upload successful', {
-            gifId: result.uploadedGif?.id,
-          });
-        } else if (result.uploadError) {
-          this.createdGifData = {
-            ...this.createdGifData,
-            uploadStatus: 'failed',
-            uploadError: result.uploadError,
-          };
-          this.log('warn', '[Content] ⚠️ Cloud upload failed', {
-            error: result.uploadError,
-          });
-        } else {
-          // Upload disabled or user not authenticated
-          this.createdGifData = {
-            ...this.createdGifData,
-            uploadStatus: 'disabled',
-          };
-          this.log('info', '[Content] Cloud upload disabled');
-        }
-
-        // Refresh UI with final upload status
-        this.updateTimelineOverlay();
-      }
-    } catch (error) {
-      this.log('error', '[Content] Cloud upload error', { error });
-
-      if (this.createdGifData) {
-        this.createdGifData = {
-          ...this.createdGifData,
-          uploadStatus: 'failed',
-          uploadError: error instanceof Error ? error.message : 'Upload failed',
-        };
-        this.updateTimelineOverlay();
-      }
-    }
-  }
-
   private hideTimelineOverlay() {
     // Don't immediately reset wizard mode - let it persist through GIF save
     // It will be reset after the GIF is saved or on error
@@ -1691,15 +1547,25 @@ class YouTubeGifMaker {
         const apiState = youTubeAPI.getPlayerState();
 
         if (apiDuration > 0 && !isNaN(apiCurrentTime) && !isNaN(apiDuration)) {
-          return {
-            isPlaying: apiState === YouTubeAPIIntegration.PlayerState.PLAYING,
-            currentTime: apiCurrentTime,
-            duration: apiDuration,
-            videoUrl: window.location.href,
-            title: document.title,
-            playerState: apiState,
-            source: 'youtube-api',
-          };
+          // Sanity check: if API returns 0 but video element has different time, prefer video element
+          const videoElementTime = this.videoElement?.currentTime;
+          if (apiCurrentTime === 0 && videoElementTime && videoElementTime > 0.5) {
+            this.log('debug', '[Content] API returned 0 but video element has time, using video element', {
+              apiCurrentTime,
+              videoElementTime,
+            });
+            // Fall through to video element fallback
+          } else {
+            return {
+              isPlaying: apiState === YouTubeAPIIntegration.PlayerState.PLAYING,
+              currentTime: apiCurrentTime,
+              duration: apiDuration,
+              videoUrl: window.location.href,
+              title: document.title,
+              playerState: apiState,
+              source: 'youtube-api',
+            };
+          }
         }
       } catch (error) {
         this.log('warn', '[Content] YouTube API error, falling back to video element', { error });
@@ -2062,55 +1928,6 @@ class YouTubeGifMaker {
     } catch (error) {
       this.log('warn', '[Content] Error extracting video ID from URL', { error });
       return null;
-    }
-  }
-
-  /**
-   * Phase 2: Extract video title from page
-   */
-  private extractVideoTitle(): string {
-    try {
-      // Try multiple selectors for video title
-      const videoTitleElement =
-        document.querySelector('#above-the-fold h1.ytd-watch-metadata yt-formatted-string') ||
-        document.querySelector('h1.title yt-formatted-string') ||
-        document.querySelector('.ytp-title-link') ||
-        document.querySelector('h1.watch-title-container') ||
-        document.querySelector('#container h1 yt-formatted-string');
-
-      const titleText = videoTitleElement?.textContent?.trim();
-
-      if (titleText) {
-        return titleText;
-      }
-
-      // Fallback to document title (remove " - YouTube" suffix)
-      return document.title.replace(' - YouTube', '').trim() || 'YouTube Video';
-    } catch (error) {
-      this.log('warn', '[Content] Error extracting video title', { error });
-      return 'YouTube Video';
-    }
-  }
-
-  /**
-   * Phase 2: Extract channel name from page
-   */
-  private extractChannelName(): string | undefined {
-    try {
-      // Try multiple selectors for channel name
-      const channelElement =
-        document.querySelector('#owner #channel-name a') ||
-        document.querySelector('#owner-name a') ||
-        document.querySelector('ytd-channel-name a') ||
-        document.querySelector('#upload-info #channel-name a') ||
-        document.querySelector('.ytd-video-owner-renderer #channel-name a');
-
-      const channelText = channelElement?.textContent?.trim();
-
-      return channelText || undefined;
-    } catch (error) {
-      this.log('warn', '[Content] Error extracting channel name', { error });
-      return undefined;
     }
   }
 

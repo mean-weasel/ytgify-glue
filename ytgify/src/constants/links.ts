@@ -21,5 +21,10 @@ export function getReviewLink(): string {
 
 // Helper to get Discord invite link
 export function getDiscordLink(): string {
-  return 'https://discord.gg/8EUxqR93';
+  return 'https://discord.gg/ufrycqwb4R';
+}
+
+// Helper to get waitlist link with UTM tracking
+export function getWaitlistLink(): string {
+  return 'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist';
 }

@@ -18,15 +18,13 @@
     "store-assets/generate-tiles.js",
     "src/lib/service-worker-video-processor.ts",
     "src/utils/keyboard-shortcuts.ts",
-    "src/lib/api/**",
-    "src/types/auth.ts"
+    "src/types/auth.ts",
+    "src/lib/api/api-client.ts"
   ],
   "ignoreDependencies": [
     "archiver",
-    "autoprefixer",
-    "process"
+    "autoprefixer"
   ],
-  "ignoreExportsUsedInFile": true,
   "ignoreBinaries": [
     "scripts/build-production.sh"
   ],

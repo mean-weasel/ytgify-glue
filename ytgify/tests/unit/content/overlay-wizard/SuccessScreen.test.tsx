@@ -5,12 +5,14 @@ import { jest } from '@jest/globals';
 import SuccessScreen from '../../../../src/content/overlay-wizard/screens/SuccessScreen';
 import * as links from '../../../../src/constants/links';
 import * as engagementTrackerModule from '../../../../src/shared/engagement-tracker';
+import * as feedbackTrackerModule from '../../../../src/shared/feedback-tracker';
 
 // Mock dependencies
 jest.mock('../../../../src/constants/links', () => ({
   openExternalLink: jest.fn(),
   getGitHubStarLink: jest.fn(() => 'https://github.com/neonwatty/ytgify'),
   getReviewLink: jest.fn(() => 'https://chromewebstore.google.com/detail/ytgify/mock-id/reviews'),
+  getWaitlistLink: jest.fn(() => 'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist'),
 }));
 
 jest.mock('../../../../src/shared/engagement-tracker', () => ({
@@ -19,6 +21,19 @@ jest.mock('../../../../src/shared/engagement-tracker', () => ({
     shouldShowPrompt: jest.fn(),
     recordDismissal: jest.fn(),
   },
+}));
+
+jest.mock('../../../../src/shared/feedback-tracker', () => ({
+  feedbackTracker: {
+    shouldShowPostSuccessFeedback: jest.fn(),
+    recordFeedbackShown: jest.fn(),
+    recordSurveyClicked: jest.fn(),
+    recordPermanentDismiss: jest.fn(),
+  },
+}));
+
+jest.mock('../../../../src/constants/features', () => ({
+  EXTERNAL_SURVEY_URL: 'https://forms.gle/test-survey-id',
 }));
 
 describe('SuccessScreen', () => {
@@ -41,6 +56,7 @@ describe('SuccessScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
 
     // Default mock implementation - footer hidden (not qualified)
     const mockEngagementTracker = engagementTrackerModule.engagementTracker as any;
@@ -50,6 +66,17 @@ describe('SuccessScreen', () => {
     });
     mockEngagementTracker.shouldShowPrompt.mockResolvedValue(false);
     mockEngagementTracker.recordDismissal.mockResolvedValue(undefined);
+
+    // Default mock implementation - feedback modal hidden
+    const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+    mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(false);
+    mockFeedbackTracker.recordFeedbackShown.mockResolvedValue(undefined);
+    mockFeedbackTracker.recordSurveyClicked.mockResolvedValue(undefined);
+    mockFeedbackTracker.recordPermanentDismiss.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   describe('Basic Rendering & UI Elements', () => {
@@ -204,11 +231,10 @@ describe('SuccessScreen', () => {
     });
 
     it('should render without metadata when not provided', () => {
-      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
+      render(<SuccessScreen {...defaultProps} />);
 
       expect(screen.getByText('Your GIF is ready!')).toBeInTheDocument();
-      // When no metadata, no dimension text like "640×480" should appear
-      expect(screen.queryByText(/\d+×\d+/)).not.toBeInTheDocument();
+      expect(screen.queryByText('×')).not.toBeInTheDocument(); // No dimensions
     });
 
     it('should apply correct CSS classes to main containers', () => {
@@ -409,11 +435,10 @@ describe('SuccessScreen', () => {
 
     it('should handle missing gifMetadata gracefully', () => {
       const gifDataUrl = 'data:image/gif;base64,test';
-      render(<SuccessScreen {...defaultProps} gifDataUrl={gifDataUrl} isAuthenticated={true} />);
+      render(<SuccessScreen {...defaultProps} gifDataUrl={gifDataUrl} />);
 
       expect(screen.getByAltText('Created GIF')).toBeInTheDocument();
-      // When no metadata, no dimension text like "640×480" should appear
-      expect(screen.queryByText(/\d+×\d+/)).not.toBeInTheDocument();
+      expect(screen.queryByText('×')).not.toBeInTheDocument();
     });
 
     it('should continue rendering when all callbacks are undefined', () => {
@@ -1034,16 +1059,38 @@ describe('SuccessScreen', () => {
   });
 
   describe('Bottom Action Buttons', () => {
+    it('should render Share This GIF button', () => {
+      render(<SuccessScreen {...defaultProps} />);
+      expect(screen.getByText('Share This GIF')).toBeInTheDocument();
+    });
+
     it('should render Join Discord button', () => {
       render(<SuccessScreen {...defaultProps} />);
       expect(screen.getByText('Join Discord')).toBeInTheDocument();
     });
 
-    it('should render only one bottom action button', () => {
+    it('should render two bottom action buttons', () => {
       const { container } = render(<SuccessScreen {...defaultProps} />);
       const buttons = container.querySelectorAll('.ytgif-success-bottom-actions button');
-      expect(buttons.length).toBe(1);
-      expect(buttons[0].textContent).toContain('Join Discord');
+      expect(buttons.length).toBe(2);
+      expect(buttons[0].textContent).toContain('Share This GIF');
+      expect(buttons[1].textContent).toContain('Join Discord');
+    });
+
+    it('should open waitlist page when Share This GIF button is clicked', () => {
+      render(<SuccessScreen {...defaultProps} />);
+
+      const shareButton = screen.getByText('Share This GIF');
+      fireEvent.click(shareButton);
+
+      expect(links.openExternalLink).toHaveBeenCalledWith(
+        'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist'
+      );
+    });
+
+    it('should show subtext under Share This GIF button', () => {
+      render(<SuccessScreen {...defaultProps} />);
+      expect(screen.getByText('Be first to know when sharing launches')).toBeInTheDocument();
     });
   });
 
@@ -1056,17 +1103,14 @@ describe('SuccessScreen', () => {
       });
       mockEngagementTracker.shouldShowPrompt.mockResolvedValue(true);
 
-      // Pass isAuthenticated to hide sign-up CTA and avoid multiple × buttons
-      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
+      render(<SuccessScreen {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('Leave us a review!')).toBeInTheDocument();
       });
 
       expect(screen.getByText('Enjoying YTGify?')).toBeInTheDocument();
-      // Use specific class to find footer dismiss button
-      const footerDismiss = document.querySelector('.ytgif-wizard-footer .dismiss-btn');
-      expect(footerDismiss).toBeInTheDocument();
+      expect(screen.getByText('×')).toBeInTheDocument(); // Dismiss button
     });
 
     it('should hide footer when user does not qualify (<5 GIFs)', async () => {
@@ -1142,15 +1186,13 @@ describe('SuccessScreen', () => {
       });
       mockEngagementTracker.shouldShowPrompt.mockResolvedValue(true);
 
-      // Pass isAuthenticated to hide sign-up CTA and avoid multiple × buttons
-      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
+      render(<SuccessScreen {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('Leave us a review!')).toBeInTheDocument();
       });
 
-      // Use the dismiss-btn class to find the footer dismiss button specifically
-      const dismissBtn = screen.getByRole('button', { name: '×' });
+      const dismissBtn = screen.getByText('×');
       fireEvent.click(dismissBtn);
 
       // Verify recordDismissal was called
@@ -1163,114 +1205,115 @@ describe('SuccessScreen', () => {
     });
   });
 
-  describe('Sign-up CTA for Unauthenticated Users', () => {
+  describe('Feedback Modal', () => {
     beforeEach(() => {
-      // Default: CTA not dismissed
-      (global as any).chrome = {
-        storage: {
-          local: {
-            get: jest.fn().mockImplementation(() => Promise.resolve({})),
-            set: jest.fn().mockImplementation(() => Promise.resolve()),
-          },
+      // Use real timers for feedback modal tests since they involve complex async behavior
+      jest.useRealTimers();
+    });
+
+    afterEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it('should show feedback modal when shouldShowPostSuccessFeedback returns true', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      // Wait for the 2 second delay + async operations
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
         },
-      };
-    });
-
-    it('should show sign-up CTA when not authenticated', async () => {
-      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Want to save to the cloud?')).toBeInTheDocument();
-        expect(screen.getByText('Sign up for a free account')).toBeInTheDocument();
-      });
-    });
-
-    it('should not show sign-up CTA when authenticated', async () => {
-      render(<SuccessScreen {...defaultProps} isAuthenticated={true} />);
-
-      await waitFor(() => {
-        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
-        expect(screen.queryByText('Sign up for a free account')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should hide sign-up CTA when dismiss button clicked and persist to storage', async () => {
-      const mockSet = jest.fn();
-      (global as any).chrome = {
-        storage: {
-          local: {
-            get: jest.fn().mockImplementation(() => Promise.resolve({})),
-            set: mockSet.mockImplementation(() => Promise.resolve()),
-          },
-        },
-      };
-
-      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Want to save to the cloud?')).toBeInTheDocument();
-      });
-
-      // Find the dismiss button within the signup CTA (it has aria-label="Dismiss")
-      const dismissBtn = screen.getByRole('button', { name: 'Dismiss' });
-      fireEvent.click(dismissBtn);
-
-      // CTA should be hidden
-      await waitFor(() => {
-        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
-      });
-
-      // Should persist dismissal to storage
-      expect(mockSet).toHaveBeenCalledWith({ signupCtaDismissed: true });
-    });
-
-    it('should not show sign-up CTA if previously dismissed', async () => {
-      (global as any).chrome = {
-        storage: {
-          local: {
-            get: jest.fn().mockImplementation(() => Promise.resolve({ signupCtaDismissed: true })),
-            set: jest.fn(),
-          },
-        },
-      };
-
-      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
-
-      await waitFor(() => {
-        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should not show sign-up CTA when upload is in progress', async () => {
-      render(<SuccessScreen {...defaultProps} isAuthenticated={false} uploadStatus="uploading" />);
-
-      await waitFor(() => {
-        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should not show sign-up CTA when upload succeeded', async () => {
-      render(<SuccessScreen {...defaultProps} isAuthenticated={false} uploadStatus="success" />);
-
-      await waitFor(() => {
-        expect(screen.queryByText('Want to save to the cloud?')).not.toBeInTheDocument();
-      });
-    });
-
-    it('should open signup page when sign-up link clicked', async () => {
-      render(<SuccessScreen {...defaultProps} isAuthenticated={false} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Sign up for a free account')).toBeInTheDocument();
-      });
-
-      const signupLink = screen.getByText('Sign up for a free account');
-      fireEvent.click(signupLink);
-
-      // Should call openExternalLink with signup URL (Devise route: /users/sign_up)
-      expect(links.openExternalLink).toHaveBeenCalledWith(
-        expect.stringContaining('/users/sign_up?source=extension-wizard')
+        { timeout: 3000 }
       );
+
+      expect(mockFeedbackTracker.recordFeedbackShown).toHaveBeenCalledWith('post-success');
+    });
+
+    it('should not show feedback modal when shouldShowPostSuccessFeedback returns false', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(false);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      // Wait a bit and verify modal never appears
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+      expect(mockFeedbackTracker.recordFeedbackShown).not.toHaveBeenCalled();
+    });
+
+    it('should close feedback modal when Take Survey is clicked', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      const surveyButton = screen.getByText('Take Survey');
+      fireEvent.click(surveyButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+      });
+
+      expect(mockFeedbackTracker.recordSurveyClicked).toHaveBeenCalled();
+      expect(links.openExternalLink).toHaveBeenCalledWith('https://forms.gle/test-survey-id');
+    });
+
+    it('should close feedback modal and record permanent dismiss when Dont show again is clicked', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      const dismissButton = screen.getByText("Don't show again");
+      fireEvent.click(dismissButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+      });
+
+      expect(mockFeedbackTracker.recordPermanentDismiss).toHaveBeenCalled();
+    });
+
+    it('should close feedback modal when X button is clicked (temporary dismiss)', async () => {
+      const mockFeedbackTracker = feedbackTrackerModule.feedbackTracker as any;
+      mockFeedbackTracker.shouldShowPostSuccessFeedback.mockResolvedValue(true);
+
+      render(<SuccessScreen {...defaultProps} />);
+
+      await waitFor(
+        () => {
+          expect(screen.getByText('Help us improve YTGify')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      const closeButton = screen.getByLabelText('Close');
+      fireEvent.click(closeButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Help us improve YTGify')).not.toBeInTheDocument();
+      });
+
+      // Permanent dismiss should NOT be called for X button
+      expect(mockFeedbackTracker.recordPermanentDismiss).not.toHaveBeenCalled();
     });
   });
 });

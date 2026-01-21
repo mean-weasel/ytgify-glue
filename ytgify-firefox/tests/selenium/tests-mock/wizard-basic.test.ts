@@ -19,6 +19,7 @@ import {
   MOCK_VIDEOS,
   extractGifMetadataFromUrl
 } from '../helpers';
+import { sleep } from '../test-utils';
 
 describe('Mock E2E: Basic Wizard Tests (Selenium)', () => {
   let driver: WebDriver;
@@ -358,6 +359,47 @@ describe('Mock E2E: Basic Wizard Tests (Selenium)', () => {
     expect(duration).toBeGreaterThan(0);
 
     console.log(`✅ Timeline slider synchronized: ${duration.toFixed(1)}s`);
+  }, 60000);
+
+  it('Wizard opens at current video time when user has seeked', async () => {
+    const youtube = new YouTubePage(driver);
+    const quickCapture = new QuickCapturePage(driver);
+
+    // Use medium video (10s) to have room for seeking
+    await youtube.navigateToVideo(getMockVideoUrl('medium', mockServerUrl));
+    console.log('[Mock Test] Navigated to medium video (10s)');
+
+    // Seek video to 5 seconds (medium video is 10s)
+    const seekTime = 5;
+    await youtube.seekToTime(seekTime);
+    await sleep(driver, 500);
+
+    // Verify seek worked
+    const currentTime = await youtube.getCurrentTime();
+    console.log(`[Mock Test] Video current time after seek: ${currentTime}s`);
+    expect(currentTime).toBeGreaterThanOrEqual(seekTime - 1);
+    expect(currentTime).toBeLessThanOrEqual(seekTime + 1);
+
+    // Open the wizard
+    console.log('[Mock Test] Opening wizard...');
+    await youtube.openGifWizard();
+    await quickCapture.waitForScreen();
+
+    // Get the timeline selection label which shows the start/end times
+    // Format: "0:05 - 0:10" (MM:SS - MM:SS)
+    const selectionLabel = await quickCapture.getSelectionLabelText();
+    console.log(`[Mock Test] Timeline selection label: ${selectionLabel}`);
+
+    expect(selectionLabel).toBeTruthy();
+
+    // Parse and verify start time is near the seek position (within 2 second tolerance)
+    const totalStartSeconds = await quickCapture.getSelectionStartTime();
+    console.log(`[Mock Test] Wizard start time: ${totalStartSeconds}s (expected ~${seekTime}s)`);
+
+    expect(totalStartSeconds).toBeGreaterThanOrEqual(seekTime - 2);
+    expect(totalStartSeconds).toBeLessThanOrEqual(seekTime + 2);
+
+    console.log('✅ [Mock Test] Wizard opened at correct video seek position!');
   }, 60000);
 
   // ========== Helper Functions ==========

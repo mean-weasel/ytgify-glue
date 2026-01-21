@@ -1,0 +1,31 @@
+<div class="w-full" data-controller="gif-carousel">
+  <div class="relative">
+    <!-- GIF Carousel -->
+    <div class="overflow-hidden rounded-lg border border-gray-800">
+      <div class="flex transition-transform duration-500" data-gif-carousel-target="slides">
+        <div class="w-full flex-shrink-0">
+          <%= image_tag "https://raw.githubusercontent.com/neonwatty/readme_gifs/main/free-gratis.gif",
+            alt: "Example GIF 1",
+            class: "w-full h-auto" %>
+        </div>
+        <div class="w-full flex-shrink-0">
+          <%= image_tag "https://raw.githubusercontent.com/neonwatty/readme_gifs/main/boom-baby.gif",
+            alt: "Example GIF 2",
+            class: "w-full h-auto" %>
+        </div>
+        <div class="w-full flex-shrink-0">
+          <%= image_tag "https://raw.githubusercontent.com/neonwatty/readme_gifs/main/witness-me.gif",
+            alt: "Example GIF 3",
+            class: "w-full h-auto" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carousel Dots -->
+    <div class="flex justify-center gap-2 mt-3">
+      <button class="w-2 h-2 rounded-full bg-white transition-opacity" data-gif-carousel-target="dot" data-action="click->gif-carousel#goToSlide" data-index="0"></button>
+      <button class="w-2 h-2 rounded-full bg-white/40 transition-opacity" data-gif-carousel-target="dot" data-action="click->gif-carousel#goToSlide" data-index="1"></button>
+      <button class="w-2 h-2 rounded-full bg-white/40 transition-opacity" data-gif-carousel-target="dot" data-action="click->gif-carousel#goToSlide" data-index="2"></button>
+    </div>
+  </div>
+</div>

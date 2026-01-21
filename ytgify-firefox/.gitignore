@@ -122,3 +122,4 @@ webp-outputs/
 
 # Selenium test extensions
 tests/selenium/extensions/*.xpi
+.firefox-test-profile/
