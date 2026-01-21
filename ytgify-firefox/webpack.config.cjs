@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -60,6 +61,11 @@ module.exports = (env, argv) => {
       },
     },
     plugins: [
+      // Define process.env variables for browser compatibility
+      new webpack.DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+        'process.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || 'https://ytgify.com/api/v1'),
+      }),
       new MiniCssExtractPlugin({
         filename: '[name].css',
       }),
@@ -80,15 +86,12 @@ module.exports = (env, argv) => {
             noErrorOnMissing: true,
           },
           {
-            // Look in both local and root node_modules (npm workspaces hoists to root)
             from: path.resolve(__dirname, '..', 'node_modules/gif.js/dist/gif.worker.js'),
             to: 'gif.worker.js',
-            noErrorOnMissing: false,
           },
           {
             from: path.resolve(__dirname, '..', 'node_modules/gifski-wasm/pkg/gifski_wasm_bg.wasm'),
-            to: 'pkg/gifski_wasm_bg.wasm',
-            noErrorOnMissing: false,
+            to: 'pkg/gifski_wasm_bg.wasm'
           },
         ],
       }),

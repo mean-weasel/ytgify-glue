@@ -63,6 +63,10 @@ gem "alba", "~> 3.3"
 # Pagination
 gem "pagy", "~> 9.1"
 
+# Markdown rendering for blog
+gem "redcarpet", "~> 3.6"
+gem "rouge", "~> 4.2"
+
 # Rate limiting
 gem "rack-attack", "~> 6.7"
 

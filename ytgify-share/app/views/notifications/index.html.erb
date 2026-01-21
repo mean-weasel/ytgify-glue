@@ -6,7 +6,7 @@
         <h1 class="text-2xl font-bold text-gray-900">Notifications</h1>
         <% if @unread_count > 0 %>
           <%= button_to "Mark All as Read",
-              mark_all_as_read_notifications_path,
+              mark_all_as_read_app_notifications_path,
               method: :post,
               class: "text-sm text-indigo-600 hover:text-indigo-700 font-medium" %>
         <% end %>

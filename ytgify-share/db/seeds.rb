@@ -18,8 +18,19 @@ User.destroy_all
 
 puts "👥 Creating users..."
 
+# Create integration test user (required by extension backend-api.spec.ts)
+integration_user = User.create!(
+  email: "test@example.com",
+  username: "testuser",
+  password: "password123",
+  password_confirmation: "password123",
+  display_name: "Test User",
+  bio: "Integration test user for extension ↔ backend testing"
+)
+puts "  ✓ Created #{integration_user.username} (integration test)"
+
 # Create test users
-users = []
+users = [ integration_user ]
 5.times do |i|
   user = User.create!(
     email: "user#{i + 1}@example.com",
@@ -217,6 +228,7 @@ puts "  Comments: #{Comment.count}"
 puts "  Follows: #{Follow.count}"
 puts "  Collections: #{Collection.count}"
 puts "\n🔑 Test Credentials:"
-puts "  Email: user1@example.com to user5@example.com"
+puts "  Integration: test@example.com / password123"
+puts "  Other users: user1@example.com to user5@example.com"
 puts "  Password: password123"
 puts "\n🎉 Ready to test!"

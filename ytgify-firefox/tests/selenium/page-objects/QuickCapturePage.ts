@@ -279,4 +279,32 @@ export class QuickCapturePage {
     await this.waitForScreen();
     await sleep(this.driver, 1000);
   }
+
+  /**
+   * Get the selection label text that shows start/end times
+   * Format: "0:10 - 0:15" (MM:SS - MM:SS)
+   */
+  async getSelectionLabelText(): Promise<string | null> {
+    return executeScript<string | null>(
+      this.driver,
+      'return document.querySelector(".ytgif-label-selection")?.textContent || null'
+    );
+  }
+
+  /**
+   * Parse selection label time into start time in seconds
+   * @returns Start time in seconds from the selection label
+   */
+  async getSelectionStartTime(): Promise<number> {
+    const selectionLabel = await this.getSelectionLabelText();
+    if (!selectionLabel) return 0;
+
+    // Parse the time display format: "0:10 - 0:15" (MM:SS - MM:SS)
+    const match = selectionLabel.match(/(\d+):(\d+)\s*-\s*(\d+):(\d+)/);
+    if (!match) return 0;
+
+    const startMinutes = parseInt(match[1]);
+    const startSeconds = parseInt(match[2]);
+    return startMinutes * 60 + startSeconds;
+  }
 }

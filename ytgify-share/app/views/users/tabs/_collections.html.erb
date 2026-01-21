@@ -2,7 +2,7 @@
   <!-- Collections Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     <% collections.each do |collection| %>
-      <%= link_to collection_path(collection),
+      <%= link_to app_collection_path(collection),
           class: "block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden group" do %>
 
         <!-- Collection Preview Grid (2x2 of first 4 GIFs) -->
@@ -97,7 +97,7 @@
     </p>
 
     <% if user_signed_in? && current_user == user %>
-      <%= link_to new_collection_path,
+      <%= link_to new_app_collection_path,
           class: "inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" do %>
         Create Your First Collection
       <% end %>

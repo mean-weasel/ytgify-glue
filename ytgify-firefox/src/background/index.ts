@@ -10,6 +10,9 @@ import { initializeMessageBus } from '@/shared/message-bus';
 import { sharedLogger, sharedErrorHandler, extensionStateManager } from '@/shared';
 import { engagementTracker } from '@/shared/engagement-tracker';
 import { MigrationManager } from './migrations';
+import { TokenManager } from './token-manager';
+import { StorageAdapter } from '@/lib/storage/storage-adapter';
+import { apiClient } from '@/lib/api/api-client';
 
 // Declare browser namespace for Firefox
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,6 +62,10 @@ browser.runtime.onInstalled.addListener(
         // Initialize engagement tracking
         await engagementTracker.initializeEngagement();
         sharedLogger.info('[Background] Engagement tracking initialized', {}, 'background');
+
+        // Set up token refresh alarm for auth
+        await TokenManager.setupTokenRefreshAlarm();
+        sharedLogger.info('[Background] Token refresh alarm set up', {}, 'background');
       }
 
       endTimer();
@@ -77,6 +84,10 @@ browser.runtime.onStartup.addListener(
 
     // Initialize extension state on startup
     await extensionStateManager.clearRuntimeState();
+
+    // Check and refresh auth token on startup
+    await TokenManager.onServiceWorkerActivation();
+    sharedLogger.info('[Background] Auth token check completed', {}, 'background');
   }
 );
 
@@ -206,6 +217,98 @@ browser.commands.onCommand.addListener(async (command: string) => {
     } catch (error) {
       console.error('[BACKGROUND] Failed to send message:', error);
     }
+  }
+});
+
+// ========================================
+// Auth Message Handlers
+// ========================================
+
+// Handle auth-related messages
+browser.runtime.onMessage.addListener(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (message: any, sender: any, sendResponse: (response: any) => void) => {
+    // Check auth status
+    if (message.type === 'CHECK_AUTH') {
+      (async () => {
+        try {
+          const isAuthenticated = await StorageAdapter.isAuthenticated();
+          const userProfile = isAuthenticated ? await StorageAdapter.getUserProfile() : null;
+          sendResponse({ authenticated: isAuthenticated, userProfile });
+        } catch (error) {
+          console.error('[Background] CHECK_AUTH failed:', error);
+          sendResponse({ authenticated: false, error: String(error) });
+        }
+      })();
+      return true; // Keep channel open for async response
+    }
+
+    // Refresh token
+    if (message.type === 'REFRESH_TOKEN') {
+      (async () => {
+        try {
+          const success = await TokenManager.manualRefresh();
+          sendResponse({ success });
+        } catch (error) {
+          console.error('[Background] REFRESH_TOKEN failed:', error);
+          sendResponse({ success: false, error: String(error) });
+        }
+      })();
+      return true;
+    }
+
+    // Login
+    if (message.type === 'LOGIN') {
+      (async () => {
+        try {
+          const { email, password } = message;
+          const response = await apiClient.login(email, password);
+          sendResponse({ success: true, user: response.user });
+        } catch (error) {
+          console.error('[Background] LOGIN failed:', error);
+          sendResponse({ success: false, error: String(error) });
+        }
+      })();
+      return true;
+    }
+
+    // Logout
+    if (message.type === 'LOGOUT') {
+      (async () => {
+        try {
+          await apiClient.logout();
+          sendResponse({ success: true });
+        } catch (error) {
+          console.error('[Background] LOGOUT failed:', error);
+          sendResponse({ success: false, error: String(error) });
+        }
+      })();
+      return true;
+    }
+
+    // Get user profile
+    if (message.type === 'GET_USER_PROFILE') {
+      (async () => {
+        try {
+          const userProfile = await apiClient.getCurrentUser();
+          sendResponse({ success: true, userProfile });
+        } catch (error) {
+          console.error('[Background] GET_USER_PROFILE failed:', error);
+          sendResponse({ success: false, error: String(error) });
+        }
+      })();
+      return true;
+    }
+
+    return false;
+  }
+);
+
+// Handle token refresh alarm
+browser.alarms.onAlarm.addListener(async (alarm: { name: string }) => {
+  if (alarm.name === 'refreshToken') {
+    console.log('[Background] Token refresh alarm triggered');
+    await TokenManager.onTokenRefreshAlarm();
   }
 });
 

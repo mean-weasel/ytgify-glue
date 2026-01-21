@@ -14,50 +14,50 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
 
   test "should show index page for authenticated user" do
     sign_in @alice
-    get gifs_path
+    get app_gifs_path
     assert_response :success
   end
 
   test "should show index page for unauthenticated user" do
-    get gifs_path
+    get app_gifs_path
     assert_response :success
   end
 
   # ========== SHOW ACTION TESTS ==========
 
   test "should show public gif to unauthenticated user" do
-    get gif_path(@alice_gif)
+    get app_gif_path(@alice_gif)
     assert_response :success
   end
 
   test "should show public gif to authenticated user" do
     sign_in @bob
-    get gif_path(@alice_gif)
+    get app_gif_path(@alice_gif)
     assert_response :success
   end
 
   test "should return 404 for non-existent gif" do
-    get gif_path(id: "00000000-0000-0000-0000-000000000000")
+    get app_gif_path(id: "00000000-0000-0000-0000-000000000000")
     assert_response :not_found
   end
 
   test "should show deleted gif" do
     # Note: Controller doesn't filter deleted GIFs in show action
     @alice_gif.update!(deleted_at: Time.current)
-    get gif_path(@alice_gif)
+    get app_gif_path(@alice_gif)
     assert_response :success
   end
 
   # ========== NEW ACTION TESTS ==========
 
   test "should require authentication for new gif page" do
-    get new_gif_path
+    get new_app_gif_path
     assert_redirected_to new_user_session_path
   end
 
   test "should show new gif form for authenticated user" do
     sign_in @alice
-    get new_gif_path
+    get new_app_gif_path
     assert_response :success
     assert_select "form"
   end
@@ -66,7 +66,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
 
   test "should require authentication to create gif" do
     assert_no_difference("Gif.count") do
-      post gifs_path, params: {
+      post app_gifs_path, params: {
         gif: { title: "New GIF" }
       }
     end
@@ -77,7 +77,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_difference("Gif.count", 1) do
-      post gifs_path, params: {
+      post app_gifs_path, params: {
         gif: {
           title: "New Test GIF"
         }
@@ -93,7 +93,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_difference("Gif.count", 1) do
-      post gifs_path, params: {
+      post app_gifs_path, params: {
         gif: {
           title: "Complete Test GIF",
           description: "Test description",
@@ -110,7 +110,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_no_difference("Gif.count") do
-      post gifs_path, params: {
+      post app_gifs_path, params: {
         gif: { title: "A" * 101 }
       }
     end
@@ -125,7 +125,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
 
   test "should require authentication to destroy gif" do
     assert_no_difference("Gif.count") do
-      delete gif_path(@alice_gif)
+      delete app_gif_path(@alice_gif)
     end
     assert_redirected_to new_user_session_path
   end
@@ -134,7 +134,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_difference("Gif.count", -1) do
-      delete gif_path(@alice_gif)
+      delete app_gif_path(@alice_gif)
     end
 
     assert_redirected_to root_path
@@ -145,7 +145,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     assert_no_difference("Gif.count") do
-      delete gif_path(@alice_gif)
+      delete app_gif_path(@alice_gif)
     end
 
     assert_redirected_to root_path
@@ -155,27 +155,27 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should return 404 when deleting non-existent gif" do
     sign_in @alice
 
-    delete gif_path(id: "00000000-0000-0000-0000-000000000000")
+    delete app_gif_path(id: "00000000-0000-0000-0000-000000000000")
     assert_response :not_found
   end
 
   # ========== EDIT ACTION TESTS ==========
 
   test "should require authentication to edit gif" do
-    get edit_gif_path(@alice_gif)
+    get edit_app_gif_path(@alice_gif)
     assert_redirected_to new_user_session_path
   end
 
   test "should allow owner to edit their gif" do
     sign_in @alice
-    get edit_gif_path(@alice_gif)
+    get edit_app_gif_path(@alice_gif)
     assert_response :success
     assert_select "h1", text: "Edit GIF"
   end
 
   test "should not allow non-owner to edit gif" do
     sign_in @bob
-    get edit_gif_path(@alice_gif)
+    get edit_app_gif_path(@alice_gif)
     assert_redirected_to root_path
     assert_equal "You're not authorized to perform this action.", flash[:alert]
   end
@@ -185,7 +185,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should require authentication to update gif" do
     new_title = "Updated Title"
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { title: new_title }
     }
 
@@ -198,14 +198,14 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     new_title = "Updated Title"
     new_description = "Updated description"
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: {
         title: new_title,
         description: new_description
       }
     }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     assert_equal new_title, @alice_gif.reload.title
     assert_equal new_description, @alice_gif.reload.description
     assert_equal "GIF updated successfully!", flash[:notice]
@@ -214,11 +214,11 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should update hashtags" do
     sign_in @alice
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { hashtag_names: [ "new", "tags", "here" ] }
     }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     assert_equal [ "here", "new", "tags" ], @alice_gif.reload.hashtag_names.sort
   end
 
@@ -226,11 +226,11 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     assert @alice_gif.privacy_public_access?
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { privacy: "unlisted" }
     }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     assert @alice_gif.reload.privacy_unlisted?
   end
 
@@ -238,7 +238,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     new_title = "Turbo Updated Title"
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { title: new_title }
     }, as: :turbo_stream
 
@@ -251,7 +251,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should handle validation errors with HTML format" do
     sign_in @alice
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { title: "A" * 101 } # Over 100 char limit
     }
 
@@ -263,7 +263,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should handle validation errors with Turbo Stream format" do
     sign_in @alice
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { title: "A" * 101 } # Over 100 char limit
     }, as: :turbo_stream
 
@@ -275,7 +275,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
     original_title = @alice_gif.title
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { title: "Hacked!" }
     }
 
@@ -290,7 +290,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     new_description = "Multi-Update Description"
     new_privacy = "private_access"
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: {
         title: new_title,
         description: new_description,
@@ -299,7 +299,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     @alice_gif.reload
     assert_equal new_title, @alice_gif.title
     assert_equal new_description, @alice_gif.description
@@ -313,11 +313,11 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     original_youtube_url = @alice_gif.youtube_video_url
     new_description = "Only description changed"
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { description: new_description }
     }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     @alice_gif.reload
     assert_equal original_title, @alice_gif.title
     assert_equal original_youtube_url, @alice_gif.youtube_video_url
@@ -329,7 +329,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should enforce authorization for edit" do
     sign_in @bob
 
-    get edit_gif_path(@alice_gif)
+    get edit_app_gif_path(@alice_gif)
 
     assert_redirected_to root_path
     assert_equal "You're not authorized to perform this action.", flash[:alert]
@@ -338,7 +338,7 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should enforce authorization for update" do
     sign_in @bob
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { title: "Unauthorized" }
     }
 
@@ -351,22 +351,22 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
   test "should handle empty hashtag array" do
     sign_in @alice
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { hashtag_names: [] }
     }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     assert_equal [], @alice_gif.reload.hashtag_names
   end
 
   test "should sanitize hashtag input" do
     sign_in @alice
 
-    patch gif_path(@alice_gif), params: {
+    patch app_gif_path(@alice_gif), params: {
       gif: { hashtag_names: [ "  spaces  ", "UPPERCASE", "MiXeD" ] }
     }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     # Hashtags should be normalized (lowercase, trimmed)
     assert_includes @alice_gif.reload.hashtag_names, "spaces"
     assert_includes @alice_gif.reload.hashtag_names, "uppercase"

@@ -16,12 +16,12 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
   # ========== AUTHENTICATION TESTS ==========
 
   test "should require authentication for toggle" do
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
     assert_response :unauthorized
   end
 
   test "should redirect to sign in when not authenticated (HTML)" do
-    post like_gif_path(@gif)
+    post like_app_gif_path(@gif)
     assert_redirected_to new_user_session_path
   end
 
@@ -30,14 +30,14 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
   test "should return 404 when gif not found" do
     sign_in @bob
 
-    post like_gif_path(id: "00000000-0000-0000-0000-000000000000"), as: :json
+    post like_app_gif_path(id: "00000000-0000-0000-0000-000000000000"), as: :json
     assert_response :not_found
   end
 
   test "should return 404 for invalid UUID format" do
     sign_in @bob
 
-    post like_gif_path(id: "invalid-id"), as: :json
+    post like_app_gif_path(id: "invalid-id"), as: :json
     assert_response :not_found
   end
 
@@ -49,7 +49,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     initial_count = @gif.reload.like_count || 0
 
     assert_difference("@gif.reload.like_count", 1) do
-      post like_gif_path(@gif), as: :json
+      post like_app_gif_path(@gif), as: :json
       assert_response :success
     end
 
@@ -63,7 +63,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     Like.create!(user: @bob, gif: @gif)
 
     assert_difference("@gif.reload.like_count", -1) do
-      post like_gif_path(@gif), as: :json
+      post like_app_gif_path(@gif), as: :json
       assert_response :success
     end
 
@@ -75,7 +75,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     assert_difference("Like.count", 1) do
-      post like_gif_path(@gif), as: :json
+      post like_app_gif_path(@gif), as: :json
     end
 
     assert Like.exists?(user: @bob, gif: @gif)
@@ -86,7 +86,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     Like.create!(user: @bob, gif: @gif)
 
     assert_difference("Like.count", -1) do
-      post like_gif_path(@gif), as: :json
+      post like_app_gif_path(@gif), as: :json
     end
 
     assert_not Like.exists?(user: @bob, gif: @gif)
@@ -97,7 +97,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
   test "should return JSON with liked status and count" do
     sign_in @bob
 
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
     assert_response :success
 
     json = JSON.parse(response.body)
@@ -110,7 +110,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
   test "should support Turbo Stream format" do
     sign_in @bob
 
-    post like_gif_path(@gif), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    post like_app_gif_path(@gif), headers: { "Accept" => "text/vnd.turbo-stream.html" }
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
 
@@ -122,12 +122,12 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
 
     # First toggle - should like
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
     json1 = JSON.parse(response.body)
     assert json1["liked"]
 
     # Second toggle - should unlike
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
     json2 = JSON.parse(response.body)
     assert_not json2["liked"]
   end
@@ -138,7 +138,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
     initial_count = @gif.like_count || 0
 
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
 
     @gif.reload
     assert_equal initial_count + 1, @gif.like_count
@@ -150,7 +150,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
     @gif.reload
     count_before = @gif.like_count
 
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
 
     @gif.reload
     assert_equal count_before - 1, @gif.like_count
@@ -160,13 +160,13 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
 
   test "multiple users can toggle likes on same gif" do
     sign_in @bob
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
     assert_response :success
     json_bob = JSON.parse(response.body)
     assert_includes json_bob, "liked"
 
     sign_in @alice
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
     assert_response :success
     json_alice = JSON.parse(response.body)
     assert_includes json_alice, "liked"
@@ -187,8 +187,8 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
 
     initial_count = Like.where(user: @bob).count
 
-    post like_gif_path(@gif), as: :json
-    post like_gif_path(gif2), as: :json
+    post like_app_gif_path(@gif), as: :json
+    post like_app_gif_path(gif2), as: :json
 
     assert_equal initial_count + 2, Like.where(user: @bob).count
   end
@@ -202,7 +202,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
       privacy: :private_access
     )
 
-    post like_gif_path(private_gif), as: :json
+    post like_app_gif_path(private_gif), as: :json
     assert_response :success
 
     json = JSON.parse(response.body)
@@ -218,7 +218,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
       privacy: :unlisted
     )
 
-    post like_gif_path(unlisted_gif), as: :json
+    post like_app_gif_path(unlisted_gif), as: :json
     assert_response :success
 
     json = JSON.parse(response.body)
@@ -228,7 +228,7 @@ class LikesControllerTest < ActionDispatch::IntegrationTest
   test "can like own gif" do
     sign_in @alice
 
-    post like_gif_path(@gif), as: :json
+    post like_app_gif_path(@gif), as: :json
     assert_response :success
 
     json = JSON.parse(response.body)

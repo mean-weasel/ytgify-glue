@@ -1,0 +1,201 @@
+<div class="min-h-screen bg-[#0a0a0a] grid-pattern" data-controller="device-detect">
+  <!-- Desktop Welcome -->
+  <div data-device-detect-target="desktop" class="hidden">
+    <article class="max-w-[800px] mx-auto px-12 sm:px-6 pt-12 pb-16">
+      <!-- Logo -->
+      <div class="flex items-center justify-center gap-3 mb-8">
+        <%= render "marketing/shared/logo" %>
+        <h2 class="text-4xl sm:text-5xl font-bold text-white">YTgify</h2>
+      </div>
+
+      <!-- Success Message -->
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#E91E8C]/20 to-[#7B2FBE]/20 border-2 border-[#E91E8C]/50 mb-6">
+          <svg class="w-10 h-10 text-[#E91E8C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-white mb-3">
+          You're all set!
+        </h1>
+        <p class="text-lg text-gray-400">
+          YTgify is now installed and ready to create GIFs from any YouTube video.
+        </p>
+      </div>
+
+      <!-- Demo Video Section -->
+      <div class="mb-10">
+        <h2 class="text-2xl font-bold text-white mb-4 text-center">See how it works</h2>
+        <%= render "marketing/shared/demo_video" %>
+      </div>
+
+      <!-- Where to Find It -->
+      <div class="mb-10 py-6 px-6 rounded-lg bg-gray-900/50 border border-gray-800">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[#E91E8C]/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-[#E91E8C]" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-white mb-1">Where to find it</h3>
+            <p class="text-gray-400">
+              Look for the <span class="text-[#E91E8C] font-semibold">pink GIF button</span> below any YouTube video, right next to the like/dislike buttons. Click it to open the GIF creator.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Try It Now CTA -->
+      <div class="text-center mb-10">
+        <a
+          href="https://www.youtube.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white font-bold text-lg rounded-full hover:opacity-90 transition-opacity shadow-lg"
+        >
+          Try it now on YouTube
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Quick Tips -->
+      <div class="mb-10">
+        <h2 class="text-2xl font-bold text-white mb-4">Quick tips</h2>
+        <div class="space-y-3">
+          <% ["Look for the pink GIF button below any YouTube video", "Drag to select the exact clip you want (max 10 seconds)", "Add custom text overlay for memes", "No watermark, ever"].each do |tip| %>
+            <div class="flex items-start gap-3">
+              <svg width="20" height="20" class="text-[#E91E8C] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span class="text-gray-300"><%= tip %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Rating CTA -->
+      <div class="text-center py-8 px-6 rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/30">
+        <div class="text-3xl mb-3">5-star rated</div>
+        <h3 class="text-xl font-bold text-white mb-2">Enjoying YTgify?</h3>
+        <p class="text-gray-400 mb-4">
+          A quick review helps others discover the extension and keeps development going!
+        </p>
+        <a
+          href="<%= chrome_extension_url %>/reviews"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 font-semibold rounded-full hover:bg-yellow-500/30 transition-colors"
+        >
+          Leave a review
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
+    </article>
+  </div>
+
+  <!-- Mobile Welcome -->
+  <div data-device-detect-target="mobile" class="hidden">
+    <article class="max-w-[800px] mx-auto px-6 pt-12 pb-16">
+      <!-- Logo -->
+      <div class="flex items-center justify-center gap-3 mb-8">
+        <%= render "marketing/shared/logo" %>
+        <h2 class="text-4xl font-bold text-white">YTgify</h2>
+      </div>
+
+      <!-- Desktop Extension Message -->
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#E91E8C]/20 to-[#7B2FBE]/20 border-2 border-[#E91E8C]/50 mb-6">
+          <svg class="w-10 h-10 text-[#E91E8C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-white mb-3">
+          YTgify is a Desktop Extension
+        </h1>
+        <p class="text-lg text-gray-400 mb-2">
+          It works inside Chrome and Firefox on your computer.
+        </p>
+        <p class="text-gray-500">
+          Save the link to install when you're back at your desktop.
+        </p>
+      </div>
+
+      <!-- Primary CTA - Share/Save Link -->
+      <div class="mb-8" data-controller="mobile-share">
+        <div data-mobile-share-target="button">
+          <button
+            data-action="click->mobile-share#share"
+            class="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white font-semibold text-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-3"
+          >
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Save Link for Later
+          </button>
+        </div>
+        <div data-mobile-share-target="success" class="hidden text-center py-4">
+          <div class="inline-flex items-center gap-2 text-green-400 text-lg font-semibold">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Link saved!
+          </div>
+          <p class="text-gray-500 text-sm mt-2">Check your notes, email, or messages</p>
+        </div>
+      </div>
+
+      <!-- Secondary CTA - Email Capture -->
+      <div class="mb-10 py-6 px-6 rounded-lg bg-gray-900/50 border border-gray-800">
+        <h2 class="text-lg font-semibold text-white mb-1 text-center">Want updates?</h2>
+        <p class="text-gray-500 text-sm text-center mb-4">
+          Get notified about new features. No spam.
+        </p>
+        <%= render "marketing/shared/email_capture_form", source: "mobile_welcome", button_text: "Subscribe", success_message: "You're on the list!", placeholder: "your@email.com" %>
+      </div>
+
+      <!-- Demo Video Section -->
+      <div class="mb-10">
+        <h2 class="text-xl font-bold text-white mb-4 text-center">See what you can do with YTgify</h2>
+        <%= render "marketing/shared/demo_video" %>
+      </div>
+
+      <!-- Quick Features List -->
+      <div class="mb-10">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center gap-2 text-gray-300">
+            <span class="text-lg">&#10024;</span>
+            <span class="text-sm">No watermark</span>
+          </div>
+          <div class="flex items-center gap-2 text-gray-300">
+            <span class="text-lg">&#9889;</span>
+            <span class="text-sm">30 seconds to GIF</span>
+          </div>
+          <div class="flex items-center gap-2 text-gray-300">
+            <span class="text-lg">&#128221;</span>
+            <span class="text-sm">Add text overlays</span>
+          </div>
+          <div class="flex items-center gap-2 text-gray-300">
+            <span class="text-lg">&#127916;</span>
+            <span class="text-sm">Works inside YouTube</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- Loading state (shown while detecting device) -->
+  <div data-device-detect-target="loading" class="flex items-center justify-center min-h-screen">
+    <div class="animate-pulse flex flex-col items-center gap-4">
+      <div class="w-16 h-16 rounded-full bg-gradient-to-r from-[#E91E8C]/20 to-[#7B2FBE]/20"></div>
+      <div class="w-48 h-4 rounded bg-gray-800"></div>
+      <div class="w-32 h-4 rounded bg-gray-800"></div>
+    </div>
+  </div>
+
+  <%= render "marketing/shared/footer" %>
+</div>

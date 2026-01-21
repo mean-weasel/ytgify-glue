@@ -56,7 +56,7 @@ class GifsController < ApplicationController
       # Skip in test environment (libvips not available in CI)
       GifProcessingJob.perform_later(@gif.id) if @gif.file.attached? && !Rails.env.test?
 
-      redirect_to @gif, notice: "GIF uploaded successfully!"
+      redirect_to app_gif_path(@gif), notice: "GIF uploaded successfully!"
     else
       render :new, status: :unprocessable_entity
     end
@@ -85,7 +85,7 @@ class GifsController < ApplicationController
             )
           ]
         end
-        format.html { redirect_to @gif, notice: "GIF updated successfully!" }
+        format.html { redirect_to app_gif_path(@gif), notice: "GIF updated successfully!" }
       else
         # Error - validation failed
         format.turbo_stream do

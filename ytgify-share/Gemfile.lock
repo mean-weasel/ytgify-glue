@@ -324,6 +324,7 @@ GEM
       erb
       psych (>= 4.0.0)
       tsort
+    redcarpet (3.6.1)
     redis-client (0.26.1)
       connection_pool
     regexp_parser (2.11.3)
@@ -332,6 +333,7 @@ GEM
     responders (3.2.0)
       actionpack (>= 7.0)
       railties (>= 7.0)
+    rouge (4.7.0)
     rubocop (1.81.7)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -463,6 +465,7 @@ PLATFORMS
   aarch64-linux-musl
   arm-linux-gnu
   arm-linux-musl
+  arm64-darwin-23
   arm64-darwin-24
   x86_64-linux
   x86_64-linux-gnu
@@ -490,6 +493,8 @@ DEPENDENCIES
   rack-attack (~> 6.7)
   rack-cors
   rails (~> 8.0.4)
+  redcarpet (~> 3.6)
+  rouge (~> 4.2)
   rubocop-rails-omakase
   sidekiq (~> 7.2)
   sidekiq-cron (~> 1.12)

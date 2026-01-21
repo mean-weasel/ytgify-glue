@@ -28,7 +28,7 @@
       <!-- Pagination -->
       <% if @pagy.next %>
         <div class="text-center">
-          <%= link_to hashtag_path(@hashtag.name, page: @pagy.next),
+          <%= link_to app_hashtag_path(@hashtag.name, page: @pagy.next),
               class: "inline-block px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors" do %>
             Load More
           <% end %>

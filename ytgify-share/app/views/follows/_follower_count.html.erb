@@ -2,14 +2,14 @@
   <div class="flex items-center space-x-4 text-sm text-gray-600">
     <% if defined?(show_links) && show_links %>
       <!-- With clickable links (for profile pages) -->
-      <%= link_to followers_user_path(user.username), class: "hover:text-indigo-600 transition-colors" do %>
+      <%= link_to followers_app_user_path(user.username), class: "hover:text-indigo-600 transition-colors" do %>
         <span class="font-semibold text-gray-900"><%= number_with_delimiter(user.follower_count) %></span>
         <span><%= user.follower_count == 1 ? 'follower' : 'followers' %></span>
       <% end %>
 
       <span class="text-gray-400">·</span>
 
-      <%= link_to following_user_path(user.username), class: "hover:text-indigo-600 transition-colors" do %>
+      <%= link_to following_app_user_path(user.username), class: "hover:text-indigo-600 transition-colors" do %>
         <span class="font-semibold text-gray-900"><%= number_with_delimiter(user.following_count) %></span>
         <span>following</span>
       <% end %>

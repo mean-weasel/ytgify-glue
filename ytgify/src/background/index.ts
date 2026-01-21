@@ -300,6 +300,36 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
+// Handle keyboard command
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === '_execute_action') {
+    // Get the active tab
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab || !tab.id || !tab.url) {
+      return;
+    }
+
+    const isYouTubePage =
+      tab.url.includes('youtube.com/watch') || tab.url.includes('youtube.com/shorts');
+
+    if (!isYouTubePage) {
+      await chrome.tabs.update(tab.id, { url: 'https://www.youtube.com' });
+      return;
+    }
+
+    // Send message to content script to show wizard
+    try {
+      await chrome.tabs.sendMessage(tab.id, {
+        type: 'SHOW_WIZARD_DIRECT',
+        data: { triggeredBy: 'command' },
+      });
+    } catch (error) {
+      console.error('[BACKGROUND] Failed to send message:', error);
+    }
+  }
+});
+
 // ========================================
 // Auth Message Handlers (Phase 1)
 // ========================================
@@ -389,36 +419,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return false;
 });
 
-// Handle keyboard command
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command === '_execute_action') {
-    // Get the active tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    if (!tab || !tab.id || !tab.url) {
-      return;
-    }
-
-    const isYouTubePage =
-      tab.url.includes('youtube.com/watch') || tab.url.includes('youtube.com/shorts');
-
-    if (!isYouTubePage) {
-      await chrome.tabs.update(tab.id, { url: 'https://www.youtube.com' });
-      return;
-    }
-
-    // Send message to content script to show wizard
-    try {
-      await chrome.tabs.sendMessage(tab.id, {
-        type: 'SHOW_WIZARD_DIRECT',
-        data: { triggeredBy: 'command' },
-      });
-    } catch (error) {
-      console.error('[BACKGROUND] Failed to send message:', error);
-    }
-  }
-});
-
 // ========================================
 // Token Refresh Alarm Handler
 // ========================================
@@ -427,6 +427,18 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'refreshToken') {
     await TokenManager.onTokenRefreshAlarm();
   }
+});
+
+// Enhanced service worker with new architecture
+// All message handling is now managed by the MessageHandler
+// All video processing is managed by the BackgroundWorker
+
+// Initialize enhanced logging for service worker lifecycle
+chrome.runtime.onInstalled.addListener((details) => {
+  logger.info('[Background] YTgify extension installed', {
+    reason: details.reason,
+    version: chrome.runtime.getManifest().version,
+  });
 });
 
 // Initialize storage and preferences with comprehensive error handling and analytics

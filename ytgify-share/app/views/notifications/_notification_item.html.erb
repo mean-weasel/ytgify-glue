@@ -3,7 +3,7 @@
   <div class="flex items-start space-x-3">
     <!-- Actor Avatar -->
     <div class="flex-shrink-0">
-      <%= link_to user_path(notification.actor.username), class: "block" do %>
+      <%= link_to app_user_path(notification.actor.username), class: "block" do %>
         <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold">
           <%= notification.actor.username.first.upcase %>
         </div>
@@ -13,7 +13,7 @@
     <!-- Notification Content -->
     <div class="flex-1 min-w-0">
       <p class="text-sm text-gray-900">
-        <%= link_to notification.actor.username, user_path(notification.actor.username), class: "font-semibold hover:text-indigo-600" %>
+        <%= link_to notification.actor.username, app_user_path(notification.actor.username), class: "font-semibold hover:text-indigo-600" %>
         <span class="text-gray-600"><%= notification.message.split(notification.actor.username).last %></span>
       </p>
       <p class="mt-1 text-xs text-gray-500">
@@ -24,7 +24,7 @@
     <!-- Actions -->
     <div class="flex-shrink-0 flex items-center space-x-2">
       <% unless notification.read? %>
-        <%= button_to mark_as_read_notification_path(notification),
+        <%= button_to mark_as_read_app_notification_path(notification),
             method: :post,
             class: "text-xs text-indigo-600 hover:text-indigo-700 font-medium" do %>
           Mark as read

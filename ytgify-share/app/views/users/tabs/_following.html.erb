@@ -4,7 +4,7 @@
     <% following.each do |followed_user| %>
       <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-indigo-200 transition-all">
         <!-- User Info -->
-        <%= link_to user_path(followed_user.username), class: "flex items-center space-x-4 flex-1 min-w-0" do %>
+        <%= link_to app_user_path(followed_user.username), class: "flex items-center space-x-4 flex-1 min-w-0" do %>
           <!-- Avatar -->
           <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0">
             <%= followed_user.username.first.upcase %>
@@ -63,7 +63,7 @@
     </p>
 
     <% if user_signed_in? && current_user == user %>
-      <%= link_to trending_path,
+      <%= link_to app_trending_path,
           class: "inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" do %>
         Discover Creators
       <% end %>

@@ -17,7 +17,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
   test "should require authentication to create comment" do
     assert_no_difference "Comment.count" do
-      post gif_comments_path(@alice_gif), params: { comment: { content: "Nice!" } }
+      post app_gif_comments_path(@alice_gif), params: { comment: { content: "Nice!" } }
     end
     assert_redirected_to new_user_session_path
   end
@@ -27,7 +27,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference "Comment.count", 1 do
       assert_difference -> { @alice_gif.reload.comment_count }, 1 do
-        post gif_comments_path(@alice_gif), params: { comment: { content: "Great GIF!" } }, as: :turbo_stream
+        post app_gif_comments_path(@alice_gif), params: { comment: { content: "Great GIF!" } }, as: :turbo_stream
       end
     end
 
@@ -46,7 +46,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     assert_difference "Comment.count", 1 do
       assert_difference -> { parent_comment.reload.reply_count }, 1 do
         assert_difference -> { @bob_gif.reload.comment_count }, 1 do
-          post gif_comments_path(@bob_gif),
+          post app_gif_comments_path(@bob_gif),
                params: { comment: { content: "Thanks!", parent_comment_id: parent_comment.id } },
                as: :turbo_stream
         end
@@ -66,7 +66,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     parent_comment = @alice_comment
     initial_reply_count = parent_comment.reply_count
 
-    post gif_comments_path(@bob_gif),
+    post app_gif_comments_path(@bob_gif),
          params: { comment: { content: "Reply", parent_comment_id: parent_comment.id } },
          as: :turbo_stream
 
@@ -77,7 +77,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     initial_count = @alice_gif.comment_count
 
-    post gif_comments_path(@alice_gif),
+    post app_gif_comments_path(@alice_gif),
          params: { comment: { content: "Nice!" } },
          as: :turbo_stream
 
@@ -88,7 +88,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_no_difference "Comment.count" do
-      post gif_comments_path(@alice_gif),
+      post app_gif_comments_path(@alice_gif),
            params: { comment: { content: "" } },
            as: :turbo_stream
     end
@@ -99,7 +99,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should render turbo stream response for successful top-level comment" do
     sign_in @alice
 
-    post gif_comments_path(@alice_gif),
+    post app_gif_comments_path(@alice_gif),
          params: { comment: { content: "Great!" } },
          as: :turbo_stream
 
@@ -112,7 +112,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should render turbo stream response for successful reply" do
     sign_in @bob
 
-    post gif_comments_path(@bob_gif),
+    post app_gif_comments_path(@bob_gif),
          params: { comment: { content: "Reply!", parent_comment_id: @alice_comment.id } },
          as: :turbo_stream
 
@@ -126,10 +126,10 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should handle html format for comment creation" do
     sign_in @alice
 
-    post gif_comments_path(@alice_gif),
+    post app_gif_comments_path(@alice_gif),
          params: { comment: { content: "HTML format!" } }
 
-    assert_redirected_to @alice_gif
+    assert_redirected_to app_gif_path(@alice_gif)
     follow_redirect!
     assert_match /Comment posted successfully/, response.body
   end
@@ -137,14 +137,14 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   # ========== EDIT ACTION TESTS ==========
 
   test "should require authentication to edit comment" do
-    get edit_comment_path(@alice_comment), as: :turbo_stream
+    get edit_app_comment_path(@alice_comment), as: :turbo_stream
     assert_redirected_to new_user_session_path
   end
 
   test "should allow owner to edit their comment" do
     sign_in @alice
 
-    get edit_comment_path(@alice_comment), as: :turbo_stream
+    get edit_app_comment_path(@alice_comment), as: :turbo_stream
 
     assert_response :success
     assert_match /turbo-stream/, @response.body
@@ -154,7 +154,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should not allow non-owner to edit comment" do
     sign_in @bob
 
-    get edit_comment_path(@alice_comment), as: :turbo_stream
+    get edit_app_comment_path(@alice_comment), as: :turbo_stream
 
     assert_response :forbidden
   end
@@ -162,15 +162,15 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should redirect html format edit to gif page" do
     sign_in @alice
 
-    get edit_comment_path(@alice_comment)
+    get edit_app_comment_path(@alice_comment)
 
-    assert_redirected_to @bob_gif
+    assert_redirected_to app_gif_path(@bob_gif)
   end
 
   # ========== UPDATE ACTION TESTS ==========
 
   test "should require authentication to update comment" do
-    patch comment_path(@alice_comment), params: { comment: { content: "Updated" } }
+    patch app_comment_path(@alice_comment), params: { comment: { content: "Updated" } }
     assert_redirected_to new_user_session_path
     assert_not_equal "Updated", @alice_comment.reload.content
   end
@@ -179,7 +179,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     new_content = "Updated content"
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: new_content } },
           as: :turbo_stream
 
@@ -191,7 +191,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob
     original_content = @alice_comment.content
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: "Hacked!" } },
           as: :turbo_stream
 
@@ -202,7 +202,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should render turbo stream response for successful update" do
     sign_in @alice
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: "Updated!" } },
           as: :turbo_stream
 
@@ -215,7 +215,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     new_content = "JSON Update"
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: new_content } },
           as: :json
 
@@ -229,7 +229,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     original_content = @alice_comment.content
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: "" } },
           as: :turbo_stream
 
@@ -240,7 +240,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should render edit form again on validation error" do
     sign_in @alice
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: "" } },
           as: :turbo_stream
 
@@ -251,10 +251,10 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should handle html format for successful update" do
     sign_in @alice
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: "Updated via HTML" } }
 
-    assert_redirected_to @bob_gif
+    assert_redirected_to app_gif_path(@bob_gif)
     follow_redirect!
     assert_match /Comment updated successfully/, response.body
   end
@@ -263,7 +263,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
   test "should require authentication to destroy comment" do
     assert_no_difference "Comment.count" do
-      delete comment_path(@alice_comment)
+      delete app_comment_path(@alice_comment)
     end
     assert_redirected_to new_user_session_path
   end
@@ -272,7 +272,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_no_difference "Comment.count" do
-      delete comment_path(@alice_comment), as: :turbo_stream
+      delete app_comment_path(@alice_comment), as: :turbo_stream
     end
 
     assert_response :success
@@ -283,7 +283,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @bob  # Bob owns the gif
 
     assert_no_difference "Comment.count" do
-      delete comment_path(@alice_comment), as: :turbo_stream  # Alice's comment on Bob's gif
+      delete app_comment_path(@alice_comment), as: :turbo_stream  # Alice's comment on Bob's gif
     end
 
     assert_response :success
@@ -295,7 +295,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     # Alice tries to delete Bob's reply (on Bob's GIF, not Alice's comment)
     bob_reply = @bob_reply
 
-    delete comment_path(bob_reply), as: :turbo_stream
+    delete app_comment_path(bob_reply), as: :turbo_stream
 
     assert_response :forbidden
     assert_nil bob_reply.reload.deleted_at
@@ -305,7 +305,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     initial_count = @bob_gif.comment_count
 
-    delete comment_path(@alice_comment), as: :turbo_stream
+    delete app_comment_path(@alice_comment), as: :turbo_stream
 
     assert_equal initial_count - 1, @bob_gif.reload.comment_count
   end
@@ -313,7 +313,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should render turbo stream response for successful deletion" do
     sign_in @alice
 
-    delete comment_path(@alice_comment), as: :turbo_stream
+    delete app_comment_path(@alice_comment), as: :turbo_stream
 
     assert_response :success
     assert_match /turbo-stream/, @response.body
@@ -323,9 +323,9 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should handle html format for deletion" do
     sign_in @alice
 
-    delete comment_path(@alice_comment)
+    delete app_comment_path(@alice_comment)
 
-    assert_redirected_to @bob_gif
+    assert_redirected_to app_gif_path(@bob_gif)
     follow_redirect!
     assert_match /Comment deleted successfully/, response.body
   end
@@ -336,7 +336,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     reply = @bob_reply
     initial_reply_count = parent_comment.reply_count
 
-    delete comment_path(reply), as: :turbo_stream
+    delete app_comment_path(reply), as: :turbo_stream
 
     assert_response :success
     assert_not_nil reply.reload.deleted_at
@@ -348,7 +348,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should enforce authorization for edit" do
     sign_in @bob
 
-    get edit_comment_path(@alice_comment), as: :turbo_stream
+    get edit_app_comment_path(@alice_comment), as: :turbo_stream
 
     assert_response :forbidden
   end
@@ -356,7 +356,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should enforce authorization for update" do
     sign_in @bob
 
-    patch comment_path(@alice_comment),
+    patch app_comment_path(@alice_comment),
           params: { comment: { content: "Unauthorized" } },
           as: :turbo_stream
 
@@ -366,13 +366,13 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should allow both comment owner and gif owner to delete" do
     # Comment owner can delete
     sign_in @alice
-    delete comment_path(@alice_comment), as: :turbo_stream
+    delete app_comment_path(@alice_comment), as: :turbo_stream
     assert_response :success
 
     # Gif owner can delete
     sign_in @bob
     comment = comments(:bob_comment_on_alice_gif)
-    delete comment_path(comment), as: :turbo_stream
+    delete app_comment_path(comment), as: :turbo_stream
     assert_response :success
   end
 
@@ -381,7 +381,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
   test "should handle nonexistent comment gracefully" do
     sign_in @alice
 
-    get edit_comment_path(id: 99999), as: :turbo_stream
+    get edit_app_comment_path(id: 99999), as: :turbo_stream
 
     assert_response :not_found
   end
@@ -391,7 +391,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
     # Create a reply to an existing reply
     assert_difference "Comment.count", 1 do
-      post gif_comments_path(@bob_gif),
+      post app_gif_comments_path(@bob_gif),
            params: { comment: { content: "Deep reply", parent_comment_id: @bob_reply.id } },
            as: :turbo_stream
     end
@@ -405,7 +405,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     initial_comment_count = Comment.count
 
-    post gif_comments_path(@alice_gif),
+    post app_gif_comments_path(@alice_gif),
          params: { comment: { content: "New comment" } },
          as: :turbo_stream
 

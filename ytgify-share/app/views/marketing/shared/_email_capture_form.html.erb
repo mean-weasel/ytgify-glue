@@ -1,0 +1,47 @@
+<%# locals: (source: "website", button_text: "Get Updates", success_message: "You're subscribed!", placeholder: "you@example.com") %>
+
+<div data-controller="email-capture">
+  <!-- Success state -->
+  <div data-email-capture-target="success" class="hidden text-center">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#E91E8C]/20 to-[#7B2FBE]/20 border-2 border-[#E91E8C]/50 mb-4">
+      <svg class="w-8 h-8 text-[#E91E8C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+    <p class="text-xl font-semibold text-white mb-2"><%= success_message %></p>
+    <p class="text-gray-400">We'll email you when there's something new.</p>
+  </div>
+
+  <!-- Form state -->
+  <form
+    data-email-capture-target="form"
+    data-action="submit->email-capture#submit"
+    action="<%= formspree_endpoint %>"
+    method="POST"
+  >
+    <input type="hidden" name="_source" value="<%= source %>">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input
+        type="email"
+        name="email"
+        placeholder="<%= placeholder %>"
+        required
+        autocomplete="email"
+        data-email-capture-target="email"
+        class="flex-1 px-4 py-3 rounded-lg bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#E91E8C] focus:ring-1 focus:ring-[#E91E8C] disabled:opacity-50"
+      >
+      <button
+        type="submit"
+        data-email-capture-target="button"
+        class="px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 min-w-[140px]"
+      >
+        <span data-email-capture-target="buttonText"><%= button_text %></span>
+        <svg data-email-capture-target="spinner" class="hidden animate-spin h-5 w-5" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+      </button>
+    </div>
+    <p data-email-capture-target="error" class="hidden text-red-400 text-sm mt-2">Failed to subscribe. Please try again.</p>
+  </form>
+</div>

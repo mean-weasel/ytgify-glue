@@ -13,7 +13,7 @@
   <% if gif.hashtags.any? %>
     <div class="flex flex-wrap gap-2 mb-4">
       <% gif.hashtags.each do |hashtag| %>
-        <%= link_to hashtag_path(hashtag.name), class: "inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium hover:bg-indigo-200" do %>
+        <%= link_to app_hashtag_path(hashtag.name), class: "inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium hover:bg-indigo-200" do %>
           #<%= hashtag.name %>
         <% end %>
       <% end %>
@@ -55,7 +55,7 @@
   <% if user_signed_in? && current_user == gif.user %>
     <div class="flex space-x-3">
       <%= link_to "Edit GIF",
-          edit_gif_path(gif),
+          edit_app_gif_path(gif),
           class: "inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" %>
     </div>
   <% end %>

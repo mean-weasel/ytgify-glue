@@ -1,6 +1,6 @@
 <%= turbo_frame_tag "reply_form_#{parent_comment.id}" do %>
   <%= form_with model: [gif, gif.comments.build(parent_comment_id: parent_comment.id)],
-                url: gif_comments_path(gif),
+                url: app_gif_comments_path(gif),
                 class: "mt-4 flex space-x-3" do |f| %>
     <%= f.hidden_field :parent_comment_id %>
 

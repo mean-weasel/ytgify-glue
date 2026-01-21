@@ -1,4 +1,5 @@
 <%= form_with model: gif,
+              url: (gif.new_record? ? app_gifs_path : app_gif_path(gif)),
               data: {
                 controller: "gif-form hashtag-input",
                 action: "submit->gif-form#handleSubmit"

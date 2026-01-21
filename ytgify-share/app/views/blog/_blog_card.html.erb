@@ -1,0 +1,44 @@
+<%# locals: (post:) %>
+
+<article class="group bg-[#111111] rounded-lg overflow-hidden border border-[#2a2a2a] hover:border-ytg-pink/50 transition-all duration-300">
+  <%= link_to blog_post_path(post[:slug]) do %>
+    <div class="aspect-video overflow-hidden bg-gray-900">
+      <% if post[:thumbnail].present? %>
+        <% thumbnail_path = post[:thumbnail].start_with?('/') ? "marketing#{post[:thumbnail]}" : post[:thumbnail] %>
+        <%= image_tag thumbnail_path,
+          alt: post[:title],
+          class: "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" %>
+      <% else %>
+        <div class="w-full h-full flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-gray-700">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+          </svg>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="p-4">
+    <div class="flex flex-wrap gap-2 mb-3">
+      <% post[:tags].first(3).each do |tag| %>
+        <%= render "blog/tag_badge", tag: tag %>
+      <% end %>
+    </div>
+    <%= link_to blog_post_path(post[:slug]) do %>
+      <h2 class="text-lg font-semibold text-white mb-2 group-hover:text-[#E91E8C] transition-colors line-clamp-2">
+        <%= post[:title] %>
+      </h2>
+    <% end %>
+    <p class="text-[#808080] text-sm mb-3 line-clamp-2">
+      <%= post[:description] %>
+    </p>
+    <div class="flex items-center gap-4 text-xs text-[#606060]">
+      <span class="flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <%= post[:read_time] %> min read
+      </span>
+      <span><%= post[:date].strftime("%B %d, %Y") %></span>
+    </div>
+  </div>
+</article>

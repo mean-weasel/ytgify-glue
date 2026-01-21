@@ -1,1 +1,3 @@
-tests/selenium/extensions/*.xpi
+# Ignore downloaded extensions except uBlock Origin which we commit
+*.xpi
+!ublock-origin.xpi

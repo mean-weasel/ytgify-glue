@@ -26,7 +26,7 @@
               <div class="flex items-center space-x-6">
                 <%= turbo_frame_tag "like_#{@gif.id}" do %>
                   <% if user_signed_in? %>
-                    <%= form_with url: like_gif_path(@gif),
+                    <%= form_with url: like_app_gif_path(@gif),
                         method: :post,
                         data: { controller: "like" } do %>
                       <button type="submit" class="flex items-center space-x-2 hover:text-red-500 transition-colors group">
@@ -71,7 +71,7 @@
 
               <!-- Remix Button -->
               <% if user_signed_in? && @gif.remixable_by?(current_user) %>
-                <%= link_to remix_gif_path(@gif),
+                <%= link_to remix_app_gif_path(@gif),
                     class: "flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors" do %>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -136,7 +136,7 @@
         <!-- Creator Info -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div class="flex items-center justify-between mb-4">
-            <%= link_to user_path(@gif.user.username), class: "flex items-center space-x-3 flex-1 min-w-0" do %>
+            <%= link_to app_user_path(@gif.user.username), class: "flex items-center space-x-3 flex-1 min-w-0" do %>
               <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0">
                 <%= @gif.user.username.first.upcase %>
               </div>
@@ -185,10 +185,10 @@
           <div class="bg-white rounded-lg shadow-lg p-6">
             <h3 class="font-semibold text-gray-900 mb-3">Manage</h3>
             <div class="space-y-2">
-              <%= link_to edit_gif_path(@gif), class: "block w-full text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors" do %>
+              <%= link_to edit_app_gif_path(@gif), class: "block w-full text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors" do %>
                 Edit GIF
               <% end %>
-              <%= button_to gif_path(@gif),
+              <%= button_to app_gif_path(@gif),
                   method: :delete,
                   data: { turbo_confirm: "Are you sure you want to delete this GIF?" },
                   class: "block w-full text-center px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-medium transition-colors" do %>

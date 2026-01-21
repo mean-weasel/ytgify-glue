@@ -172,36 +172,12 @@ export class QuickCapturePage {
   }
 
   async clickNext() {
-    // Ensure button is in viewport before clicking
-    await this.nextButton.scrollIntoViewIfNeeded();
-    await this.page.waitForTimeout(200); // Brief wait after scroll
-
-    // Try normal click first
-    try {
-      await this.nextButton.click({ timeout: 5000 });
-    } catch (error) {
-      // If normal click fails, try force click
-      console.log('[QuickCapturePage] Normal click failed, attempting force click');
-      await this.nextButton.click({ force: true });
-    }
-
+    await this.nextButton.click();
     await this.page.waitForTimeout(500);
   }
 
   async clickBack() {
-    // Ensure button is in viewport before clicking
-    await this.backButton.scrollIntoViewIfNeeded();
-    await this.page.waitForTimeout(200); // Brief wait after scroll
-
-    // Try normal click first
-    try {
-      await this.backButton.click({ timeout: 5000 });
-    } catch (error) {
-      // If normal click fails, try force click
-      console.log('[QuickCapturePage] Normal click failed, attempting force click');
-      await this.backButton.click({ force: true });
-    }
-
+    await this.backButton.click();
     await this.page.waitForTimeout(500);
   }
 

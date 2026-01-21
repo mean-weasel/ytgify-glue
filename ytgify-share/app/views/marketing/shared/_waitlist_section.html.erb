@@ -1,0 +1,38 @@
+<section class="mt-16 pt-12 border-t border-gray-800">
+  <div class="text-center mb-8">
+    <h2 class="text-3xl font-bold mb-4 text-white">
+      Coming Soon: Share Your GIFs Instantly
+    </h2>
+    <p class="text-gray-400 text-lg max-w-xl mx-auto">
+      We're building a home for your YouTube GIFs. Host, share, and discover - all free.
+    </p>
+  </div>
+
+  <!-- Features -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 max-w-lg mx-auto">
+    <div class="flex items-center gap-3 text-gray-300">
+      <span class="text-xl">&#128279;</span>
+      <span>One-click shareable links</span>
+    </div>
+    <div class="flex items-center gap-3 text-gray-300">
+      <span class="text-xl">&#128172;</span>
+      <span>Works in Discord, Slack, X</span>
+    </div>
+    <div class="flex items-center gap-3 text-gray-300">
+      <span class="text-xl">&#127760;</span>
+      <span>Browse community creations</span>
+    </div>
+    <div class="flex items-center gap-3 text-gray-300">
+      <span class="text-xl">&#127912;</span>
+      <span>Remix and build on others' GIFs</span>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="max-w-md mx-auto">
+    <%= render "marketing/shared/email_capture_form", source: "waitlist", button_text: "Join the Waitlist", success_message: "You're on the list!", placeholder: "you@example.com" %>
+    <p class="text-gray-500 text-sm mt-4 text-center">
+      No spam. We'll only email you when sharing launches.
+    </p>
+  </div>
+</section>

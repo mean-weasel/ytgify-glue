@@ -81,3 +81,18 @@ export interface EngagementData {
   };
   popupFooterDismissed: boolean;
 }
+
+export interface FeedbackData {
+  firstGifCreatedAt: number | null;
+  lastFeedbackPromptAt: number | null;
+  feedbackCompletedAt: number | null;
+  surveyLinkClickedAt: number | null;
+  permanentlyDismissed: boolean;
+  milestoneFeedbackShown: {
+    milestone10: boolean;
+    milestone25: boolean;
+    milestone50: boolean;
+  };
+  postSuccessFeedbackLastShown: number | null;
+  postSuccessFeedbackCount: number;
+}

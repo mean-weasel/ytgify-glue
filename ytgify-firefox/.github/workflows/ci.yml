@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: Test and Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint:code
+
+      - name: Run type checking
+        run: npm run typecheck
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Validate external links
+        run: npm run test:links
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: tests/coverage/
+          retention-days: 7
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-build
+          path: dist/
+          retention-days: 7
+
+      - name: Check coverage thresholds
+        run: |
+          coverage_output=$(npm run test:coverage 2>&1)
+          echo "$coverage_output"
+
+          # Extract coverage percentage for statements
+          coverage=$(echo "$coverage_output" | grep "All files" | awk '{print $4}' | sed 's/%//')
+
+          # Check if coverage is above threshold (60%)
+          if [ -z "$coverage" ]; then
+            echo "⚠️  Could not extract coverage percentage, skipping threshold check"
+            exit 0
+          fi
+
+          if (( $(echo "$coverage < 60" | bc -l) )); then
+            echo "❌ Coverage is below 60% threshold: ${coverage}%"
+            exit 1
+          else
+            echo "✅ Coverage is above threshold: ${coverage}%"
+          fi
+
+  mock-e2e-tests:
+    name: Mock E2E Tests (Shard ${{ matrix.shard }}/3)
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1
+            pattern: "wizard-settings-matrix|error-handling|debug-frame-capture"
+          - shard: 2
+            pattern: "wizard-basic|gif-output-validation|debug-gif-parser"
+          - shard: 3
+            pattern: "diagnostic-video|debug-gif-settings"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Firefox and dependencies
+        run: |
+          # Install Firefox via snap (Ubuntu 22.04+ default method)
+          sudo snap install firefox
+
+          # Verify Firefox installation
+          firefox --version
+
+          # geckodriver is already installed via npm (from package.json)
+          # Verify geckodriver is available
+          npx geckodriver --version
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Install FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v2
+
+      - name: Verify FFmpeg
+        run: ffmpeg -version
+
+      - name: Generate test videos
+        run: npm run generate:test-videos
+
+      - name: Run mock E2E tests (Shard ${{ matrix.shard }}/3)
+        env:
+          HEADLESS: true
+        run: npm run test:e2e -- --testPathPattern="${{ matrix.pattern }}"
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-artifacts-shard-${{ matrix.shard }}
+          path: |
+            tests/test-results/
+            tests/test-artifacts/
+          retention-days: 7

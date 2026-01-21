@@ -74,7 +74,7 @@
     <div class="bg-white rounded-lg shadow-lg mb-6">
       <div class="border-b border-gray-200">
         <nav class="flex -mb-px">
-          <%= link_to user_path(@user.username, tab: 'gifs'),
+          <%= link_to app_user_path(@user.username, tab: 'gifs'),
               data: { turbo_frame: "profile_content" },
               class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'gifs' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
             <div class="flex items-center justify-center space-x-2">
@@ -85,7 +85,7 @@
             </div>
           <% end %>
 
-          <%= link_to user_path(@user.username, tab: 'liked'),
+          <%= link_to app_user_path(@user.username, tab: 'liked'),
               data: { turbo_frame: "profile_content" },
               class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'liked' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
             <div class="flex items-center justify-center space-x-2">
@@ -96,7 +96,7 @@
             </div>
           <% end %>
 
-          <%= link_to user_path(@user.username, tab: 'collections'),
+          <%= link_to app_user_path(@user.username, tab: 'collections'),
               data: { turbo_frame: "profile_content" },
               class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'collections' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
             <div class="flex items-center justify-center space-x-2">
@@ -107,7 +107,7 @@
             </div>
           <% end %>
 
-          <%= link_to user_path(@user.username, tab: 'followers'),
+          <%= link_to app_user_path(@user.username, tab: 'followers'),
               data: { turbo_frame: "profile_content" },
               class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'followers' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
             <div class="flex items-center justify-center space-x-2">
@@ -118,7 +118,7 @@
             </div>
           <% end %>
 
-          <%= link_to user_path(@user.username, tab: 'following'),
+          <%= link_to app_user_path(@user.username, tab: 'following'),
               data: { turbo_frame: "profile_content" },
               class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'following' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
             <div class="flex items-center justify-center space-x-2">

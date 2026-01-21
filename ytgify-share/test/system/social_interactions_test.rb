@@ -12,7 +12,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   # ========== LIKE FUNCTIONALITY ==========
 
   test "like button shows on GIF card for anonymous users" do
-    visit root_path
+    visit app_feed_path
 
     # Should see GIF card with like button
     assert_selector "svg"  # Heart icon should be visible
@@ -23,7 +23,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "GIF detail page shows like count" do
-    visit gif_path(@public_gif)
+    visit app_gif_path(@public_gif)
 
     # Should see like count
     assert_page_has_text @public_gif.like_count.to_s
@@ -32,7 +32,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "feed shows GIF cards with engagement stats" do
-    visit root_path
+    visit app_feed_path
 
     # Should see GIFs - the feed has GIF cards with engagement stats
     # Check for like buttons (heart icons in svg)
@@ -44,7 +44,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   # ========== FOLLOW FUNCTIONALITY ==========
 
   test "user profile shows follow button for anonymous users" do
-    visit user_path(@other_user.username)
+    visit app_user_path(@other_user.username)
 
     # Should see follow button that links to sign in
     assert_page_has_text "Follow"
@@ -53,7 +53,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "user profile shows follower and following counts" do
-    visit user_path(@e2e_user.username)
+    visit app_user_path(@e2e_user.username)
 
     # Should see follower/following counts
     assert_page_has_text "Followers"
@@ -65,7 +65,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   # ========== COMMENT FUNCTIONALITY ==========
 
   test "GIF detail page shows comments section" do
-    visit gif_path(@public_gif)
+    visit app_gif_path(@public_gif)
 
     # Should see comments section
     assert_page_has_text "Comments"
@@ -74,7 +74,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "comment count shows on GIF cards" do
-    visit root_path
+    visit app_feed_path
 
     # GIF cards should show comment counts
     # Comments icon with count
@@ -86,7 +86,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   # ========== HASHTAG FUNCTIONALITY ==========
 
   test "hashtags are clickable and lead to hashtag page" do
-    visit root_path
+    visit app_feed_path
 
     # Page should load successfully
     assert @page.url.present?
@@ -97,7 +97,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "trending page shows popular GIFs" do
-    visit trending_path
+    visit app_trending_path
 
     assert_page_has_text "Trending"
     # Should show GIF cards
@@ -107,7 +107,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   # ========== NAVIGATION TESTS ==========
 
   test "navbar shows main navigation links" do
-    visit root_path
+    visit app_feed_path
 
     # Should have navigation elements
     assert_page_has_text "Trending"
@@ -116,7 +116,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "navbar shows sign in link for anonymous users" do
-    visit root_path
+    visit app_feed_path
 
     # The page should have sign in functionality available
     # Check if we can find the sign in link in the HTML (hidden or visible)
@@ -130,7 +130,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
     # Resize to mobile viewport
     @page.set_viewport_size(width: 375, height: 667)
 
-    visit root_path
+    visit app_feed_path
 
     # Page should load in mobile viewport
     assert @page.url.present?
@@ -151,7 +151,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   # ========== PROFILE PAGE TESTS ==========
 
   test "user profile page loads successfully" do
-    visit user_path(@e2e_user.username)
+    visit app_user_path(@e2e_user.username)
 
     # Should see username
     assert_page_has_text @e2e_user.username
@@ -160,7 +160,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "user profile shows GIFs tab" do
-    visit user_path(@e2e_user.username)
+    visit app_user_path(@e2e_user.username)
 
     # Should see GIFs section
     assert_page_has_text "GIFs"
@@ -169,7 +169,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "visiting non-existent user shows 404" do
-    visit user_path("nonexistent_user_12345")
+    visit app_user_path("nonexistent_user_12345")
 
     # Should show not found or redirect
     # Either 404 page or redirect to root
@@ -181,7 +181,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   # ========== GIF DETAIL PAGE TESTS ==========
 
   test "GIF detail page loads successfully" do
-    visit gif_path(@public_gif)
+    visit app_gif_path(@public_gif)
 
     # Should see GIF title
     assert_page_has_text @public_gif.title
@@ -190,7 +190,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "GIF detail page shows creator info" do
-    visit gif_path(@public_gif)
+    visit app_gif_path(@public_gif)
 
     # Should see creator username
     assert_page_has_text @public_gif.user.username
@@ -199,7 +199,7 @@ class SocialInteractionsTest < ApplicationSystemTestCase
   end
 
   test "GIF detail page shows engagement metrics" do
-    visit gif_path(@public_gif)
+    visit app_gif_path(@public_gif)
 
     # Should see view count, like count
     assert_selector "svg"  # Icons for likes, comments, views

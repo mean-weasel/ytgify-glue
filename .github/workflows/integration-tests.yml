@@ -50,9 +50,10 @@ jobs:
       - name: Setup test database shard ${{ matrix.shard }}
         run: |
           bin/rails db:test:prepare
+          bin/rails db:fixtures:load
           mkdir -p tmp/storage
           chmod 755 tmp/storage
-          echo "✓ Database shard ${{ matrix.shard }} prepared"
+          echo "✓ Database shard ${{ matrix.shard }} prepared with fixtures"
         working-directory: ytgify-share
 
       - name: Start Rails test server

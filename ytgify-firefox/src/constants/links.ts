@@ -1,9 +1,9 @@
 // External Links Constants
 
 export const LINKS = {
-  // Chrome Web Store
-  WEBSTORE_LISTING: 'https://chromewebstore.google.com/detail/ytgify/dnljofakogbecppbkmnoffppkfdmpfje',
-  WEBSTORE_REVIEWS: 'https://chromewebstore.google.com/detail/ytgify/dnljofakogbecppbkmnoffppkfdmpfje/reviews',
+  // Firefox Add-ons
+  ADDON_LISTING: 'https://addons.mozilla.org/en-US/firefox/addon/ytgify-for-firefox/',
+  ADDON_REVIEWS: 'https://addons.mozilla.org/en-US/firefox/addon/ytgify-for-firefox/reviews/',
 
   // GitHub
   GITHUB_REPO: 'https://github.com/neonwatty/ytgify',
@@ -12,7 +12,7 @@ export const LINKS = {
 
   // Social
   TWITTER_PROFILE: 'https://x.com/neonwatty',
-  DISCORD_INVITE: 'https://discord.gg/8EUxqR93',
+  DISCORD_INVITE: 'https://discord.gg/ufrycqwb4R',
 
   // Documentation
   DOCS_USER_GUIDE: 'https://github.com/neonwatty/ytgify#user-guide'
@@ -34,7 +34,7 @@ export function openExternalLink(url: string): void {
 
 // Helper to get review link
 export function getReviewLink(): string {
-  return LINKS.WEBSTORE_REVIEWS;
+  return LINKS.ADDON_REVIEWS;
 }
 
 // Helper to get GitHub star link
@@ -45,4 +45,9 @@ export function getGitHubStarLink(): string {
 // Helper to get Discord invite link
 export function getDiscordLink(): string {
   return LINKS.DISCORD_INVITE;
+}
+
+// Helper to get waitlist link with UTM tracking
+export function getWaitlistLink(): string {
+  return 'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist';
 }

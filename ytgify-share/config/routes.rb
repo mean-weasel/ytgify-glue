@@ -5,51 +5,73 @@ Rails.application.routes.draw do
   # Sidekiq Web UI (protect in production!)
   mount Sidekiq::Web => "/sidekiq"
 
-  # Devise authentication
+  # Devise authentication (keep at root level for existing URLs)
   devise_for :users
 
-  # Web routes (Hotwire frontend)
-  root "home#feed"
-  get "trending", to: "home#trending"
+  # ============================================================
+  # Marketing Routes (public landing pages at root)
+  # ============================================================
+  root "marketing#landing"
+  get "privacy-policy", to: "marketing#privacy", as: :privacy_policy
+  get "terms-of-service", to: "marketing#terms", as: :terms_of_service
+  get "welcome", to: "marketing#welcome"
 
-  resources :gifs, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
-    member do
-      post :like, to: "likes#toggle"
-      get :remix, to: "remixes#new"
-      post :create_remix, to: "remixes#create"
-    end
-    resources :comments, only: [ :create ]
-  end
+  # Blog routes
+  get "blog", to: "blog#index", as: :blog
+  get "blog/tag/:tag", to: "blog#tag", as: :blog_tag
+  get "blog/:slug", to: "blog#show", as: :blog_post
 
-  # Top-level comment routes for edit, update, delete (outside nested route)
-  resources :comments, only: [ :edit, :update, :destroy ]
+  # Share pages
+  get "share", to: "marketing#share_waitlist", as: :share_waitlist  # Waitlist CTA (from extension)
+  get "share/:id", to: "marketing#share", as: :share               # Specific shared GIF
 
-  resources :users, only: [ :show ], param: :username do
-    member do
-      post :follow, to: "follows#toggle"
-      get :followers
-      get :following
-    end
-  end
+  # ============================================================
+  # App Routes (authenticated user features at /app)
+  # ============================================================
+  scope "/app", as: "app" do
+    get "/", to: "home#feed", as: :feed
+    get "trending", to: "home#trending", as: :trending
 
-  resources :collections, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
-    member do
-      post "add_gif"
-      delete "remove_gif/:gif_id", action: :remove_gif, as: "remove_gif"
+    resources :gifs, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
+      member do
+        post :like, to: "likes#toggle"
+        get :remix, to: "remixes#new"
+        post :create_remix, to: "remixes#create"
+      end
+      resources :comments, only: [ :create ]
     end
-  end
-  resources :hashtags, only: [ :index, :show ], param: :name do
-    collection do
-      get :trending
-    end
-  end
 
-  resources :notifications, only: [ :index ] do
-    member do
-      post :mark_as_read
+    # Top-level comment routes for edit, update, delete (outside nested route)
+    resources :comments, only: [ :edit, :update, :destroy ]
+
+    resources :users, only: [ :show ], param: :username do
+      member do
+        post :follow, to: "follows#toggle"
+        get :followers
+        get :following
+      end
     end
-    collection do
-      post :mark_all_as_read
+
+    resources :collections, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
+      member do
+        post "add_gif"
+        delete "remove_gif/:gif_id", action: :remove_gif, as: "remove_gif"
+      end
+    end
+
+    resources :hashtags, only: [ :index, :show ], param: :name do
+      collection do
+        get :trending
+      end
+    end
+
+    resources :notifications, only: [ :index ] do
+      member do
+        post :mark_as_read
+      end
+      collection do
+        post :mark_all_as_read
+      end
     end
   end
 
@@ -57,7 +79,9 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # API routes
+  # ============================================================
+  # API Routes (for browser extensions)
+  # ============================================================
   namespace :api do
     namespace :v1 do
       # Authentication endpoints
@@ -114,7 +138,4 @@ Rails.application.routes.draw do
       get "feed/following", to: "feed#following"
     end
   end
-
-  # Defines the root path route ("/")
-  # root "posts#index"
 end

@@ -81,3 +81,20 @@ export interface EngagementData {
   };
   popupFooterDismissed: boolean;
 }
+
+// Feedback tracking data
+export interface FeedbackData {
+  // Tracking when feedback was shown
+  feedbackShown: {
+    milestone10?: number;
+    milestone25?: number;
+    milestone50?: number;
+    timeBased?: number;
+    postSuccess?: number;
+  };
+  // Survey clicks
+  surveyClicked: boolean;
+  surveyClickedAt?: number;
+  // Permanent dismissal
+  permanentlyDismissed: boolean;
+}
