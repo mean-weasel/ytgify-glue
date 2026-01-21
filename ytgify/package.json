@@ -29,6 +29,7 @@
     "test:e2e:ui": "playwright test --config tests/playwright-mock.config.ts --ui",
     "test:e2e:backend": "playwright test --config tests/playwright-backend.config.ts",
     "test:e2e:backend:debug": "playwright test --config tests/playwright-backend.config.ts --debug",
+    "test:e2e:upload": "playwright test --config tests/playwright-backend.config.ts",
     "generate:test-videos": "cd tests/e2e-mock/fixtures/videos && chmod +x generate-test-videos.sh && ./generate-test-videos.sh",
     "test:all": "npm run test && npm run test:e2e",
     "test:integration": "npm run test:e2e:backend",
