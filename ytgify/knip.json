@@ -28,6 +28,7 @@
   "ignoreBinaries": [
     "scripts/build-production.sh"
   ],
+  "ignoreExportsUsedInFile": true,
   "webpack": {
     "config": "webpack.config.cjs"
   },
