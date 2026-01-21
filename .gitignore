@@ -142,3 +142,9 @@ vite.config.ts.timestamp-*
 # ytgify/
 # ytgify-share/
 # ytgify-firefox/
+
+# Claude Code project folder
+.claude/
+
+# Migration backup files
+.migration-backup/
