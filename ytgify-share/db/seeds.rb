@@ -30,7 +30,7 @@ integration_user = User.create!(
 puts "  ✓ Created #{integration_user.username} (integration test)"
 
 # Create test users
-users = [integration_user]
+users = [ integration_user ]
 5.times do |i|
   user = User.create!(
     email: "user#{i + 1}@example.com",
