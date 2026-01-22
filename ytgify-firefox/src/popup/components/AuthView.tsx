@@ -3,9 +3,11 @@
  *
  * Login form for unauthenticated users
  * Phase 1: JWT Authentication
+ * Phase 2: Google OAuth
  */
 
 import React, { useState } from 'react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { apiClient, APIError, AuthError } from '@/lib/api/api-client';
 
 // Declare browser namespace for Firefox
@@ -20,6 +22,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -65,6 +68,38 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
     });
   };
 
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      setError('No credential received from Google');
+      return;
+    }
+
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      await apiClient.googleLogin(credentialResponse.credential);
+      onLoginSuccess();
+    } catch (err) {
+      if (err instanceof APIError) {
+        setError(err.message);
+      } else if (err instanceof AuthError) {
+        setError(err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Google login failed. Please try again.');
+      }
+      console.error('[AuthView] Google login failed:', err);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google sign-in was cancelled or failed');
+  };
+
   return (
     <div className="auth-view" data-testid="auth-view" style={{ padding: '20px' }}>
       {/* Header */}
@@ -99,7 +134,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            disabled={loading}
+            disabled={loading || googleLoading}
             style={{
               width: '100%',
               padding: '10px 12px',
@@ -132,7 +167,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            disabled={loading}
+            disabled={loading || googleLoading}
             style={{
               width: '100%',
               padding: '10px 12px',
@@ -167,21 +202,21 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
         <button
           type="submit"
           data-testid="login-submit-btn"
-          disabled={loading}
+          disabled={loading || googleLoading}
           style={{
             width: '100%',
             padding: '12px',
             fontSize: '15px',
             fontWeight: '600',
             color: '#fff',
-            backgroundColor: loading ? '#999' : '#6366f1',
+            backgroundColor: loading || googleLoading ? '#999' : '#6366f1',
             border: 'none',
             borderRadius: '6px',
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: loading || googleLoading ? 'not-allowed' : 'pointer',
             transition: 'background-color 0.2s',
           }}
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? 'Signing in...' : googleLoading ? 'Google sign-in...' : 'Sign In'}
         </button>
       </form>
 
@@ -190,7 +225,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
         <button
           onClick={handleForgotPassword}
           data-testid="forgot-password-link"
-          disabled={loading}
+          disabled={loading || googleLoading}
           style={{
             background: 'none',
             border: 'none',
@@ -202,6 +237,43 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
         >
           Forgot password?
         </button>
+      </div>
+
+      {/* Divider */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          margin: '20px 0',
+          color: '#999',
+          fontSize: '14px',
+        }}
+      >
+        <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
+        <span style={{ padding: '0 12px' }}>or continue with</span>
+        <div style={{ flex: 1, height: '1px', backgroundColor: '#ddd' }} />
+      </div>
+
+      {/* Google Sign-In */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '16px',
+          opacity: googleLoading ? 0.6 : 1,
+          pointerEvents: googleLoading ? 'none' : 'auto',
+        }}
+        data-testid="google-login-container"
+      >
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          theme="outline"
+          size="large"
+          text="continue_with"
+          shape="rectangular"
+          width="280"
+        />
       </div>
 
       {/* Divider */}
@@ -234,7 +306,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
         <button
           onClick={handleSignupClick}
           data-testid="create-account-btn"
-          disabled={loading}
+          disabled={loading || googleLoading}
           style={{
             padding: '10px 24px',
             fontSize: '14px',
@@ -243,7 +315,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
             backgroundColor: '#fff',
             border: '1px solid #6366f1',
             borderRadius: '6px',
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: loading || googleLoading ? 'not-allowed' : 'pointer',
             transition: 'background-color 0.2s',
           }}
         >

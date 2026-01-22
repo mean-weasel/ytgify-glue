@@ -5,11 +5,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 YTgify is a YouTube GIF creation platform consisting of three integrated components:
-- **ytgify/** - Chrome Manifest V3 extension (React + TypeScript)
-- **ytgify-firefox/** - Firefox WebExtension (React + TypeScript)
-- **ytgify-share/** - Rails 8 backend with Hotwire (no React/Vue)
+- **ytgify/** - Chrome Manifest V3 extension (React + TypeScript) - v1.0.19
+- **ytgify-firefox/** - Firefox WebExtension (React + TypeScript) - v1.0.19
+- **ytgify-share/** - Rails 8 backend with Hotwire (marketing site + social platform + API)
 
 Each sub-project has its own CLAUDE.md with component-specific details.
+
+## Current Status
+
+**Extensions:** Published to Chrome Web Store and Firefox Add-ons (v1.0.19)
+**Backend:** Production-ready with marketing site, blog, and social features
+**Integration:** Full JWT authentication and GIF upload from extensions to backend
 
 ## Root Commands
 
@@ -26,34 +32,8 @@ npm run ci:firefox          # Lint + typecheck + tests + build
 npm run ci:rails            # Rails tests
 npm run ci:all              # All CI checks
 
-# Integration tests (requires Rails backend running on port 3001)
+# Integration tests (requires Rails on port 3000)
 npm run test:integration
-```
-
-## Component Commands
-
-**Chrome Extension (ytgify/):**
-```bash
-npm run build              # Production build
-npm run dev               # Watch mode
-npm run validate:pre-push # Full validation before PR
-npm run test:e2e          # E2E tests (headless)
-npm run test:e2e:headed   # E2E with visible browser
-```
-
-**Firefox Extension (ytgify-firefox/):**
-```bash
-npm run build             # Webpack build
-npm run dev              # Watch mode + Firefox reload
-npm run validate         # Typecheck + lint + unit tests
-npm run test:selenium:mock # Mock E2E (headless)
-```
-
-**Rails Backend (ytgify-share/):**
-```bash
-bin/dev                  # Rails + Tailwind
-bin/rails test           # All tests
-bin/rails test path/to/test.rb -n test_method_name  # Single test
 ```
 
 ## Architecture
@@ -61,51 +41,126 @@ bin/rails test path/to/test.rb -n test_method_name  # Single test
 ### Extension Architecture (Chrome & Firefox)
 - **Content Script**: YouTube integration, frame capture, GIF processing, React overlay wizard
 - **Background**: Message routing (service worker on Chrome, event page on Firefox)
-- **Popup**: Settings UI, button visibility controls
+- **Popup**: Settings UI, user profile, authentication state
 
-GIF creation flow: User triggers wizard → parameter collection → frame extraction from canvas → text overlay → GIF encoding (gifenc primary, gif.js fallback) → download to browser → optional cloud upload
+**GIF Creation Flow:**
+1. User triggers wizard on YouTube video
+2. Parameter collection (start/end time, resolution, FPS)
+3. Frame extraction from video canvas
+4. Optional text overlay
+5. GIF encoding (gifenc primary, gif.js fallback)
+6. Download to browser
+7. Optional cloud upload to backend (JWT authenticated)
 
 ### Rails Backend Architecture
-- **Tech**: Rails 8.0.4, PostgreSQL (UUID primary keys), Hotwire (Turbo + Stimulus), Tailwind CSS 4
-- **Auth**: Devise (web sessions) + JWT (API for extensions)
-- **Real-time**: ActionCable + Turbo Streams
-- **Storage**: AWS S3 via ActiveStorage
-- **Jobs**: Sidekiq + Redis
 
-Key models: User → Gif → Like, Comment, Collection, Notification (polymorphic)
+**Tech Stack:**
+- Rails 8.0.4, PostgreSQL (UUID primary keys)
+- Hotwire (Turbo Frames/Streams + Stimulus), Tailwind CSS 4
+- Devise (web sessions) + JWT (API for extensions)
+- ActionCable + Turbo Streams (real-time)
+- AWS S3 via ActiveStorage
+- Sidekiq + Redis (background jobs)
+
+**Route Structure:**
+```
+Marketing (root level):
+  /                     Landing page
+  /welcome              Device detection welcome
+  /privacy-policy       Privacy policy
+  /terms-of-service     Terms of service
+  /blog                 Blog index
+  /blog/tag/:tag        Blog tag filter
+  /blog/:slug           Blog post
+  /share                Waitlist signup
+  /share/:id            Shared GIF view
+
+App (authenticated, /app scope):
+  /app                  Feed
+  /app/trending         Trending GIFs
+  /app/gifs/:id         GIF detail
+  /app/users/:username  User profile
+  /app/collections      User collections
+  /app/notifications    Notifications
+
+API (for extensions, /api/v1):
+  POST /api/v1/auth/login     JWT login
+  POST /api/v1/auth/register  JWT register
+  POST /api/v1/auth/refresh   Token refresh
+  POST /api/v1/gifs           Upload GIF
+  GET  /api/v1/feed           Personalized feed
+```
+
+**Key Models:**
+- User (Devise + JWT) → Gif, Like, Comment, Collection, Follow, Notification
+- Gif → Likes, Comments, Hashtags, ViewEvents, Remixes (parent_gif)
+- Notification (polymorphic: recipient, actor, notifiable)
+
+**Services:**
+- `FeedService` - Personalized/trending feeds
+- `NotificationService` - Creates & broadcasts real-time notifications
+- `BlogService` - Markdown parsing with frontmatter, syntax highlighting
 
 ### Extension ↔ Backend Integration
-- Extensions authenticate via JWT tokens (Authorization: Bearer)
-- Upload endpoint: POST /api/v1/gifs with multipart form data
-- Test credentials: test@example.com / password123
 
-## Cross-Project Patterns
+Both extensions include full backend integration:
+- JWT authentication (login, register, token refresh)
+- GIF upload to `/api/v1/gifs` with multipart form data
+- User profile caching and sync
+- Rate limiting and retry logic
+- Test credentials: `test@example.com` / `password123`
 
-### API Differences
-- Chrome: `chrome.*` API (callback-based, some Promise support)
-- Firefox: `browser.*` API (Promise-based)
+## CI/CD Pipeline
 
-### Message Passing
-Both extensions use typed request/response patterns. Message types defined in `src/types/messages.ts` and `src/shared/messages.ts`. Use type guards for safe handling.
+**Change Detection:** CI uses `dorny/paths-filter` to run only affected workflows.
 
-### Storage
-- Extensions: `chrome.storage.sync`/`browser.storage.local` for settings
-- Backend: PostgreSQL + S3
+**Workflows:**
+1. **Chrome Extension** - Lint, typecheck, coverage, build, E2E tests (4 Playwright shards)
+2. **Firefox Extension** - Lint, typecheck, coverage, build, E2E tests (3 Selenium shards)
+3. **Rails Backend** - Security scan (Brakeman), lint (RuboCop), tests (PostgreSQL)
+4. **Integration Tests** - 4 parallel shards with separate DBs, full extension→backend flow
+
+**Branch Protection:** Main branch requires PRs (no direct pushes).
 
 ## Testing
 
-### E2E Test Videos
-Both extensions use generated test videos with mock YouTube servers. Run `npm run generate:test-videos` in extension directory if videos are missing.
+### E2E Tests
+- Chrome: Playwright with 4 parallel shards
+- Firefox: Selenium WebDriver with 3 parallel shards
+- Both use generated test videos with mock YouTube servers
 
 ### Integration Tests
-Verify full flow: Extension → Backend API → Database
-
 ```bash
-# Terminal 1: Rails test mode
-cd ytgify-share && RAILS_ENV=test bin/rails server -p 3001
+# Terminal 1: Start Rails
+cd ytgify-share && bin/rails server
 
 # Terminal 2: Run integration tests
-cd ytgify && npm run test:e2e:upload
+cd ytgify && REAL_BACKEND=true npm run test:e2e:upload
+```
+
+### Rails Tests
+```bash
+bin/rails test                             # All tests (parallel)
+bin/rails test test/models/gif_test.rb    # Specific file
+```
+
+## Key Directories
+
+```
+ytgify-glue/
+├── ytgify/              # Chrome extension
+├── ytgify-firefox/      # Firefox extension
+├── ytgify-share/        # Rails backend
+│   ├── app/
+│   │   ├── controllers/
+│   │   │   ├── api/v1/      # API endpoints
+│   │   │   ├── marketing_controller.rb
+│   │   │   └── blog_controller.rb
+│   │   ├── services/        # FeedService, NotificationService, BlogService
+│   │   └── javascript/controllers/  # 20+ Stimulus controllers
+│   └── content/blog/        # Markdown blog posts
+├── .github/workflows/   # CI/CD
+└── plans/               # Architecture docs (archived)
 ```
 
 ## Key Constraints

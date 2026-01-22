@@ -6,7 +6,9 @@ Rails.application.routes.draw do
   mount Sidekiq::Web => "/sidekiq"
 
   # Devise authentication (keep at root level for existing URLs)
-  devise_for :users
+  devise_for :users, controllers: {
+    omniauth_callbacks: "users/omniauth_callbacks"
+  }
 
   # ============================================================
   # Marketing Routes (public landing pages at root)
@@ -87,6 +89,7 @@ Rails.application.routes.draw do
       # Authentication endpoints
       post "auth/register", to: "auth#register"
       post "auth/login", to: "auth#login"
+      post "auth/google", to: "auth#google"
       delete "auth/logout", to: "auth#logout"
       post "auth/refresh", to: "auth#refresh"
       get "auth/me", to: "auth#me"

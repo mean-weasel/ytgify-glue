@@ -3,7 +3,7 @@
 module Api
   module V1
     class AuthController < BaseController
-      skip_before_action :authenticate_user!, only: [ :register, :login ]
+      skip_before_action :authenticate_user!, only: [ :register, :login, :google ]
 
       # POST /api/v1/auth/register
       def register
@@ -41,6 +41,53 @@ module Api
           render json: {
             error: "Invalid credentials",
             message: "Email or password is incorrect"
+          }, status: :unauthorized
+        end
+      end
+
+      # POST /api/v1/auth/google
+      # Authenticate with Google ID token (for browser extensions)
+      def google
+        id_token = params[:id_token]
+
+        if id_token.blank?
+          render json: {
+            error: "Missing Google ID token"
+          }, status: :bad_request
+          return
+        end
+
+        begin
+          # Verify the Google ID token
+          payload = verify_google_id_token(id_token)
+
+          if payload.nil?
+            render json: {
+              error: "Invalid Google token"
+            }, status: :unauthorized
+            return
+          end
+
+          # Find or create user from Google data
+          user = User.find_or_create_from_google(
+            uid: payload["sub"],
+            email: payload["email"],
+            name: payload["name"] || payload["email"].split("@").first
+          )
+
+          token = generate_jwt_token(user)
+          response.set_header("Authorization", "Bearer #{token}")
+
+          render json: {
+            message: "Google authentication successful",
+            user: user_json(user),
+            token: token
+          }, status: :ok
+        rescue StandardError => e
+          Rails.logger.error("Google auth error: #{e.message}")
+          render json: {
+            error: "Google authentication failed",
+            message: e.message
           }, status: :unauthorized
         end
       end
@@ -103,6 +150,37 @@ module Api
           created_at: user.created_at,
           updated_at: user.updated_at
         }
+      end
+
+      # Verify Google ID token using Google's public keys
+      def verify_google_id_token(id_token)
+        require "googleauth/id_tokens"
+
+        client_id = ENV.fetch("GOOGLE_CLIENT_ID", nil)
+
+        if client_id.blank?
+          Rails.logger.error("GOOGLE_CLIENT_ID not configured")
+          return nil
+        end
+
+        # Verify the token
+        payload = Google::Auth::IDTokens.verify_oidc(
+          id_token,
+          aud: client_id
+        )
+
+        # Verify email is verified
+        unless payload["email_verified"]
+          Rails.logger.warn("Google email not verified for: #{payload['email']}")
+          return nil
+        end
+
+        payload
+      rescue Google::Auth::IDTokens::SignatureError,
+             Google::Auth::IDTokens::AudienceMismatchError,
+             Google::Auth::IDTokens::ExpiredTokenError => e
+        Rails.logger.error("Google token verification failed: #{e.message}")
+        nil
       end
     end
   end

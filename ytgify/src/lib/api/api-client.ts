@@ -50,6 +50,55 @@ export class YtgifyApiClient {
   // ========================================
 
   /**
+   * Login with Google ID token
+   * Returns JWT token and user data
+   */
+  async googleLogin(idToken: string): Promise<LoginResponse> {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id_token: idToken,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new APIError(
+          errorData.message || errorData.error || 'Google login failed',
+          response.status
+        );
+      }
+
+      const data: LoginResponse = await response.json();
+
+      // Decode token to get expiration
+      const decoded = this.decodeToken(data.token);
+
+      // Save auth state
+      const authState: AuthState = {
+        token: data.token,
+        expiresAt: decoded.exp * 1000, // Convert to milliseconds
+        userId: decoded.sub,
+        userProfile: data.user,
+      };
+
+      await StorageAdapter.saveAuthState(authState);
+      await StorageAdapter.saveUserProfile(data.user);
+
+      console.log('[ApiClient] Google login successful');
+
+      return data;
+    } catch (error) {
+      console.error('[ApiClient] Google login failed:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Login with email and password
    * Returns JWT token and user data
    */
