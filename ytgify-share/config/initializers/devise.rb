@@ -273,6 +273,17 @@ Devise.setup do |config|
   # up on your models and hooks.
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
 
+  # Google OAuth 2.0 configuration
+  config.omniauth :google_oauth2,
+                  ENV.fetch("GOOGLE_CLIENT_ID", nil),
+                  ENV.fetch("GOOGLE_CLIENT_SECRET", nil),
+                  {
+                    scope: "email,profile",
+                    prompt: "select_account",
+                    image_aspect_ratio: "square",
+                    image_size: 100
+                  }
+
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.

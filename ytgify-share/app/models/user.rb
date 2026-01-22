@@ -2,10 +2,12 @@ class User < ApplicationRecord
   include Devise::JWT::RevocationStrategies::Denylist
 
   # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable and :omniauthable
+  # :confirmable, :lockable, :timeoutable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, :trackable,
-         :jwt_authenticatable, jwt_revocation_strategy: self
+         :jwt_authenticatable, :omniauthable,
+         jwt_revocation_strategy: self,
+         omniauth_providers: [ :google_oauth2 ]
 
   # Associations
   has_one_attached :avatar
@@ -101,6 +103,70 @@ class User < ApplicationRecord
   # Scopes
   def self.followed_by(user)
     joins(:follower_relationships).where(follows: { follower_id: user.id })
+  end
+
+  # OmniAuth methods
+  # Find or create user from OmniAuth callback (used by web app)
+  def self.from_omniauth(auth)
+    # First try to find by provider/uid
+    user = find_by(provider: auth.provider, uid: auth.uid)
+    return user if user
+
+    # Then try to find by email and link the account
+    user = find_by(email: auth.info.email)
+    if user
+      user.update!(provider: auth.provider, uid: auth.uid)
+      return user
+    end
+
+    # Create new user
+    create!(
+      provider: auth.provider,
+      uid: auth.uid,
+      email: auth.info.email,
+      username: generate_username_from_email(auth.info.email),
+      display_name: auth.info.name,
+      password: Devise.friendly_token[0, 20]
+    )
+  end
+
+  # Find or create user from Google ID token (used by extensions API)
+  def self.find_or_create_from_google(uid:, email:, name:)
+    # First try to find by provider/uid
+    user = find_by(provider: "google_oauth2", uid: uid)
+    return user if user
+
+    # Then try to find by email and link the account
+    user = find_by(email: email)
+    if user
+      user.update!(provider: "google_oauth2", uid: uid)
+      return user
+    end
+
+    # Create new user
+    create!(
+      provider: "google_oauth2",
+      uid: uid,
+      email: email,
+      username: generate_username_from_email(email),
+      display_name: name,
+      password: Devise.friendly_token[0, 20]
+    )
+  end
+
+  # Generate a unique username from email
+  def self.generate_username_from_email(email)
+    base_username = email.split("@").first.gsub(/[^a-zA-Z0-9_]/, "_")[0, 25]
+    username = base_username
+
+    # Ensure uniqueness by appending numbers if needed
+    counter = 1
+    while exists?(username: username)
+      username = "#{base_username[0, 25 - counter.to_s.length - 1]}_#{counter}"
+      counter += 1
+    end
+
+    username
   end
 
   private
