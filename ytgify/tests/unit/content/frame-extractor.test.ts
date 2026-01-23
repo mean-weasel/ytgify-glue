@@ -86,13 +86,7 @@ describe('ContentScriptFrameExtractor', () => {
   });
 
   afterEach(() => {
-    // Clean up any running timers and intervals from BackgroundMessageHandler
-    const { BackgroundMessageHandler } = require('@/background/message-handler');
-    if (BackgroundMessageHandler.resetInstance) {
-      BackgroundMessageHandler.resetInstance();
-    }
-
-    // Reset ContentScriptFrameExtractor singleton as well
+    // Reset ContentScriptFrameExtractor singleton
     ContentScriptFrameExtractor.resetInstance();
 
     // Clear all timers and intervals that might have been created
