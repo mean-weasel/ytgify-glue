@@ -360,6 +360,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === 'TRIGGER_AUTH') {
+    console.log('[Background] TRIGGER_AUTH received - opening popup');
+    // Open the extension popup which will show the auth view
+    chrome.action.openPopup().catch((error) => {
+      // openPopup may fail if popup is already open or in some contexts
+      console.warn('[Background] Could not open popup:', error);
+    });
+    sendResponse({ success: true });
+    return false;
+  }
+
   if (message.type === 'LOGIN') {
     // Handle login request from popup/content script
     (async () => {

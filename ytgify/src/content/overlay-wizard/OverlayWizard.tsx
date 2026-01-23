@@ -322,6 +322,11 @@ const OverlayWizard: React.FC<OverlayWizardProps> = ({
               gifSize={data.gifSize}
               gifDataUrl={data.gifDataUrl}
               gifMetadata={data.gifMetadata}
+              youtubeUrl={window.location.href}
+              youtubeVideoTitle={videoTitle}
+              startTime={data.startTime}
+              endTime={data.endTime}
+              textOverlays={data.textOverlays}
             />
           )}
         </div>

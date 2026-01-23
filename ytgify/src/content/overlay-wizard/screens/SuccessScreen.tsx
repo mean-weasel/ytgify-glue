@@ -1,8 +1,12 @@
 import React from 'react';
 import { engagementTracker } from '@/shared/engagement-tracker';
 import { feedbackTracker } from '@/shared/feedback-tracker';
-import { openExternalLink, getReviewLink, getWaitlistLink } from '@/constants/links';
+import { openExternalLink, getReviewLink } from '@/constants/links';
 import FeedbackModal from '../components/FeedbackModal';
+import { StorageAdapter } from '@/lib/storage/storage-adapter';
+import { apiClient } from '@/lib/api/api-client';
+import type { UploadedGif } from '@/types/auth';
+import type { TextOverlay } from '@/types';
 
 interface SuccessScreenProps {
   onDownload?: () => void;
@@ -16,6 +20,12 @@ interface SuccessScreenProps {
     duration: number;
     frameCount?: number;
   };
+  // Props for upload functionality
+  youtubeUrl?: string;
+  youtubeVideoTitle?: string;
+  startTime?: number;
+  endTime?: number;
+  textOverlays?: TextOverlay[];
 }
 
 const SuccessScreen: React.FC<SuccessScreenProps> = ({
@@ -25,9 +35,20 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
   gifSize,
   gifDataUrl,
   gifMetadata,
+  youtubeUrl,
+  youtubeVideoTitle,
+  startTime,
+  endTime,
+  textOverlays,
 }) => {
   const [showFooter, setShowFooter] = React.useState(false);
   const [showFeedback, setShowFeedback] = React.useState(false);
+
+  // Upload state
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadedGif, setUploadedGif] = React.useState<UploadedGif | null>(null);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   // Check footer qualification on mount
   React.useEffect(() => {
@@ -63,6 +84,74 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
     checkFeedback();
   }, []);
 
+  // Check authentication on mount
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const authState = await StorageAdapter.getAuthState();
+        setIsAuthenticated(!!authState?.token);
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Handle upload
+  const handleUpload = async () => {
+    if (!gifDataUrl) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      // Convert data URL to Blob
+      const response = await fetch(gifDataUrl);
+      const blob = await response.blob();
+
+      // Generate title from video title or default
+      const title = youtubeVideoTitle
+        ? `${youtubeVideoTitle.slice(0, 50)}${youtubeVideoTitle.length > 50 ? '...' : ''}`
+        : 'GIF from YouTube';
+
+      // Upload to backend
+      const uploaded = await apiClient.uploadGif({
+        file: blob,
+        title,
+        youtubeUrl: youtubeUrl || window.location.href,
+        timestampStart: startTime || 0,
+        timestampEnd: endTime || 0,
+        youtubeVideoTitle,
+        hasTextOverlay: textOverlays && textOverlays.length > 0,
+        textOverlayData: textOverlays ? JSON.stringify(textOverlays) : undefined,
+      });
+
+      setUploadedGif(uploaded);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Upload failed';
+      setUploadError(message);
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Handle view on website
+  const handleViewOnWebsite = () => {
+    if (!uploadedGif) return;
+
+    const baseUrl = process.env.API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:3000';
+    const gifUrl = `${baseUrl}/app/gifs/${uploadedGif.id}`;
+
+    window.open(gifUrl, '_blank');
+  };
+
+  // Handle sign in - trigger auth via background
+  const handleSignIn = () => {
+    chrome.runtime.sendMessage({ type: 'TRIGGER_AUTH' });
+  };
+
   // Handle footer actions
   const handleReview = () => {
     openExternalLink(getReviewLink());
@@ -75,10 +164,6 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
 
   const handleDiscord = () => {
     openExternalLink('https://discord.gg/8EUxqR93');
-  };
-
-  const handleShareWaitlist = () => {
-    openExternalLink(getWaitlistLink());
   };
 
   const formatSize = (bytes: number) => {
@@ -152,16 +237,75 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
 
         {/* Stay Connected Action */}
         <div className="ytgif-success-bottom-actions">
+          {/* Upload/Share Section */}
           <div className="ytgif-connect-button-wrapper">
-            <button className="ytgif-button-secondary" onClick={handleShareWaitlist}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
-                <polyline points="16 6 12 2 8 6" />
-                <line x1="12" y1="2" x2="12" y2="15" />
-              </svg>
-              Share This GIF
-            </button>
-            <span className="ytgif-connect-subtext">Be first to know when sharing launches</span>
+            {!isAuthenticated ? (
+              // Not signed in - show sign-in prompt
+              <>
+                <button className="ytgif-button-secondary" onClick={handleSignIn}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                  </svg>
+                  Sign in to Share
+                </button>
+                <span className="ytgif-connect-subtext">Sign in to upload and share GIFs</span>
+              </>
+            ) : uploadedGif ? (
+              // Upload successful - show view link
+              <>
+                <button className="ytgif-button-primary ytgif-upload-success" onClick={handleViewOnWebsite}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  View on YTgify
+                </button>
+                <span className="ytgif-connect-subtext">Uploaded successfully!</span>
+              </>
+            ) : uploadError ? (
+              // Upload failed - show retry
+              <>
+                <button className="ytgif-button-secondary ytgif-upload-error" onClick={handleUpload}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 4v6h6" />
+                    <path d="M23 20v-6h-6" />
+                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                  </svg>
+                  Retry Upload
+                </button>
+                <span className="ytgif-connect-subtext ytgif-error-text">{uploadError}</span>
+              </>
+            ) : (
+              // Signed in, ready to upload
+              <>
+                <button
+                  className="ytgif-button-secondary"
+                  onClick={handleUpload}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <svg className="ytgif-spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                        <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                      </svg>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                        <polyline points="16 6 12 2 8 6" />
+                        <line x1="12" y1="2" x2="12" y2="15" />
+                      </svg>
+                      Upload to My Account
+                    </>
+                  )}
+                </button>
+                <span className="ytgif-connect-subtext">Share on YTgify</span>
+              </>
+            )}
           </div>
           <div className="ytgif-connect-button-wrapper">
             <button className="ytgif-button-secondary" onClick={handleDiscord}>
