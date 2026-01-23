@@ -7,7 +7,6 @@
  */
 
 import React, { useState } from 'react';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { apiClient, APIError, AuthError } from '@/lib/api/api-client';
 
 interface AuthViewProps {
@@ -48,11 +47,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
   };
 
   const handleSignupClick = () => {
-    // Open web app for full signup flow
-    const signupUrl =
+    // Open web app for full signup flow (Devise default route)
+    const baseUrl =
       process.env.API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:3000';
     chrome.tabs.create({
-      url: `${signupUrl}/signup?source=extension`,
+      url: `${baseUrl}/users/sign_up?source=extension`,
     });
   };
 
@@ -64,24 +63,54 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
     });
   };
 
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    if (!credentialResponse.credential) {
-      setError('No credential received from Google');
-      return;
-    }
+  const handleTestPing = async () => {
+    console.log('[AuthView] Testing PING message...');
+    chrome.runtime.sendMessage({ type: 'PING' }, (response) => {
+      console.log('[AuthView] PING response:', response);
+      console.log('[AuthView] lastError:', chrome.runtime.lastError);
+      if (response?.success) {
+        alert('PING successful! Background is working.');
+      } else {
+        alert('PING failed: ' + (chrome.runtime.lastError?.message || 'No response'));
+      }
+    });
+  };
 
+  const handleGoogleSignIn = async () => {
+    console.log('[AuthView] Google Sign-In button clicked');
     setGoogleLoading(true);
     setError(null);
 
     try {
-      await apiClient.googleLogin(credentialResponse.credential);
-      onLoginSuccess();
+      // Send message to background script to handle OAuth
+      // This persists even if the popup closes during the OAuth flow
+      console.log('[AuthView] Sending GOOGLE_LOGIN message to background...');
+      const response = await new Promise<{ success: boolean; data?: unknown; error?: string }>(
+        (resolve) => {
+          chrome.runtime.sendMessage({ type: 'GOOGLE_LOGIN' }, (result) => {
+            console.log('[AuthView] Got response from background:', result);
+            console.log('[AuthView] chrome.runtime.lastError:', chrome.runtime.lastError);
+            if (chrome.runtime.lastError) {
+              resolve({ success: false, error: chrome.runtime.lastError.message });
+            } else {
+              resolve(result || { success: false, error: 'No response from background' });
+            }
+          });
+        }
+      );
+
+      if (response.success) {
+        onLoginSuccess();
+      } else {
+        const errorMsg = response.error || 'Google login failed';
+        if (errorMsg.includes('canceled') || errorMsg.includes('cancelled')) {
+          setError('Google sign-in was cancelled');
+        } else {
+          setError(errorMsg);
+        }
+      }
     } catch (err) {
-      if (err instanceof APIError) {
-        setError(err.message);
-      } else if (err instanceof AuthError) {
-        setError(err.message);
-      } else if (err instanceof Error) {
+      if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('Google login failed. Please try again.');
@@ -90,10 +119,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
     } finally {
       setGoogleLoading(false);
     }
-  };
-
-  const handleGoogleError = () => {
-    setError('Google sign-in was cancelled or failed');
   };
 
   return (
@@ -256,20 +281,69 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
           display: 'flex',
           justifyContent: 'center',
           marginBottom: '16px',
-          opacity: googleLoading ? 0.6 : 1,
-          pointerEvents: googleLoading ? 'none' : 'auto',
         }}
         data-testid="google-login-container"
       >
-        <GoogleLogin
-          onSuccess={handleGoogleSuccess}
-          onError={handleGoogleError}
-          theme="outline"
-          size="large"
-          text="continue_with"
-          shape="rectangular"
-          width="280"
-        />
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading || googleLoading}
+          data-testid="google-login-btn"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            padding: '12px',
+            fontSize: '15px',
+            fontWeight: '500',
+            color: '#444',
+            backgroundColor: '#fff',
+            border: '1px solid #ddd',
+            borderRadius: '6px',
+            cursor: loading || googleLoading ? 'not-allowed' : 'pointer',
+            opacity: loading || googleLoading ? 0.6 : 1,
+            transition: 'background-color 0.2s',
+          }}
+        >
+          <svg
+            style={{ width: '18px', height: '18px', marginRight: '10px' }}
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+          {googleLoading ? 'Signing in...' : 'Continue with Google'}
+        </button>
+        {/* Debug test button */}
+        <button
+          onClick={handleTestPing}
+          style={{
+            marginTop: '8px',
+            padding: '8px',
+            fontSize: '12px',
+            color: '#666',
+            backgroundColor: '#f0f0f0',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            cursor: 'pointer',
+          }}
+        >
+          Test Background (PING)
+        </button>
       </div>
 
       {/* Divider */}

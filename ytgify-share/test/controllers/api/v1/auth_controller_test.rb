@@ -435,6 +435,229 @@ module Api
         assert_not_includes user_data, "password_digest"
       end
 
+      # ========== GOOGLE AUTH ENDPOINT TESTS ==========
+
+      test "google auth should fail without id_token" do
+        post api_v1_auth_google_path, as: :json
+
+        assert_response :bad_request
+        json = JSON.parse(response.body)
+        assert_equal "Missing Google ID token", json["error"]
+      end
+
+      test "google auth should fail with blank id_token" do
+        post api_v1_auth_google_path, params: { id_token: "" }, as: :json
+
+        assert_response :bad_request
+        json = JSON.parse(response.body)
+        assert_equal "Missing Google ID token", json["error"]
+      end
+
+      test "google auth should fail with invalid token" do
+        post api_v1_auth_google_path, params: { id_token: "invalid_token" }, as: :json
+
+        assert_response :unauthorized
+      end
+
+      test "google auth should succeed with valid token and create new user" do
+        # Create a mock Google ID token (JWT)
+        mock_payload = {
+          "iss" => "https://accounts.google.com",
+          "aud" => ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
+          "sub" => "google_test_uid_12345",
+          "email" => "newtestuser@gmail.com",
+          "email_verified" => true,
+          "name" => "New Test User",
+          "exp" => 1.hour.from_now.to_i
+        }
+        mock_token = JWT.encode(mock_payload, nil, "none")
+
+        # Stub environment variable for test
+        original_client_id = ENV["GOOGLE_CLIENT_ID"]
+        ENV["GOOGLE_CLIENT_ID"] = mock_payload["aud"]
+
+        assert_difference("User.count", 1) do
+          post api_v1_auth_google_path, params: { id_token: mock_token }, as: :json
+        end
+
+        assert_response :ok
+        json = JSON.parse(response.body)
+        assert_equal "Google authentication successful", json["message"]
+        assert_includes json, "token"
+        assert_includes json, "user"
+        assert_equal "newtestuser@gmail.com", json["user"]["email"]
+      ensure
+        ENV["GOOGLE_CLIENT_ID"] = original_client_id
+      end
+
+      test "google auth should succeed with valid token and find existing user" do
+        existing_user = User.create!(
+          provider: "google_oauth2",
+          uid: "existing_google_uid",
+          email: "existinggoogle@gmail.com",
+          username: "existinggoogleuser",
+          password: Devise.friendly_token[0, 20]
+        )
+
+        mock_payload = {
+          "iss" => "https://accounts.google.com",
+          "aud" => ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
+          "sub" => "existing_google_uid",
+          "email" => "existinggoogle@gmail.com",
+          "email_verified" => true,
+          "name" => "Existing Google User",
+          "exp" => 1.hour.from_now.to_i
+        }
+        mock_token = JWT.encode(mock_payload, nil, "none")
+
+        original_client_id = ENV["GOOGLE_CLIENT_ID"]
+        ENV["GOOGLE_CLIENT_ID"] = mock_payload["aud"]
+
+        assert_no_difference("User.count") do
+          post api_v1_auth_google_path, params: { id_token: mock_token }, as: :json
+        end
+
+        assert_response :ok
+        json = JSON.parse(response.body)
+        assert_equal existing_user.id, json["user"]["id"]
+      ensure
+        ENV["GOOGLE_CLIENT_ID"] = original_client_id
+      end
+
+      test "google auth should link existing email account to Google" do
+        existing_user = User.create!(
+          email: "linkable@gmail.com",
+          username: "linkableuser",
+          password: "password123"
+        )
+
+        assert_nil existing_user.provider
+
+        mock_payload = {
+          "iss" => "https://accounts.google.com",
+          "aud" => ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
+          "sub" => "new_google_uid_for_linking",
+          "email" => "linkable@gmail.com",
+          "email_verified" => true,
+          "name" => "Linkable User",
+          "exp" => 1.hour.from_now.to_i
+        }
+        mock_token = JWT.encode(mock_payload, nil, "none")
+
+        original_client_id = ENV["GOOGLE_CLIENT_ID"]
+        ENV["GOOGLE_CLIENT_ID"] = mock_payload["aud"]
+
+        assert_no_difference("User.count") do
+          post api_v1_auth_google_path, params: { id_token: mock_token }, as: :json
+        end
+
+        assert_response :ok
+        json = JSON.parse(response.body)
+        assert_equal existing_user.id, json["user"]["id"]
+
+        # Verify account was linked
+        existing_user.reload
+        assert_equal "google_oauth2", existing_user.provider
+        assert_equal "new_google_uid_for_linking", existing_user.uid
+      ensure
+        ENV["GOOGLE_CLIENT_ID"] = original_client_id
+      end
+
+      test "google auth should fail with unverified email" do
+        mock_payload = {
+          "iss" => "https://accounts.google.com",
+          "aud" => ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
+          "sub" => "unverified_uid",
+          "email" => "unverified@gmail.com",
+          "email_verified" => false,  # Not verified
+          "name" => "Unverified User",
+          "exp" => 1.hour.from_now.to_i
+        }
+        mock_token = JWT.encode(mock_payload, nil, "none")
+
+        original_client_id = ENV["GOOGLE_CLIENT_ID"]
+        ENV["GOOGLE_CLIENT_ID"] = mock_payload["aud"]
+
+        post api_v1_auth_google_path, params: { id_token: mock_token }, as: :json
+
+        assert_response :unauthorized
+      ensure
+        ENV["GOOGLE_CLIENT_ID"] = original_client_id
+      end
+
+      test "google auth should fail with expired token" do
+        mock_payload = {
+          "iss" => "https://accounts.google.com",
+          "aud" => ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
+          "sub" => "expired_uid",
+          "email" => "expired@gmail.com",
+          "email_verified" => true,
+          "name" => "Expired User",
+          "exp" => 1.hour.ago.to_i  # Expired
+        }
+        mock_token = JWT.encode(mock_payload, nil, "none")
+
+        original_client_id = ENV["GOOGLE_CLIENT_ID"]
+        ENV["GOOGLE_CLIENT_ID"] = mock_payload["aud"]
+
+        post api_v1_auth_google_path, params: { id_token: mock_token }, as: :json
+
+        assert_response :unauthorized
+      ensure
+        ENV["GOOGLE_CLIENT_ID"] = original_client_id
+      end
+
+      test "google auth should fail with wrong audience" do
+        mock_payload = {
+          "iss" => "https://accounts.google.com",
+          "aud" => "wrong-client-id",  # Wrong audience
+          "sub" => "wrong_aud_uid",
+          "email" => "wrongaud@gmail.com",
+          "email_verified" => true,
+          "name" => "Wrong Audience User",
+          "exp" => 1.hour.from_now.to_i
+        }
+        mock_token = JWT.encode(mock_payload, nil, "none")
+
+        original_client_id = ENV["GOOGLE_CLIENT_ID"]
+        ENV["GOOGLE_CLIENT_ID"] = "correct-client-id"
+
+        post api_v1_auth_google_path, params: { id_token: mock_token }, as: :json
+
+        assert_response :unauthorized
+      ensure
+        ENV["GOOGLE_CLIENT_ID"] = original_client_id
+      end
+
+      test "google auth returns valid JWT token" do
+        mock_payload = {
+          "iss" => "https://accounts.google.com",
+          "aud" => ENV.fetch("GOOGLE_CLIENT_ID", "test-client-id"),
+          "sub" => "jwt_test_uid",
+          "email" => "jwttest@gmail.com",
+          "email_verified" => true,
+          "name" => "JWT Test User",
+          "exp" => 1.hour.from_now.to_i
+        }
+        mock_token = JWT.encode(mock_payload, nil, "none")
+
+        original_client_id = ENV["GOOGLE_CLIENT_ID"]
+        ENV["GOOGLE_CLIENT_ID"] = mock_payload["aud"]
+
+        post api_v1_auth_google_path, params: { id_token: mock_token }, as: :json
+
+        assert_response :ok
+        json = JSON.parse(response.body)
+        token = json["token"]
+
+        # Verify returned token is valid JWT
+        decoded = JWT.decode(token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
+        assert_not_nil decoded["sub"]
+        assert_not_nil decoded["exp"]
+      ensure
+        ENV["GOOGLE_CLIENT_ID"] = original_client_id
+      end
+
       private
 
       def auth_headers(user)

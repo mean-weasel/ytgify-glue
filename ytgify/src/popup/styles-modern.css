@@ -19,7 +19,7 @@ body {
   height: 100%;
   background: #1a1a1a;
   color: #ffffff;
-  overflow: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
