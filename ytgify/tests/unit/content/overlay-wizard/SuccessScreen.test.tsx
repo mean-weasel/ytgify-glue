@@ -12,7 +12,20 @@ jest.mock('../../../../src/constants/links', () => ({
   openExternalLink: jest.fn(),
   getGitHubStarLink: jest.fn(() => 'https://github.com/neonwatty/ytgify'),
   getReviewLink: jest.fn(() => 'https://chromewebstore.google.com/detail/ytgify/mock-id/reviews'),
-  getWaitlistLink: jest.fn(() => 'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist'),
+}));
+
+// Mock StorageAdapter for auth check
+jest.mock('../../../../src/lib/storage/storage-adapter', () => ({
+  StorageAdapter: {
+    getAuthState: jest.fn(() => Promise.resolve(null)), // Default: not authenticated
+  },
+}));
+
+// Mock apiClient for upload
+jest.mock('../../../../src/lib/api/api-client', () => ({
+  apiClient: {
+    uploadGif: jest.fn(() => Promise.resolve({ id: 'mock-gif-id', url: 'https://example.com/gif.gif' })),
+  },
 }));
 
 jest.mock('../../../../src/shared/engagement-tracker', () => ({
@@ -1059,9 +1072,9 @@ describe('SuccessScreen', () => {
   });
 
   describe('Bottom Action Buttons', () => {
-    it('should render Share This GIF button', () => {
+    it('should render Sign in to Share button when not authenticated', () => {
       render(<SuccessScreen {...defaultProps} />);
-      expect(screen.getByText('Share This GIF')).toBeInTheDocument();
+      expect(screen.getByText('Sign in to Share')).toBeInTheDocument();
     });
 
     it('should render Join Discord button', () => {
@@ -1073,24 +1086,13 @@ describe('SuccessScreen', () => {
       const { container } = render(<SuccessScreen {...defaultProps} />);
       const buttons = container.querySelectorAll('.ytgif-success-bottom-actions button');
       expect(buttons.length).toBe(2);
-      expect(buttons[0].textContent).toContain('Share This GIF');
+      expect(buttons[0].textContent).toContain('Sign in to Share');
       expect(buttons[1].textContent).toContain('Join Discord');
     });
 
-    it('should open waitlist page when Share This GIF button is clicked', () => {
+    it('should show subtext under Sign in to Share button', () => {
       render(<SuccessScreen {...defaultProps} />);
-
-      const shareButton = screen.getByText('Share This GIF');
-      fireEvent.click(shareButton);
-
-      expect(links.openExternalLink).toHaveBeenCalledWith(
-        'https://ytgify.com/share?utm_source=extension&utm_medium=success_screen&utm_campaign=waitlist'
-      );
-    });
-
-    it('should show subtext under Share This GIF button', () => {
-      render(<SuccessScreen {...defaultProps} />);
-      expect(screen.getByText('Be first to know when sharing launches')).toBeInTheDocument();
+      expect(screen.getByText('Sign in to upload and share GIFs')).toBeInTheDocument();
     });
   });
 
