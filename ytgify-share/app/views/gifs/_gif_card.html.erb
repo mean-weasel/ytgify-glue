@@ -1,22 +1,31 @@
+<%# GIF Card Component - Single-column feed design %>
+<%# Reference: /mockups/feed.html lines 146-223 %>
 <%# Set default values for optional locals %>
 <% show_remove_button ||= false %>
 <% collection ||= nil %>
 
 <div id="<%= dom_id(gif) %>" class="relative">
 <% cache [gif, gif.user, gif.hashtags.maximum(:updated_at)] do %>
-<div class="bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-all overflow-hidden">
-  <!-- GIF Image -->
-  <%= link_to gif_path(gif), data: { turbo_frame: "_top" }, class: "aspect-video bg-black relative group flex items-center justify-center" do %>
+<article class="rounded-xl overflow-hidden">
+  <!-- GIF Media -->
+  <%= link_to gif_path(gif), data: { turbo_frame: "_top" }, class: "relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden block group" do %>
     <% if gif.file.attached? %>
-      <%= image_tag gif.file, alt: gif.title, class: "max-w-full max-h-full object-contain" %>
+      <%= image_tag gif.file, alt: gif.title, class: "w-full h-full object-cover" %>
     <% elsif gif.thumbnail_url.present? %>
-      <%= image_tag gif.thumbnail_url, alt: gif.title, class: "max-w-full max-h-full object-contain" %>
+      <%= image_tag gif.thumbnail_url, alt: gif.title, class: "w-full h-full object-cover" %>
     <% else %>
       <div class="flex items-center justify-center h-full text-gray-600">
         <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
         </svg>
       </div>
+    <% end %>
+
+    <!-- Duration Badge -->
+    <% if gif.duration %>
+      <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+        <%= Time.at(gif.duration).utc.strftime("%M:%S") %>
+      </span>
     <% end %>
 
     <!-- Play button overlay on hover -->
@@ -27,118 +36,117 @@
         </svg>
       </div>
     </div>
-
-    <!-- Duration badge if available -->
-    <% if gif.duration %>
-      <div class="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-        <%= Time.at(gif.duration).utc.strftime("%M:%S") %>
-      </div>
-    <% end %>
   <% end %>
 
-  <!-- Card Content -->
-  <div class="p-4">
-    <!-- Title and User Info -->
-    <div class="flex items-start justify-between mb-2">
+  <!-- Card Footer -->
+  <div class="pt-4">
+    <!-- User Info Row -->
+    <div class="flex items-center space-x-3 mb-2">
+      <%= link_to user_path(gif.user.username), class: "flex-shrink-0" do %>
+        <div class="w-10 h-10 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-sm font-bold">
+          <%= gif.user.username.first.upcase %>
+        </div>
+      <% end %>
       <div class="flex-1 min-w-0">
-        <%= link_to gif_path(gif), data: { turbo_frame: "_top" }, class: "block" do %>
-          <h3 class="text-sm font-semibold text-white line-clamp-2 hover:text-[#E91E8C]">
-            <%= gif.title %>
-          </h3>
-        <% end %>
-
-        <div class="flex items-center mt-1 text-xs text-gray-400">
-          <%= link_to user_path(gif.user.username), class: "hover:text-[#E91E8C] font-medium" do %>
+        <div class="flex items-center space-x-2">
+          <%= link_to user_path(gif.user.username), class: "font-medium truncate hover:text-[#E91E8C] transition" do %>
             <%= gif.user.username %>
           <% end %>
-          <span class="mx-1">•</span>
-          <span><%= time_ago_in_words(gif.created_at) %> ago</span>
+          <span class="text-gray-500 text-sm">· <%= time_ago_in_words(gif.created_at) %> ago</span>
         </div>
       </div>
     </div>
 
+    <!-- Title/Caption -->
+    <p class="text-lg mb-2">
+      <%= link_to gif.title, gif_path(gif), class: "hover:text-[#E91E8C] transition", data: { turbo_frame: "_top" } %>
+    </p>
+
     <!-- Hashtags -->
     <% if gif.hashtags.any? %>
-      <div class="flex flex-wrap gap-1 mb-3">
-        <% gif.hashtags.first(3).each do |hashtag| %>
-          <%= link_to hashtag_path(hashtag.name), class: "inline-block text-xs text-[#E91E8C] hover:text-[#E91E8C]/80 hover:underline" do %>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <% gif.hashtags.first(5).each do |hashtag| %>
+          <%= link_to hashtag_path(hashtag.name), class: "text-[#E91E8C] text-sm hover:underline" do %>
             #<%= hashtag.name %>
           <% end %>
         <% end %>
-        <% if gif.hashtags.count > 3 %>
-          <span class="text-xs text-gray-500">+<%= gif.hashtags.count - 3 %> more</span>
+        <% if gif.hashtags.count > 5 %>
+          <span class="text-gray-500 text-sm">+<%= gif.hashtags.count - 5 %> more</span>
         <% end %>
       </div>
     <% end %>
 
-    <!-- Actions Bar -->
+    <!-- Actions -->
     <div class="flex items-center justify-between pt-3 border-t border-gray-800">
-      <!-- Like Button -->
-      <%= render "likes/like_button", gif: gif %>
+      <div class="flex items-center space-x-6">
+        <!-- Like Button -->
+        <%= render "likes/like_button", gif: gif %>
 
-      <!-- Comments -->
-      <%= link_to gif_path(gif), data: { turbo_frame: "_top" }, class: "flex items-center space-x-1 text-gray-400 hover:text-[#E91E8C] transition-colors min-h-[44px] px-2" do %>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-        <span class="text-sm font-medium"><%= gif.comment_count %></span>
-      <% end %>
-
-      <!-- Views -->
-      <div class="flex items-center space-x-1 text-gray-400">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-        </svg>
-        <span class="text-sm font-medium"><%= gif.view_count || 0 %></span>
+        <!-- Comments -->
+        <%= link_to gif_path(gif), data: { turbo_frame: "_top" }, class: "flex items-center space-x-2 text-gray-400 hover:text-white transition" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <span class="text-sm"><%= gif.comment_count %></span>
+        <% end %>
       </div>
 
-      <!-- Share/More Dropdown -->
-      <div class="relative" data-controller="dropdown">
-        <button data-action="click->dropdown#toggle" class="text-gray-400 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+      <div class="flex items-center space-x-2">
+        <!-- Share -->
+        <button
+          data-controller="share"
+          data-share-url-value="<%= gif_url(gif) %>"
+          data-share-title-value="<%= gif.title %>"
+          data-action="click->share#share"
+          class="p-2 text-gray-400 hover:text-white transition rounded-lg hover:bg-gray-800">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
           </svg>
         </button>
 
-        <div data-dropdown-target="menu" class="hidden absolute right-0 bottom-full mb-2 w-48 bg-gray-900 rounded-lg shadow-lg border border-gray-700 py-1 z-10">
+        <!-- Save to Collection -->
+        <% if user_signed_in? %>
           <button
-            data-controller="share"
-            data-share-url-value="<%= gif_url(gif) %>"
-            data-share-title-value="<%= gif.title %>"
-            data-action="click->share#share click->dropdown#toggle"
-            class="w-full text-left px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-white">
-            Share
+            data-action="click->collection-modal#show:prevent"
+            data-gif-id="<%= gif.id %>"
+            class="p-2 text-gray-400 hover:text-white transition rounded-lg hover:bg-gray-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
           </button>
-          <% if user_signed_in? %>
-            <button
-              data-action="click->collection-modal#show:prevent click->dropdown#toggle"
-              data-gif-id="<%= gif.id %>"
-              class="w-full text-left px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-white"
-            >
-              Save to Collection
-            </button>
+        <% end %>
+
+        <!-- More Options Dropdown -->
+        <div class="relative" data-controller="dropdown">
+          <button data-action="click->dropdown#toggle" class="p-2 text-gray-400 hover:text-white transition rounded-lg hover:bg-gray-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
+
+          <div data-dropdown-target="menu" class="hidden absolute right-0 bottom-full mb-2 w-48 bg-gray-900 rounded-lg shadow-lg border border-gray-700 py-1 z-10">
             <% if show_remove_button && collection %>
               <%= button_to remove_gif_collection_path(collection, gif_id: gif.id),
                   method: :delete,
-                  data: { turbo_confirm: "Remove this GIF from the collection?" },
+                  data: { turbo_confirm: "Remove this GIF from the collection?", action: "dropdown#toggle" },
                   class: "w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/30" do %>
                 Remove from Collection
               <% end %>
             <% end %>
-            <% if current_user == gif.user %>
-              <%= link_to "Edit", edit_gif_path(gif), class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-white" %>
+            <% if user_signed_in? && current_user == gif.user %>
+              <%= link_to "Edit", edit_gif_path(gif), class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-white", data: { action: "dropdown#toggle" } %>
               <%= button_to "Delete", gif_path(gif),
                   method: :delete,
-                  data: { turbo_confirm: "Are you sure?" },
+                  data: { turbo_confirm: "Are you sure?", action: "dropdown#toggle" },
                   class: "w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/30" %>
             <% end %>
-          <% end %>
+            <%= link_to "View GIF", gif_path(gif), class: "block px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-white", data: { turbo_frame: "_top", action: "dropdown#toggle" } %>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</article>
 <% end %>
 
 <!-- Collection Modal (per GIF) -->
