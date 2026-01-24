@@ -52,7 +52,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
     const signupUrl =
       process.env.API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:3000';
     chrome.tabs.create({
-      url: `${signupUrl}/signup?source=extension`,
+      url: `${signupUrl}/users/sign_up?source=extension`,
     });
   };
 
@@ -60,7 +60,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLoginSuccess }) => {
     const baseUrl =
       process.env.API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:3000';
     chrome.tabs.create({
-      url: `${baseUrl}/password/new`,
+      url: `${baseUrl}/users/password/new`,
     });
   };
 
