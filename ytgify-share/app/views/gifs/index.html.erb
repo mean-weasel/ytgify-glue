@@ -1,29 +1,59 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="max-w-6xl mx-auto">
+<%# Search Results / Browse GIFs Page %>
+<%# Single-column layout matching the new design %>
+
+<main class="pt-16 pb-20 lg:pb-8 min-h-screen">
+  <div class="max-w-3xl mx-auto px-4">
+
     <!-- Header -->
-    <div class="mb-8">
+    <div class="py-8 border-b border-gray-800">
       <% if @query.present? %>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Search Results for "<%= @query %>"</h1>
-        <p class="text-gray-600"><%= @pagy.count %> GIF<%= @pagy.count == 1 ? '' : 's' %> found</p>
+        <div class="flex items-center space-x-4 mb-4">
+          <%= link_to root_path, class: "p-2 text-gray-400 hover:text-white transition rounded-lg hover:bg-gray-800" do %>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          <% end %>
+          <div>
+            <h1 class="text-2xl font-bold">Search Results</h1>
+            <p class="text-gray-400">for "<%= @query %>"</p>
+          </div>
+        </div>
+        <p class="text-gray-500"><%= @pagy.count %> GIF<%= @pagy.count == 1 ? '' : 's' %> found</p>
       <% else %>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Browse GIFs</h1>
-        <p class="text-gray-600">Explore all public GIFs</p>
+        <h1 class="text-2xl font-bold mb-2">Browse GIFs</h1>
+        <p class="text-gray-400">Explore all public GIFs</p>
       <% end %>
+
+      <!-- Search Form -->
+      <div class="mt-6">
+        <%= form_with url: gifs_path, method: :get, class: "relative" do |f| %>
+          <%= f.text_field :q,
+              value: @query,
+              placeholder: "Search GIFs...",
+              autofocus: @query.blank?,
+              class: "w-full bg-gray-900 border border-gray-700 rounded-full px-5 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent" %>
+          <button type="submit" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+        <% end %>
+      </div>
     </div>
 
     <% if @gifs.any? %>
-      <!-- GIF Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <!-- GIF Feed - Single column -->
+      <div class="py-6 space-y-8">
         <% @gifs.each do |gif| %>
           <%= render "gifs/gif_card", gif: gif %>
         <% end %>
       </div>
 
-      <!-- Pagination -->
+      <!-- Load More Pagination -->
       <% if @pagy.next %>
-        <div class="text-center">
+        <div class="text-center py-8">
           <%= link_to gifs_path(q: @query, page: @pagy.next),
-              class: "inline-block px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors" do %>
+              class: "inline-block px-8 py-3 border border-gray-700 text-gray-300 rounded-full font-medium hover:bg-gray-800 transition" do %>
             Load More
           <% end %>
         </div>
@@ -31,18 +61,20 @@
     <% else %>
       <!-- Empty State -->
       <div class="text-center py-16">
-        <svg class="mx-auto h-24 w-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="mx-auto h-20 w-20 text-gray-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <% if @query.present? %>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">No GIFs found</h3>
-          <p class="text-gray-500 mb-6">Try a different search term</p>
-          <%= link_to "Clear Search", gifs_path, class: "inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" %>
+          <h3 class="text-xl font-semibold text-white mb-2">No GIFs found</h3>
+          <p class="text-gray-400 mb-6">Try a different search term</p>
+          <%= link_to gifs_path, class: "inline-block px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-full hover:opacity-90 font-medium transition" do %>
+            Clear Search
+          <% end %>
         <% else %>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">No GIFs yet</h3>
-          <p class="text-gray-500 mb-6">Be the first to upload a GIF!</p>
+          <h3 class="text-xl font-semibold text-white mb-2">No GIFs yet</h3>
+          <p class="text-gray-400 mb-6">Be the first to upload a GIF!</p>
           <% if user_signed_in? %>
-            <%= link_to new_gif_path, class: "inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" do %>
+            <%= link_to new_gif_path, class: "inline-block px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-full hover:opacity-90 font-medium transition" do %>
               Upload GIF
             <% end %>
           <% end %>
@@ -50,4 +82,7 @@
       </div>
     <% end %>
   </div>
-</div>
+</main>
+
+<!-- Mobile Bottom Navigation -->
+<%= render "shared/mobile_bottom_nav" %>

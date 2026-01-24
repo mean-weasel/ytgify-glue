@@ -1,148 +1,141 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="max-w-6xl mx-auto">
+<%# User Profile Page - Single-column layout %>
+<%# Reference: /mockups/profile.html %>
+
+<main class="pt-16 pb-20 lg:pb-8 min-h-screen">
+  <div class="max-w-3xl mx-auto px-4">
+
     <!-- Profile Header -->
-    <div class="bg-gray-900 rounded-lg border border-gray-800 p-8 mb-6">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <!-- User Info -->
-        <div class="flex items-center space-x-6">
-          <!-- Avatar -->
-          <div class="w-24 h-24 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-full flex items-center justify-center font-bold text-4xl flex-shrink-0">
-            <%= @user.username.first.upcase %>
-          </div>
-
-          <!-- Details -->
-          <div>
-            <h1 class="text-3xl font-bold text-white mb-1"><%= @user.display_name %></h1>
-            <p class="text-gray-400 mb-3">@<%= @user.username %></p>
-
-            <!-- Stats -->
-            <div class="flex items-center space-x-6 text-sm">
-              <div>
-                <span class="font-semibold text-white"><%= number_with_delimiter(@user.gifs.count) %></span>
-                <span class="text-gray-400">GIF<%= @user.gifs.count == 1 ? '' : 's' %></span>
-              </div>
-              <div>
-                <span class="font-semibold text-white"><%= number_with_delimiter(@user.followers.count) %></span>
-                <span class="text-gray-400">Follower<%= @user.followers.count == 1 ? '' : 's' %></span>
-              </div>
-              <div>
-                <span class="font-semibold text-white"><%= number_with_delimiter(@user.following.count) %></span>
-                <span class="text-gray-400">Following</span>
-              </div>
-            </div>
-          </div>
+    <div class="py-8 border-b border-gray-800">
+      <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+        <!-- Avatar -->
+        <div class="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-4xl md:text-5xl font-bold flex-shrink-0">
+          <%= @user.username.first.upcase %>
         </div>
 
-        <!-- Actions -->
-        <div class="flex items-center space-x-3">
-          <% if user_signed_in? %>
-            <% if current_user == @user %>
-              <!-- Own profile - Edit button -->
-              <%= link_to edit_user_registration_path, class: "px-6 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg font-medium transition-colors" do %>
-                Edit Profile
+        <!-- Info -->
+        <div class="flex-1 text-center md:text-left">
+          <div class="flex flex-col md:flex-row md:items-center md:space-x-4 mb-3">
+            <h1 class="text-2xl font-bold"><%= @user.display_name || @user.username %></h1>
+            <div class="flex items-center justify-center md:justify-start space-x-2 mt-2 md:mt-0">
+              <% if user_signed_in? %>
+                <% if current_user == @user %>
+                  <!-- Own profile - Edit button -->
+                  <%= link_to edit_user_registration_path, class: "px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded-full text-sm font-medium transition" do %>
+                    Edit Profile
+                  <% end %>
+                <% else %>
+                  <!-- Other user - Follow button -->
+                  <div id="follow_button_<%= @user.id %>">
+                    <% if current_user.following?(@user) %>
+                      <%= button_to follow_user_path(@user.username),
+                          method: :post,
+                          class: "px-6 py-2 border border-gray-600 text-gray-400 rounded-full text-sm font-medium hover:bg-gray-800 transition" do %>
+                        Following
+                      <% end %>
+                    <% else %>
+                      <%= button_to follow_user_path(@user.username),
+                          method: :post,
+                          class: "px-6 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full text-sm font-medium hover:opacity-90 transition" do %>
+                        Follow
+                      <% end %>
+                    <% end %>
+                  </div>
+                <% end %>
+              <% else %>
+                <%= link_to new_user_session_path, class: "px-6 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full text-sm font-medium hover:opacity-90 transition" do %>
+                  Follow
+                <% end %>
               <% end %>
-            <% else %>
-              <!-- Other user - Follow button -->
-              <div id="follow_button_<%= @user.id %>">
-                <%= render "follows/button", user: @user, following: current_user.following?(@user) %>
+
+              <!-- More Options -->
+              <div class="relative" data-controller="dropdown">
+                <button data-action="click->dropdown#toggle" class="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                  </svg>
+                </button>
+                <div data-dropdown-target="menu" class="hidden absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-lg border border-gray-700 py-1 z-10">
+                  <button
+                    data-controller="share"
+                    data-share-url-value="<%= user_url(@user.username) %>"
+                    data-share-title-value="<%= @user.display_name || @user.username %> on YTgify"
+                    data-action="click->share#share click->dropdown#toggle"
+                    class="w-full text-left px-4 py-2 text-sm text-gray-400 hover:bg-gray-800 hover:text-white">
+                    Share Profile
+                  </button>
+                  <% if user_signed_in? && current_user != @user %>
+                    <button class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/30">
+                      Report User
+                    </button>
+                  <% end %>
+                </div>
               </div>
-            <% end %>
-          <% else %>
-            <%= link_to new_user_session_path, class: "px-6 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium transition-colors" do %>
-              Follow
-            <% end %>
+            </div>
+          </div>
+
+          <!-- Bio -->
+          <% if @user.bio.present? %>
+            <p class="text-gray-400 mb-4 max-w-md"><%= @user.bio %></p>
           <% end %>
 
-          <!-- Share profile -->
-          <button class="p-2 text-gray-400 hover:bg-gray-800 rounded-lg transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-          </button>
+          <!-- Stats -->
+          <div class="flex items-center justify-center md:justify-start space-x-6">
+            <div class="text-center">
+              <span class="font-bold"><%= number_with_delimiter(@user.gifs.not_deleted.count) %></span>
+              <span class="text-gray-500 ml-1">GIFs</span>
+            </div>
+            <%= link_to user_path(@user.username, tab: 'followers'),
+                data: { turbo_frame: "profile_content" },
+                class: "text-center hover:text-[#E91E8C] transition" do %>
+              <span class="font-bold"><%= number_to_human(@user.follower_count || 0, precision: 1, significant: false, format: '%n%u', units: { thousand: 'k', million: 'M' }) %></span>
+              <span class="text-gray-500 ml-1">Followers</span>
+            <% end %>
+            <%= link_to user_path(@user.username, tab: 'following'),
+                data: { turbo_frame: "profile_content" },
+                class: "text-center hover:text-[#E91E8C] transition" do %>
+              <span class="font-bold"><%= number_to_human(@user.following_count || 0, precision: 1, significant: false, format: '%n%u', units: { thousand: 'k', million: 'M' }) %></span>
+              <span class="text-gray-500 ml-1">Following</span>
+            <% end %>
+          </div>
         </div>
       </div>
-
-      <!-- Bio -->
-      <% if @user.bio.present? %>
-        <div class="mt-6 pt-6 border-t border-gray-800">
-          <p class="text-gray-300 whitespace-pre-line"><%= @user.bio %></p>
-        </div>
-      <% end %>
     </div>
 
-    <!-- Tabs Navigation -->
-    <div class="bg-gray-900 rounded-lg border border-gray-800 mb-6">
-      <div class="border-b border-gray-800">
-        <nav class="flex -mb-px">
-          <%= link_to user_path(@user.username, tab: 'gifs'),
-              data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'gifs' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
-            <div class="flex items-center justify-center space-x-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-              </svg>
-              <span>GIFs</span>
-            </div>
-          <% end %>
-
-          <%= link_to user_path(@user.username, tab: 'liked'),
-              data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'liked' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
-            <div class="flex items-center justify-center space-x-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>Liked</span>
-            </div>
-          <% end %>
-
-          <%= link_to user_path(@user.username, tab: 'collections'),
-              data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'collections' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
-            <div class="flex items-center justify-center space-x-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
-              <span>Collections</span>
-            </div>
-          <% end %>
-
-          <%= link_to user_path(@user.username, tab: 'followers'),
-              data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'followers' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
-            <div class="flex items-center justify-center space-x-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span>Followers</span>
-            </div>
-          <% end %>
-
-          <%= link_to user_path(@user.username, tab: 'following'),
-              data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'following' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
-            <div class="flex items-center justify-center space-x-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <span>Following</span>
-            </div>
-          <% end %>
-        </nav>
+    <!-- Tabs - Sticky below navbar -->
+    <div class="sticky top-16 bg-[#0a0a0a] z-40 border-b border-gray-800">
+      <div class="flex">
+        <%= link_to user_path(@user.username, tab: 'gifs'),
+            data: { turbo_frame: "profile_content" },
+            class: "flex-1 py-4 text-center font-medium border-b-2 transition #{@tab == 'gifs' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white'}" do %>
+          GIFs
+        <% end %>
+        <%= link_to user_path(@user.username, tab: 'liked'),
+            data: { turbo_frame: "profile_content" },
+            class: "flex-1 py-4 text-center font-medium border-b-2 transition #{@tab == 'liked' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white'}" do %>
+          Liked
+        <% end %>
+        <%= link_to user_path(@user.username, tab: 'collections'),
+            data: { turbo_frame: "profile_content" },
+            class: "flex-1 py-4 text-center font-medium border-b-2 transition #{@tab == 'collections' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white'}" do %>
+          Collections
+        <% end %>
       </div>
-
-      <!-- Tab Content (Turbo Frame) -->
-      <%= turbo_frame_tag "profile_content" do %>
-        <div class="p-6">
-          <%= render "users/tabs/#{@tab}",
-                     user: @user,
-                     gifs: @gifs,
-                     collections: @collections,
-                     followers: @followers,
-                     following: @following,
-                     pagy: @pagy %>
-        </div>
-      <% end %>
     </div>
+
+    <!-- Tab Content -->
+    <%= turbo_frame_tag "profile_content" do %>
+      <div class="py-6">
+        <%= render "users/tabs/#{@tab}",
+                   user: @user,
+                   gifs: @gifs,
+                   collections: @collections,
+                   followers: @followers,
+                   following: @following,
+                   pagy: @pagy %>
+      </div>
+    <% end %>
   </div>
-</div>
+</main>
+
+<!-- Mobile Bottom Navigation -->
+<%= render "shared/mobile_bottom_nav" %>
