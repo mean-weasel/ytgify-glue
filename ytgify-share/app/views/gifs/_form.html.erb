@@ -1,5 +1,5 @@
 <%= form_with model: gif,
-              url: (gif.new_record? ? app_gifs_path : app_gif_path(gif)),
+              url: (gif.new_record? ? gifs_path : gif_path(gif)),
               data: {
                 controller: "gif-form hashtag-input",
                 action: "submit->gif-form#handleSubmit"
@@ -7,9 +7,9 @@
 
   <!-- YouTube Clip Section -->
   <div class="mb-6">
-    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-      <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+    <div class="p-4 bg-gray-800 rounded-lg border border-gray-700">
+      <h3 class="text-sm font-semibold text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-red-500" fill="currentColor" viewBox="0 0 24 24">
           <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
         </svg>
         YouTube Source
@@ -17,14 +17,14 @@
 
       <!-- YouTube URL Input -->
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">YouTube URL*</label>
+        <label class="block text-sm font-medium text-gray-300 mb-2">YouTube URL*</label>
         <input
           type="text"
           placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           value="<%= gif.youtube_video_url %>"
           data-gif-form-target="youtubeUrl"
           data-action="blur->gif-form#parseYoutubeUrl"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          class="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent"
         />
         <p class="mt-1 text-xs text-gray-500">Paste any YouTube video URL</p>
 
@@ -36,9 +36,9 @@
       <div class="mb-4">
         <!-- Placeholder (shown when no URL entered) -->
         <div data-gif-form-target="youtubePlaceholder" class="<%= 'hidden' if gif.youtube_video_url.present? %>">
-          <div class="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+          <div class="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
             <div class="text-center">
-              <svg class="w-16 h-16 mx-auto mb-2 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+              <svg class="w-16 h-16 mx-auto mb-2 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
               </svg>
               <p class="text-sm text-gray-500">Video preview will appear here</p>
@@ -68,7 +68,7 @@
       <!-- Time Range Selection -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <%= f.label :youtube_timestamp_start, "Start Time (seconds)*", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.label :youtube_timestamp_start, "Start Time (seconds)*", class: "block text-sm font-medium text-gray-300 mb-2" %>
           <%= f.number_field :youtube_timestamp_start,
               placeholder: "0",
               min: 0,
@@ -77,11 +77,11 @@
                 gif_form_target: "timestampStart",
                 action: "change->gif-form#calculateDuration blur->gif-form#formatTimestamp"
               },
-              class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" %>
+              class: "w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent" %>
         </div>
 
         <div>
-          <%= f.label :youtube_timestamp_end, "End Time (seconds)*", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.label :youtube_timestamp_end, "End Time (seconds)*", class: "block text-sm font-medium text-gray-300 mb-2" %>
           <%= f.number_field :youtube_timestamp_end,
               placeholder: "10",
               min: 0,
@@ -90,43 +90,43 @@
                 gif_form_target: "timestampEnd",
                 action: "change->gif-form#calculateDuration blur->gif-form#formatTimestamp"
               },
-              class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" %>
+              class: "w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent" %>
         </div>
 
         <div>
-          <%= f.label :duration, "Duration (auto)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.label :duration, "Duration (auto)", class: "block text-sm font-medium text-gray-300 mb-2" %>
           <%= f.number_field :duration,
               placeholder: "Auto",
               min: 0,
               step: 0.01,
               readonly: true,
               data: { gif_form_target: "duration" },
-              class: "w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600" %>
+              class: "w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400" %>
         </div>
       </div>
 
       <% if gif.errors[:youtube_timestamp_start].any? || gif.errors[:youtube_timestamp_end].any? %>
-        <p class="mt-2 text-sm text-red-600">
+        <p class="mt-2 text-sm text-red-400">
           <%= gif.errors[:youtube_timestamp_start].first || gif.errors[:youtube_timestamp_end].first %>
         </p>
       <% end %>
     </div>
 
     <% if gif.errors[:youtube_video_url].any? %>
-      <p class="mt-2 text-sm text-red-600"><%= gif.errors[:youtube_video_url].first %></p>
+      <p class="mt-2 text-sm text-red-400"><%= gif.errors[:youtube_video_url].first %></p>
     <% end %>
   </div>
 
   <!-- Title -->
   <div class="mb-6">
-    <%= f.label :title, "Title*", class: "block text-sm font-medium text-gray-700 mb-2" %>
+    <%= f.label :title, "Title*", class: "block text-sm font-medium text-gray-300 mb-2" %>
     <%= f.text_field :title,
         placeholder: "Give your GIF a catchy title",
         maxlength: 100,
-        class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent #{'border-red-500' if gif.errors[:title].any?}" %>
+        class: "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent #{'border-red-500' if gif.errors[:title].any?}" %>
     <div class="flex justify-between items-center mt-2">
       <% if gif.errors[:title].any? %>
-        <p class="text-sm text-red-600"><%= gif.errors[:title].first %></p>
+        <p class="text-sm text-red-400"><%= gif.errors[:title].first %></p>
       <% else %>
         <p class="text-xs text-gray-500">Required</p>
       <% end %>
@@ -136,12 +136,12 @@
 
   <!-- Description -->
   <div class="mb-6">
-    <%= f.label :description, "Description", class: "block text-sm font-medium text-gray-700 mb-2" %>
+    <%= f.label :description, "Description", class: "block text-sm font-medium text-gray-300 mb-2" %>
     <%= f.text_area :description,
         placeholder: "Describe your GIF (optional)",
         rows: 4,
         maxlength: 2000,
-        class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none" %>
+        class: "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent resize-none" %>
     <p class="mt-2 text-xs text-gray-500 text-right">
       <%= gif.description&.length || 0 %> / 2000 characters
     </p>
@@ -149,17 +149,17 @@
 
   <!-- Hashtags -->
   <div class="mb-6">
-    <%= f.label :hashtag_names, "Hashtags", class: "block text-sm font-medium text-gray-700 mb-2" %>
-    <div data-hashtag-input-target="container" class="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-lg min-h-[50px] focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent">
+    <%= f.label :hashtag_names, "Hashtags", class: "block text-sm font-medium text-gray-300 mb-2" %>
+    <div data-hashtag-input-target="container" class="flex flex-wrap gap-2 p-3 bg-gray-800 border border-gray-700 rounded-lg min-h-[50px] focus-within:ring-2 focus-within:ring-[#E91E8C] focus-within:border-transparent">
       <!-- Existing tags -->
       <% gif.hashtags.each do |hashtag| %>
-        <div class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+        <div class="inline-flex items-center px-3 py-1 bg-[#E91E8C]/20 text-[#E91E8C] rounded-full text-sm font-medium">
           <span>#<%= hashtag.name %></span>
           <button
             type="button"
             data-tag="<%= hashtag.name %>"
             data-action="click->hashtag-input#removeHashtag"
-            class="ml-2 text-indigo-600 hover:text-indigo-800 focus:outline-none"
+            class="ml-2 text-[#E91E8C] hover:text-[#E91E8C]/80 focus:outline-none"
           >
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -177,13 +177,13 @@
         data-action="input->hashtag-input#handleInput keydown->hashtag-input#handleKeydown focus->hashtag-input#handleFocus"
         placeholder="Type a hashtag and press Enter"
         autocomplete="off"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent"
       />
 
       <!-- Autocomplete dropdown -->
       <div
         data-hashtag-input-target="dropdown"
-        class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden"
+        class="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden"
         style="display: none;"
       ></div>
     </div>
@@ -200,56 +200,56 @@
 
   <!-- Privacy -->
   <div class="mb-8">
-    <%= f.label :privacy, "Privacy", class: "block text-sm font-medium text-gray-700 mb-2" %>
+    <%= f.label :privacy, "Privacy", class: "block text-sm font-medium text-gray-300 mb-2" %>
     <div class="grid grid-cols-3 gap-4">
       <label
         data-gif-form-target="privacyOption"
         data-action="click->gif-form#selectPrivacy"
-        class="relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors <%= (gif.privacy == 'public_access' || gif.privacy.nil?) ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300' %>"
+        class="relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-[#E91E8C] transition-colors <%= (gif.privacy == 'public_access' || gif.privacy.nil?) ? 'border-[#E91E8C] bg-[#E91E8C]/10' : 'border-gray-700 bg-gray-800' %>"
       >
         <%= f.radio_button :privacy, 'public_access',
             checked: gif.privacy.nil? || gif.privacy == 'public_access',
             class: "sr-only" %>
-        <svg class="w-8 h-8 mb-2 <%= (gif.privacy == 'public_access' || gif.privacy.nil?) ? 'text-indigo-600' : 'text-gray-400' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-8 h-8 mb-2 <%= (gif.privacy == 'public_access' || gif.privacy.nil?) ? 'text-[#E91E8C]' : 'text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span class="font-medium text-gray-900">Public</span>
-        <span class="text-xs text-gray-500 text-center mt-1">Anyone can see</span>
+        <span class="font-medium text-white">Public</span>
+        <span class="text-xs text-gray-400 text-center mt-1">Anyone can see</span>
       </label>
 
       <label
         data-gif-form-target="privacyOption"
         data-action="click->gif-form#selectPrivacy"
-        class="relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors <%= gif.privacy == 'unlisted' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300' %>"
+        class="relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-[#E91E8C] transition-colors <%= gif.privacy == 'unlisted' ? 'border-[#E91E8C] bg-[#E91E8C]/10' : 'border-gray-700 bg-gray-800' %>"
       >
         <%= f.radio_button :privacy, 'unlisted', class: "sr-only" %>
-        <svg class="w-8 h-8 mb-2 <%= gif.privacy == 'unlisted' ? 'text-indigo-600' : 'text-gray-400' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-8 h-8 mb-2 <%= gif.privacy == 'unlisted' ? 'text-[#E91E8C]' : 'text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
         </svg>
-        <span class="font-medium text-gray-900">Unlisted</span>
-        <span class="text-xs text-gray-500 text-center mt-1">Only with link</span>
+        <span class="font-medium text-white">Unlisted</span>
+        <span class="text-xs text-gray-400 text-center mt-1">Only with link</span>
       </label>
 
       <label
         data-gif-form-target="privacyOption"
         data-action="click->gif-form#selectPrivacy"
-        class="relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-indigo-500 transition-colors <%= gif.privacy == 'private_access' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300' %>"
+        class="relative flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:border-[#E91E8C] transition-colors <%= gif.privacy == 'private_access' ? 'border-[#E91E8C] bg-[#E91E8C]/10' : 'border-gray-700 bg-gray-800' %>"
       >
         <%= f.radio_button :privacy, 'private_access', class: "sr-only" %>
-        <svg class="w-8 h-8 mb-2 <%= gif.privacy == 'private_access' ? 'text-indigo-600' : 'text-gray-400' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-8 h-8 mb-2 <%= gif.privacy == 'private_access' ? 'text-[#E91E8C]' : 'text-gray-500' %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
-        <span class="font-medium text-gray-900">Private</span>
-        <span class="text-xs text-gray-500 text-center mt-1">Only you</span>
+        <span class="font-medium text-white">Private</span>
+        <span class="text-xs text-gray-400 text-center mt-1">Only you</span>
       </label>
     </div>
   </div>
 
   <!-- Actions -->
-  <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-    <%= link_to "Cancel", :back, class: "px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" %>
+  <div class="flex items-center justify-between pt-6 border-t border-gray-700">
+    <%= link_to "Cancel", :back, class: "px-6 py-3 text-gray-400 hover:text-white rounded-lg font-medium transition-colors" %>
     <%= f.submit gif.new_record? ? "Create GIF" : "Update GIF",
         data: { gif_form_target: "submitButton" },
-        class: "px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium cursor-pointer transition-colors" %>
+        class: "px-8 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium cursor-pointer transition-colors" %>
   </div>
 <% end %>

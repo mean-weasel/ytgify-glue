@@ -1,26 +1,26 @@
 <div class="container mx-auto px-4 py-8">
   <!-- Feed Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Trending GIFs</h1>
-    <p class="text-gray-600">
+    <h1 class="text-3xl font-bold text-white mb-2">Trending GIFs</h1>
+    <p class="text-gray-400">
       The hottest GIFs right now based on likes, views, and engagement
     </p>
   </div>
 
   <!-- Feed Filters -->
-  <div class="flex items-center space-x-4 mb-6 pb-4 border-b border-gray-200">
-    <%= link_to app_feed_path, class: "px-4 py-2 rounded-lg font-medium #{request.path == app_feed_path ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}" do %>
+  <div class="flex items-center space-x-4 mb-6 pb-4 border-b border-gray-800">
+    <%= link_to root_path, class: "px-4 py-2 rounded-lg font-medium #{request.path == root_path ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'text-gray-400 hover:bg-gray-800'}" do %>
       <% if user_signed_in? %>
         For You
       <% else %>
         Popular
       <% end %>
     <% end %>
-    <%= link_to app_trending_path, class: "px-4 py-2 rounded-lg font-medium #{request.path == app_trending_path ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}" do %>
+    <%= link_to trending_path, class: "px-4 py-2 rounded-lg font-medium #{request.path == trending_path ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'text-gray-400 hover:bg-gray-800'}" do %>
       Trending
     <% end %>
     <% if user_signed_in? %>
-      <%= link_to "#", class: "px-4 py-2 rounded-lg font-medium text-gray-600 hover:bg-gray-100" do %>
+      <%= link_to "#", class: "px-4 py-2 rounded-lg font-medium text-gray-400 hover:bg-gray-800" do %>
         Following
       <% end %>
     <% end %>
@@ -39,7 +39,7 @@
           loading: :lazy,
           data: { infinite_scroll_target: "trigger" } do %>
         <div class="flex justify-center py-12">
-          <div class="flex items-center space-x-3 text-gray-600">
+          <div class="flex items-center space-x-3 text-gray-400">
             <svg class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -54,20 +54,20 @@
   <!-- Empty State -->
   <% if @gifs.empty? %>
     <div class="text-center py-20">
-      <svg class="mx-auto h-24 w-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="mx-auto h-24 w-24 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
       </svg>
-      <h3 class="text-xl font-semibold text-gray-700 mb-2">No trending GIFs yet</h3>
-      <p class="text-gray-500 mb-6">Check back soon to see what's hot!</p>
+      <h3 class="text-xl font-semibold text-white mb-2">No trending GIFs yet</h3>
+      <p class="text-gray-400 mb-6">Check back soon to see what's hot!</p>
       <% if user_signed_in? %>
-        <%= link_to new_app_gif_path, class: "inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
+        <%= link_to new_gif_path, class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           Upload a GIF
         <% end %>
       <% else %>
-        <%= link_to new_user_session_path, class: "inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
+        <%= link_to new_user_session_path, class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
           Sign In to Upload
         <% end %>
       <% end %>

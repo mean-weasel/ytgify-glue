@@ -10,7 +10,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
 
   # Authentication Tests
   test "toggle requires authentication" do
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert_redirected_to new_user_session_path
   end
 
@@ -21,7 +21,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     assert_difference -> { Follow.count }, 1 do
       assert_difference -> { @bob.reload.follower_count }, 1 do
         assert_difference -> { @alice.reload.following_count }, 1 do
-          post follow_app_user_path(@bob.username)
+          post follow_user_path(@bob.username)
         end
       end
     end
@@ -39,7 +39,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     assert_difference -> { Follow.count }, -1 do
       assert_difference -> { @bob.reload.follower_count }, -1 do
         assert_difference -> { @alice.reload.following_count }, -1 do
-          post follow_app_user_path(@bob.username)
+          post follow_user_path(@bob.username)
         end
       end
     end
@@ -53,7 +53,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
 
     assert_not @alice.following?(@bob)
 
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
 
     assert @alice.reload.following?(@bob)
   end
@@ -64,7 +64,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
 
     assert @alice.reload.following?(@bob)
 
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
 
     assert_not @alice.reload.following?(@bob)
   end
@@ -76,7 +76,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     initial_follower_count = @bob.follower_count
     initial_following_count = @alice.following_count
 
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
 
     assert_equal initial_follower_count + 1, @bob.reload.follower_count
     assert_equal initial_following_count + 1, @alice.reload.following_count
@@ -91,7 +91,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     initial_follower_count = @bob.follower_count
     initial_following_count = @alice.following_count
 
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
 
     assert_equal initial_follower_count - 1, @bob.reload.follower_count
     assert_equal initial_following_count - 1, @alice.reload.following_count
@@ -101,7 +101,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "turbo stream response for follow" do
     sign_in @alice
 
-    post follow_app_user_path(@bob.username), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    post follow_user_path(@bob.username), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
@@ -113,7 +113,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     @alice.following_relationships.create!(following: @bob)
 
-    post follow_app_user_path(@bob.username), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    post follow_user_path(@bob.username), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html; charset=utf-8", response.content_type
@@ -123,7 +123,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "json response for follow" do
     sign_in @alice
 
-    post follow_app_user_path(@bob.username), headers: { "Accept" => "application/json" }
+    post follow_user_path(@bob.username), headers: { "Accept" => "application/json" }
 
     assert_response :success
     json = JSON.parse(response.body)
@@ -142,7 +142,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     @alice.reload
     @bob.reload
 
-    post follow_app_user_path(@bob.username), headers: { "Accept" => "application/json" }
+    post follow_user_path(@bob.username), headers: { "Accept" => "application/json" }
 
     assert_response :success
     json = JSON.parse(response.body)
@@ -156,7 +156,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "html response redirects back" do
     sign_in @alice
 
-    post follow_app_user_path(@bob.username), headers: { "Accept" => "text/html" }
+    post follow_user_path(@bob.username), headers: { "Accept" => "text/html" }
 
     assert_response :redirect
     follow_redirect!
@@ -168,7 +168,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     assert_no_difference -> { Follow.count } do
-      post follow_app_user_path(@alice.username)
+      post follow_user_path(@alice.username)
     end
 
     # HTML format redirects with alert
@@ -178,7 +178,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "self-follow returns forbidden for turbo stream" do
     sign_in @alice
 
-    post follow_app_user_path(@alice.username), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    post follow_user_path(@alice.username), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :forbidden
   end
@@ -186,7 +186,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "self-follow returns forbidden for json" do
     sign_in @alice
 
-    post follow_app_user_path(@alice.username), headers: { "Accept" => "application/json" }
+    post follow_user_path(@alice.username), headers: { "Accept" => "application/json" }
 
     assert_response :forbidden
     json = JSON.parse(response.body)
@@ -197,7 +197,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "nonexistent user returns not found" do
     sign_in @alice
 
-    post follow_app_user_path("nonexistent"), headers: { "Accept" => "application/json" }
+    post follow_user_path("nonexistent"), headers: { "Accept" => "application/json" }
 
     assert_response :not_found
     json = JSON.parse(response.body)
@@ -207,7 +207,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "nonexistent user returns not found for turbo stream" do
     sign_in @alice
 
-    post follow_app_user_path("nonexistent"), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    post follow_user_path("nonexistent"), headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :not_found
   end
@@ -215,7 +215,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "nonexistent user redirects for html" do
     sign_in @alice
 
-    post follow_app_user_path("nonexistent"), headers: { "Accept" => "text/html" }
+    post follow_user_path("nonexistent"), headers: { "Accept" => "text/html" }
 
     assert_response :redirect
     assert_redirected_to root_path
@@ -225,7 +225,7 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
   test "self-follow redirects back for html" do
     sign_in @alice
 
-    post follow_app_user_path(@alice.username), headers: { "Accept" => "text/html" }
+    post follow_user_path(@alice.username), headers: { "Accept" => "text/html" }
 
     assert_response :redirect
   end
@@ -235,11 +235,11 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     # First follow
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert @alice.reload.following?(@bob)
 
     # Second follow (should unfollow)
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert_not @alice.reload.following?(@bob)
   end
 
@@ -247,15 +247,15 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
 
     # Follow
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert @alice.reload.following?(@bob)
 
     # Unfollow
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert_not @alice.reload.following?(@bob)
 
     # Follow again
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert @alice.reload.following?(@bob)
   end
 
@@ -267,17 +267,17 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, @alice.following_count
 
     # Follow
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert_equal 1, @bob.reload.follower_count
     assert_equal 1, @alice.reload.following_count
 
     # Unfollow
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert_equal 0, @bob.reload.follower_count
     assert_equal 0, @alice.reload.following_count
 
     # Follow again
-    post follow_app_user_path(@bob.username)
+    post follow_user_path(@bob.username)
     assert_equal 1, @bob.reload.follower_count
     assert_equal 1, @alice.reload.following_count
   end

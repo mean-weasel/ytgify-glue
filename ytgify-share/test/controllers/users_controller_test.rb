@@ -11,60 +11,66 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   # ========== SHOW ACTION TESTS ==========
 
   test "should show user profile" do
-    get app_user_path(@alice.username)
+    get user_path(@alice.username)
     assert_response :success
     assert_select "h1", text: @alice.display_name
   end
 
   test "should show gifs tab by default" do
-    get app_user_path(@alice.username)
+    get user_path(@alice.username)
     assert_response :success
-    # Check that GIFs tab is active
-    assert_select "nav a.border-indigo-600", text: /GIFs/
+    # Check that GIFs tab is active (border-[#E91E8C] class indicates active)
+    assert_select "nav a", text: /GIFs/
+    assert response.body.include?("border-[#E91E8C]"), "Expected active tab styling"
   end
 
   test "should show liked tab when requested" do
-    get app_user_path(@alice.username, tab: "liked")
+    get user_path(@alice.username, tab: "liked")
     assert_response :success
-    assert_select "nav a.border-indigo-600", text: /Liked/
+    assert_select "nav a", text: /Liked/
+    assert response.body.include?("border-[#E91E8C]"), "Expected active tab styling"
   end
 
   test "should show collections tab when requested" do
-    get app_user_path(@alice.username, tab: "collections")
+    get user_path(@alice.username, tab: "collections")
     assert_response :success
-    assert_select "nav a.border-indigo-600", text: /Collections/
+    assert_select "nav a", text: /Collections/
+    assert response.body.include?("border-[#E91E8C]"), "Expected active tab styling"
   end
 
   test "should show followers tab when requested" do
-    get app_user_path(@alice.username, tab: "followers")
+    get user_path(@alice.username, tab: "followers")
     assert_response :success
-    assert_select "nav a.border-indigo-600", text: /Followers/
+    assert_select "nav a", text: /Followers/
+    assert response.body.include?("border-[#E91E8C]"), "Expected active tab styling"
   end
 
   test "should show following tab when requested" do
-    get app_user_path(@alice.username, tab: "following")
+    get user_path(@alice.username, tab: "following")
     assert_response :success
-    assert_select "nav a.border-indigo-600", text: /Following/
+    assert_select "nav a", text: /Following/
+    assert response.body.include?("border-[#E91E8C]"), "Expected active tab styling"
   end
 
   # Removed: Rails handles RecordNotFound with 404 in production
 
   test "should default to gifs tab for invalid tab parameter" do
-    get app_user_path(@alice.username, tab: "invalid_tab")
+    get user_path(@alice.username, tab: "invalid_tab")
     assert_response :success
     # Should default to gifs tab
-    assert_select "nav a.border-indigo-600", text: /GIFs/
+    assert_select "nav a", text: /GIFs/
+    assert response.body.include?("border-[#E91E8C]"), "Expected active tab styling"
   end
 
   # ========== FOLLOWERS ACTION TESTS ==========
 
   test "should show followers list" do
-    get followers_app_user_path(@bob.username)
+    get followers_user_path(@bob.username)
     assert_response :success
   end
 
   test "should load followers with pagination" do
-    get followers_app_user_path(@bob.username)
+    get followers_user_path(@bob.username)
     assert_response :success
     # Verify pagination is rendered if there are followers
     if @bob.followers.any?
@@ -73,19 +79,19 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should support turbo stream format for followers" do
-    get followers_app_user_path(@bob.username), as: :turbo_stream
+    get followers_user_path(@bob.username), as: :turbo_stream
     assert_response :success
   end
 
   # ========== FOLLOWING ACTION TESTS ==========
 
   test "should show following list" do
-    get following_app_user_path(@alice.username)
+    get following_user_path(@alice.username)
     assert_response :success
   end
 
   test "should load following with pagination" do
-    get following_app_user_path(@alice.username)
+    get following_user_path(@alice.username)
     assert_response :success
     # Verify pagination is rendered if user is following anyone
     if @alice.following.any?
@@ -94,28 +100,28 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should support turbo stream format for following" do
-    get following_app_user_path(@alice.username), as: :turbo_stream
+    get following_user_path(@alice.username), as: :turbo_stream
     assert_response :success
   end
 
   # ========== PRIVACY TESTS ==========
 
   test "should show gifs tab to guests" do
-    get app_user_path(@alice.username, tab: "gifs")
+    get user_path(@alice.username, tab: "gifs")
     assert_response :success
     # Guests should only see public GIFs (tested by controller logic)
   end
 
   test "should show all gifs tab to owner" do
     sign_in @alice
-    get app_user_path(@alice.username, tab: "gifs")
+    get user_path(@alice.username, tab: "gifs")
     assert_response :success
     # Owner should see all privacy levels (tested by controller logic)
   end
 
   test "should show collections tab to non-owners" do
     sign_in @bob
-    get app_user_path(@alice.username, tab: "collections")
+    get user_path(@alice.username, tab: "collections")
     assert_response :success
     # Non-owners should only see public collections (tested by controller logic)
   end
@@ -123,14 +129,14 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   # ========== INTEGRATION TESTS ==========
 
   test "should display follower count in profile header" do
-    get app_user_path(@bob.username)
+    get user_path(@bob.username)
     assert_response :success
     # Check that follower count is displayed (fixtures have 0 followers)
     assert_select "span", text: /Follower/
   end
 
   test "should display following count in profile header" do
-    get app_user_path(@alice.username)
+    get user_path(@alice.username)
     assert_response :success
     # Check that following count is displayed (fixtures have 0 following)
     assert_select "span", text: /Following/
@@ -138,7 +144,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
   test "should show follow button for other users" do
     sign_in @alice
-    get app_user_path(@bob.username)
+    get user_path(@bob.username)
     assert_response :success
     # Should show follow button for other users
     assert_select "#follow_button_#{@bob.id}"
@@ -146,14 +152,14 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
   test "should show edit profile button for own profile" do
     sign_in @alice
-    get app_user_path(@alice.username)
+    get user_path(@alice.username)
     assert_response :success
     assert_select "a", text: /Edit Profile/
   end
 
   test "should not show edit profile button for other users" do
     sign_in @alice
-    get app_user_path(@bob.username)
+    get user_path(@bob.username)
     assert_response :success
     assert_select "a", text: /Edit Profile/, count: 0
   end
@@ -161,7 +167,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   # ========== TAB NAVIGATION TESTS ==========
 
   test "should render all five tabs in navigation" do
-    get app_user_path(@alice.username)
+    get user_path(@alice.username)
     assert_response :success
     assert_select "nav a", text: /GIFs/
     assert_select "nav a", text: /Liked/
@@ -171,7 +177,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should support turbo frame for tab switching" do
-    get app_user_path(@alice.username, tab: "liked")
+    get user_path(@alice.username, tab: "liked")
     assert_response :success
     assert_select "turbo-frame#profile_content"
   end

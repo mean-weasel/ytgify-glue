@@ -9,7 +9,7 @@
     <% if current_user == user %>
       <!-- Don't show follow button for own profile -->
     <% else %>
-      <%= button_to follow_app_user_path(user.username),
+      <%= button_to follow_user_path(user.username),
           method: :post,
           data: {
             controller: "follow",
@@ -17,7 +17,7 @@
             follow_username_value: user.username,
             turbo_frame: "follow_button_#{user.id}"
           },
-          class: "group relative px-4 py-2 min-h-[44px] rounded-lg font-medium transition-all duration-200 #{is_following ? 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700' : 'bg-indigo-600 text-white hover:bg-indigo-700'}" do %>
+          class: "group relative px-4 py-2 min-h-[44px] rounded-lg font-medium transition-all duration-200 #{is_following ? 'bg-gray-800 text-gray-300 hover:bg-red-900/30 hover:text-red-400' : 'bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white hover:opacity-90'}" do %>
 
         <span class="follow-button-text">
           <% if is_following %>
@@ -38,7 +38,7 @@
       <% end %>
 
       <% if error_message.present? %>
-        <div class="absolute top-full left-0 mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 whitespace-nowrap">
+        <div class="absolute top-full left-0 mt-2 px-3 py-2 bg-red-900/50 border border-red-800 rounded-lg text-sm text-red-400 whitespace-nowrap">
           <%= error_message %>
         </div>
       <% end %>
@@ -47,6 +47,6 @@
     <!-- Show sign-in prompt for non-authenticated users -->
     <%= link_to "Follow",
         new_user_session_path,
-        class: "px-4 py-2 min-h-[44px] inline-flex items-center bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg font-medium transition-colors" %>
+        class: "px-4 py-2 min-h-[44px] inline-flex items-center bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white hover:opacity-90 rounded-lg font-medium transition-colors" %>
   <% end %>
 <% end %>

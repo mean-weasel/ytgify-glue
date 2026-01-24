@@ -64,7 +64,7 @@ class CommentsController < ApplicationController
 
           render turbo_stream: streams
         end
-        format.html { redirect_to app_gif_path(@gif), notice: "Comment posted successfully!" }
+        format.html { redirect_to gif_path(@gif), notice: "Comment posted successfully!" }
       else
         format.turbo_stream do
           if is_reply
@@ -82,7 +82,7 @@ class CommentsController < ApplicationController
           end
         end
         format.html {
-          redirect_to app_gif_path(@gif),
+          redirect_to gif_path(@gif),
           alert: "Failed to post comment: #{@comment.errors.full_messages.to_sentence}"
         }
       end
@@ -98,7 +98,7 @@ class CommentsController < ApplicationController
           locals: { comment: @comment }
         )
       end
-      format.html { redirect_to app_gif_path(@gif) }
+      format.html { redirect_to gif_path(@gif) }
     end
   end
 
@@ -122,7 +122,7 @@ class CommentsController < ApplicationController
             }
           }, status: :ok
         end
-        format.html { redirect_to app_gif_path(@gif), notice: "Comment updated successfully!" }
+        format.html { redirect_to gif_path(@gif), notice: "Comment updated successfully!" }
       else
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
@@ -137,7 +137,7 @@ class CommentsController < ApplicationController
             details: @comment.errors.full_messages
           }, status: :unprocessable_entity
         end
-        format.html { redirect_to app_gif_path(@gif), alert: "Failed to update comment: #{@comment.errors.full_messages.to_sentence}" }
+        format.html { redirect_to gif_path(@gif), alert: "Failed to update comment: #{@comment.errors.full_messages.to_sentence}" }
       end
     end
   end
@@ -163,7 +163,7 @@ class CommentsController < ApplicationController
           )
         ]
       end
-      format.html { redirect_to app_gif_path(@gif), notice: "Comment deleted successfully." }
+      format.html { redirect_to gif_path(@gif), notice: "Comment deleted successfully." }
     end
   end
 
@@ -190,7 +190,7 @@ class CommentsController < ApplicationController
     respond_to do |format|
       format.turbo_stream { head :forbidden }
       format.json { render json: { error: "Not authorized" }, status: :forbidden }
-      format.html { redirect_to app_gif_path(@gif), alert: "You're not authorized to perform this action." }
+      format.html { redirect_to gif_path(@gif), alert: "You're not authorized to perform this action." }
     end
   end
 
@@ -200,7 +200,7 @@ class CommentsController < ApplicationController
     respond_to do |format|
       format.turbo_stream { head :forbidden }
       format.json { render json: { error: "Not authorized" }, status: :forbidden }
-      format.html { redirect_to app_gif_path(@gif), alert: "You're not authorized to delete this comment." }
+      format.html { redirect_to gif_path(@gif), alert: "You're not authorized to delete this comment." }
     end
   end
 

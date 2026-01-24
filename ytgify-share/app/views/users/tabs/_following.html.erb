@@ -2,18 +2,18 @@
   <!-- Following List -->
   <div class="space-y-4 mb-8">
     <% following.each do |followed_user| %>
-      <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-indigo-200 transition-all">
+      <div class="flex items-center justify-between p-4 bg-gray-900 border border-gray-800 rounded-lg hover:border-gray-700 transition-all">
         <!-- User Info -->
-        <%= link_to app_user_path(followed_user.username), class: "flex items-center space-x-4 flex-1 min-w-0" do %>
+        <%= link_to user_path(followed_user.username), class: "flex items-center space-x-4 flex-1 min-w-0" do %>
           <!-- Avatar -->
-          <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0">
+          <div class="w-12 h-12 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0">
             <%= followed_user.username.first.upcase %>
           </div>
 
           <!-- Details -->
           <div class="flex-1 min-w-0">
-            <div class="font-semibold text-gray-900 truncate"><%= followed_user.display_name %></div>
-            <div class="text-sm text-gray-600">@<%= followed_user.username %></div>
+            <div class="font-semibold text-white truncate"><%= followed_user.display_name %></div>
+            <div class="text-sm text-gray-400">@<%= followed_user.username %></div>
 
             <!-- Stats -->
             <div class="flex items-center space-x-4 text-xs text-gray-500 mt-1">
@@ -31,7 +31,7 @@
             </div>
           <% end %>
         <% else %>
-          <%= link_to new_user_session_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors text-sm" do %>
+          <%= link_to new_user_session_path, class: "px-4 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium transition-colors text-sm" do %>
             Follow
           <% end %>
         <% end %>
@@ -42,19 +42,19 @@
   <!-- Pagination -->
   <% if pagy.pages > 1 %>
     <div class="flex justify-center items-center space-x-2">
-      <%== pagy_nav(pagy, link_extra: 'data-turbo-frame="profile_content" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-700"') %>
+      <%== pagy_nav(pagy, link_extra: 'data-turbo-frame="profile_content" class="px-4 py-2 border border-gray-700 rounded-md hover:bg-gray-800 transition-colors text-gray-300"') %>
     </div>
   <% end %>
 <% else %>
   <!-- Empty State -->
   <div class="text-center py-16">
-    <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="mx-auto h-16 w-16 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
     </svg>
 
-    <h3 class="text-xl font-semibold text-gray-700 mb-2">Not following anyone yet</h3>
+    <h3 class="text-xl font-semibold text-white mb-2">Not following anyone yet</h3>
 
-    <p class="text-gray-600 mb-6">
+    <p class="text-gray-400 mb-6">
       <% if user_signed_in? && current_user == user %>
         You're not following anyone yet. Discover creators and start building your feed!
       <% else %>
@@ -63,8 +63,8 @@
     </p>
 
     <% if user_signed_in? && current_user == user %>
-      <%= link_to app_trending_path,
-          class: "inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" do %>
+      <%= link_to trending_path,
+          class: "inline-block px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium transition-colors" do %>
         Discover Creators
       <% end %>
     <% end %>

@@ -1,33 +1,33 @@
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-6xl mx-auto">
     <!-- Profile Header -->
-    <div class="bg-white rounded-lg shadow-lg p-8 mb-6">
+    <div class="bg-gray-900 rounded-lg border border-gray-800 p-8 mb-6">
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <!-- User Info -->
         <div class="flex items-center space-x-6">
           <!-- Avatar -->
-          <div class="w-24 h-24 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-4xl flex-shrink-0">
+          <div class="w-24 h-24 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-full flex items-center justify-center font-bold text-4xl flex-shrink-0">
             <%= @user.username.first.upcase %>
           </div>
 
           <!-- Details -->
           <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-1"><%= @user.display_name %></h1>
-            <p class="text-gray-600 mb-3">@<%= @user.username %></p>
+            <h1 class="text-3xl font-bold text-white mb-1"><%= @user.display_name %></h1>
+            <p class="text-gray-400 mb-3">@<%= @user.username %></p>
 
             <!-- Stats -->
             <div class="flex items-center space-x-6 text-sm">
               <div>
-                <span class="font-semibold text-gray-900"><%= number_with_delimiter(@user.gifs.count) %></span>
-                <span class="text-gray-600">GIF<%= @user.gifs.count == 1 ? '' : 's' %></span>
+                <span class="font-semibold text-white"><%= number_with_delimiter(@user.gifs.count) %></span>
+                <span class="text-gray-400">GIF<%= @user.gifs.count == 1 ? '' : 's' %></span>
               </div>
               <div>
-                <span class="font-semibold text-gray-900"><%= number_with_delimiter(@user.followers.count) %></span>
-                <span class="text-gray-600">Follower<%= @user.followers.count == 1 ? '' : 's' %></span>
+                <span class="font-semibold text-white"><%= number_with_delimiter(@user.followers.count) %></span>
+                <span class="text-gray-400">Follower<%= @user.followers.count == 1 ? '' : 's' %></span>
               </div>
               <div>
-                <span class="font-semibold text-gray-900"><%= number_with_delimiter(@user.following.count) %></span>
-                <span class="text-gray-600">Following</span>
+                <span class="font-semibold text-white"><%= number_with_delimiter(@user.following.count) %></span>
+                <span class="text-gray-400">Following</span>
               </div>
             </div>
           </div>
@@ -38,7 +38,7 @@
           <% if user_signed_in? %>
             <% if current_user == @user %>
               <!-- Own profile - Edit button -->
-              <%= link_to edit_user_registration_path, class: "px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors" do %>
+              <%= link_to edit_user_registration_path, class: "px-6 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg font-medium transition-colors" do %>
                 Edit Profile
               <% end %>
             <% else %>
@@ -48,13 +48,13 @@
               </div>
             <% end %>
           <% else %>
-            <%= link_to new_user_session_path, class: "px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" do %>
+            <%= link_to new_user_session_path, class: "px-6 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium transition-colors" do %>
               Follow
             <% end %>
           <% end %>
 
           <!-- Share profile -->
-          <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <button class="p-2 text-gray-400 hover:bg-gray-800 rounded-lg transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
@@ -64,19 +64,19 @@
 
       <!-- Bio -->
       <% if @user.bio.present? %>
-        <div class="mt-6 pt-6 border-t border-gray-200">
-          <p class="text-gray-700 whitespace-pre-line"><%= @user.bio %></p>
+        <div class="mt-6 pt-6 border-t border-gray-800">
+          <p class="text-gray-300 whitespace-pre-line"><%= @user.bio %></p>
         </div>
       <% end %>
     </div>
 
     <!-- Tabs Navigation -->
-    <div class="bg-white rounded-lg shadow-lg mb-6">
-      <div class="border-b border-gray-200">
+    <div class="bg-gray-900 rounded-lg border border-gray-800 mb-6">
+      <div class="border-b border-gray-800">
         <nav class="flex -mb-px">
-          <%= link_to app_user_path(@user.username, tab: 'gifs'),
+          <%= link_to user_path(@user.username, tab: 'gifs'),
               data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'gifs' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
+              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'gifs' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
             <div class="flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
@@ -85,9 +85,9 @@
             </div>
           <% end %>
 
-          <%= link_to app_user_path(@user.username, tab: 'liked'),
+          <%= link_to user_path(@user.username, tab: 'liked'),
               data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'liked' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
+              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'liked' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
             <div class="flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -96,9 +96,9 @@
             </div>
           <% end %>
 
-          <%= link_to app_user_path(@user.username, tab: 'collections'),
+          <%= link_to user_path(@user.username, tab: 'collections'),
               data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'collections' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
+              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'collections' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
             <div class="flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -107,9 +107,9 @@
             </div>
           <% end %>
 
-          <%= link_to app_user_path(@user.username, tab: 'followers'),
+          <%= link_to user_path(@user.username, tab: 'followers'),
               data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'followers' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
+              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'followers' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
             <div class="flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -118,9 +118,9 @@
             </div>
           <% end %>
 
-          <%= link_to app_user_path(@user.username, tab: 'following'),
+          <%= link_to user_path(@user.username, tab: 'following'),
               data: { turbo_frame: "profile_content" },
-              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'following' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'}" do %>
+              class: "flex-1 py-4 px-6 text-center font-medium border-b-2 transition-colors #{@tab == 'following' ? 'border-[#E91E8C] text-[#E91E8C]' : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'}" do %>
             <div class="flex items-center justify-center space-x-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
