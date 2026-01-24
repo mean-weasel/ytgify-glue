@@ -57,7 +57,7 @@ class DeviseViewsTest < ActionDispatch::IntegrationTest
       }
     }
     assert_response :unprocessable_entity
-    assert_select ".bg-red-50" # Error messages container
+    assert_select "[class*='bg-red-900']" # Error messages container (dark theme)
     assert_select "li", minimum: 1 # At least one error message
   end
 
@@ -152,7 +152,7 @@ class DeviseViewsTest < ActionDispatch::IntegrationTest
       }
     }
     assert_response :unprocessable_entity
-    assert_select ".bg-red-50" # Error messages container
+    assert_select "[class*='bg-red-900']" # Error messages container (dark theme)
   end
 
   # ========== EDIT PROFILE PAGE TESTS ==========

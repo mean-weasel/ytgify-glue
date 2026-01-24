@@ -1,16 +1,63 @@
-<h2>Resend unlock instructions</h2>
+<div class="min-h-screen flex items-center justify-center bg-[#0a0a0a] py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <%= link_to root_path, class: "inline-flex items-center space-x-2 text-2xl font-bold bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] bg-clip-text text-transparent hover:opacity-80 mb-8" do %>
+        <svg class="w-10 h-10 text-[#E91E8C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+        </svg>
+        <span>ytgify</span>
+      <% end %>
+      <h2 class="mt-6 text-3xl font-bold text-white">
+        Unlock your account
+      </h2>
+      <p class="mt-2 text-gray-400">
+        Enter your email to receive unlock instructions
+      </p>
+    </div>
 
-<%= form_for(resource, as: resource_name, url: unlock_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+    <!-- Form -->
+    <div class="bg-gray-900 rounded-lg border border-gray-800 p-8">
+      <%= form_for(resource, as: resource_name, url: unlock_path(resource_name), html: { method: :post }) do |f| %>
+        <%= render "devise/shared/error_messages", resource: resource %>
 
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
+        <!-- Email -->
+        <div class="mb-6">
+          <%= f.label :email, "Email address", class: "block text-sm font-medium text-gray-300 mb-2" %>
+          <%= f.email_field :email,
+              autofocus: true,
+              autocomplete: "email",
+              class: "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent" %>
+        </div>
+
+        <!-- Submit -->
+        <div class="mb-6">
+          <%= f.submit "Resend unlock instructions", class: "w-full px-4 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium cursor-pointer transition-colors" %>
+        </div>
+      <% end %>
+
+      <!-- Divider -->
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-700"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-gray-900 text-gray-500">Or</span>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="space-y-3 text-center">
+        <%= link_to "Back to sign in", new_session_path(resource_name), class: "block text-[#E91E8C] hover:text-[#E91E8C]/80 font-medium" %>
+        <%= link_to "Create an account", new_registration_path(resource_name), class: "block text-gray-400 hover:text-white text-sm" %>
+      </div>
+    </div>
+
+    <!-- Back to home -->
+    <div class="text-center">
+      <%= link_to root_path, class: "text-sm text-gray-500 hover:text-gray-300" do %>
+        ← Back to home
+      <% end %>
+    </div>
   </div>
-
-  <div class="actions">
-    <%= f.submit "Resend unlock instructions" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>
