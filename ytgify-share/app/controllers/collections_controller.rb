@@ -13,7 +13,7 @@ class CollectionsController < ApplicationController
   def show
     # Check privacy
     unless can_view_collection?
-      redirect_to app_collections_path, alert: "You don't have permission to view this collection."
+      redirect_to collections_path, alert: "You don't have permission to view this collection."
       return
     end
 
@@ -31,7 +31,7 @@ class CollectionsController < ApplicationController
     @collection = current_user.collections.build(collection_params)
 
     if @collection.save
-      redirect_to app_collection_path(@collection), notice: "Collection created successfully!"
+      redirect_to collection_path(@collection), notice: "Collection created successfully!"
     else
       render :new, status: :unprocessable_entity
     end
@@ -42,7 +42,7 @@ class CollectionsController < ApplicationController
 
   def update
     if @collection.update(collection_params)
-      redirect_to app_collection_path(@collection), notice: "Collection updated successfully!"
+      redirect_to collection_path(@collection), notice: "Collection updated successfully!"
     else
       render :edit, status: :unprocessable_entity
     end
@@ -50,7 +50,7 @@ class CollectionsController < ApplicationController
 
   def destroy
     @collection.destroy
-    redirect_to app_user_path(current_user.username, tab: "collections"), notice: "Collection deleted."
+    redirect_to user_path(current_user.username, tab: "collections"), notice: "Collection deleted."
   end
 
   # Add a GIF to the collection
@@ -71,7 +71,7 @@ class CollectionsController < ApplicationController
           )
         end
         format.json { render json: { success: true } }
-        format.html { redirect_back fallback_location: app_collection_path(@collection), notice: "GIF added to collection" }
+        format.html { redirect_back fallback_location: collection_path(@collection), notice: "GIF added to collection" }
       end
     end
   end
@@ -86,7 +86,7 @@ class CollectionsController < ApplicationController
         render turbo_stream: turbo_stream.remove("gif_#{gif.id}")
       end
       format.json { render json: { success: true } }
-      format.html { redirect_back fallback_location: app_collection_path(@collection), notice: "GIF removed from collection" }
+      format.html { redirect_back fallback_location: collection_path(@collection), notice: "GIF removed from collection" }
     end
   end
 
@@ -98,7 +98,7 @@ class CollectionsController < ApplicationController
 
   def authorize_collection!
     unless current_user == @collection.user
-      redirect_to app_collections_path, alert: "You're not authorized to perform this action."
+      redirect_to collections_path, alert: "You're not authorized to perform this action."
     end
   end
 

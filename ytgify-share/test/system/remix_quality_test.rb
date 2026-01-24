@@ -142,7 +142,7 @@ class RemixQualityTest < ApplicationSystemTestCase
   test "remix editor loads source GIF correctly" do
     skip "Source GIF has no file attached" unless @source_gif.file.attached?
 
-    remix_path = remix_app_gif_path(@source_gif)
+    remix_path = remix_gif_path(@source_gif)
     sign_in_and_visit(remix_path)
 
     wait_for_stimulus("remix-editor")
@@ -157,7 +157,7 @@ class RemixQualityTest < ApplicationSystemTestCase
   test "remix preserves source GIF dimensions" do
     skip "Source GIF has no file attached" unless @source_gif.file.attached?
 
-    remix_path = remix_app_gif_path(@source_gif)
+    remix_path = remix_gif_path(@source_gif)
     sign_in_and_visit(remix_path)
 
     wait_for_stimulus("remix-editor")
@@ -191,7 +191,7 @@ class RemixQualityTest < ApplicationSystemTestCase
   test "remix editor handles text overlay without distortion" do
     skip "Source GIF has no file attached" unless @source_gif.file.attached?
 
-    remix_path = remix_app_gif_path(@source_gif)
+    remix_path = remix_gif_path(@source_gif)
     sign_in_and_visit(remix_path)
 
     wait_for_stimulus("remix-editor")
@@ -231,7 +231,7 @@ class RemixQualityTest < ApplicationSystemTestCase
   test "remix generation produces valid GIF with correct dimensions" do
     skip "Source GIF has no file attached" unless @source_gif.file.attached?
 
-    remix_path = remix_app_gif_path(@source_gif)
+    remix_path = remix_gif_path(@source_gif)
     sign_in_and_visit(remix_path)
 
     wait_for_stimulus("remix-editor")
@@ -340,7 +340,7 @@ class RemixQualityTest < ApplicationSystemTestCase
   test "remix editor uses accumulator canvas for frame compositing" do
     skip "Source GIF has no file attached" unless @source_gif.file.attached?
 
-    remix_path = remix_app_gif_path(@source_gif)
+    remix_path = remix_gif_path(@source_gif)
     sign_in_and_visit(remix_path)
 
     wait_for_stimulus("remix-editor")
@@ -380,7 +380,7 @@ class RemixQualityTest < ApplicationSystemTestCase
   test "visual comparison - remix preview matches source quality" do
     skip "Source GIF has no file attached" unless @source_gif.file.attached?
 
-    remix_path = remix_app_gif_path(@source_gif)
+    remix_path = remix_gif_path(@source_gif)
     sign_in_and_visit(remix_path)
 
     wait_for_stimulus("remix-editor")

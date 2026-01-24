@@ -5,7 +5,7 @@
       <% if @collections&.any? %>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <% @collections.each do |collection| %>
-            <%= link_to app_collection_path(collection), class: "group" do %>
+            <%= link_to collection_path(collection), class: "group" do %>
               <div class="bg-gray-100 rounded-lg p-6 hover:bg-gray-200 transition-colors">
                 <div class="flex items-center justify-between mb-3">
                   <h3 class="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
@@ -31,7 +31,7 @@
           <h3 class="text-lg font-semibold text-gray-700 mb-2">No collections yet</h3>
           <% if current_user == @user %>
             <p class="text-gray-500 mb-4">Start organizing your GIFs into collections</p>
-            <%= link_to new_app_collection_path, class: "inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
+            <%= link_to new_collection_path, class: "inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
               Create Collection
             <% end %>
           <% else %>
@@ -49,7 +49,7 @@
         <!-- Pagination -->
         <% if @pagy.next %>
           <div class="mt-8 text-center">
-            <%= link_to app_user_path(@user.username, tab: @tab, page: @pagy.next),
+            <%= link_to user_path(@user.username, tab: @tab, page: @pagy.next),
                 data: { turbo_frame: "profile_content" },
                 class: "inline-block px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors" do %>
               Load More
@@ -77,7 +77,7 @@
               <% end %>
             <% else %>
               <p class="text-gray-500 mb-4">Upload your first GIF to get started</p>
-              <%= link_to new_app_gif_path, class: "inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
+              <%= link_to new_gif_path, class: "inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
                 Upload GIF
               <% end %>
             <% end %>
