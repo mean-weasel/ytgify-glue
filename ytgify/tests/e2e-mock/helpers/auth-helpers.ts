@@ -254,6 +254,7 @@ export async function clearAuthState(context: BrowserContext): Promise<void> {
 
 /**
  * Set auth state directly in storage (for test setup)
+ * Stores both authState and userProfile separately (matching real extension behavior)
  */
 export async function setAuthState(
   context: BrowserContext,
@@ -268,7 +269,14 @@ export async function setAuthState(
 
   await backgroundPage.evaluate((state) => {
     return new Promise<void>((resolve) => {
-      chrome.storage.local.set({ authState: state }, () => {
+      // Store both authState and userProfile separately (matching real extension behavior)
+      const storageData: { authState: typeof state; userProfile?: typeof state.userProfile } = {
+        authState: state
+      };
+      if (state.userProfile) {
+        storageData.userProfile = state.userProfile;
+      }
+      chrome.storage.local.set(storageData, () => {
         resolve();
       });
     });
@@ -301,4 +309,374 @@ export function buildAuthCallbackUrl(
   }
 
   return `${mockServerUrl}/mock-auth-callback?${params.toString()}`;
+}
+
+// ============================================
+// Additional Token Generators
+// ============================================
+
+/**
+ * Generate a JWT token that expires in a specific number of seconds
+ * Useful for testing token refresh flows
+ */
+export function generateNearExpiryJwtToken(secondsUntilExpiry: number, userId?: string): string {
+  return generateMockJwtToken({
+    userId,
+    expiresInSeconds: secondsUntilExpiry
+  });
+}
+
+/**
+ * Generate a mock Google ID token for testing OAuth flows
+ * This mimics the structure of a real Google ID token
+ */
+export function generateMockGoogleIdToken(userData?: Partial<{
+  email: string;
+  name: string;
+  picture: string;
+  sub: string;
+  email_verified: boolean;
+}>): string {
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT',
+    kid: 'mock-key-id'
+  };
+
+  const now = Math.floor(Date.now() / 1000);
+  const sub = userData?.sub || 'google-' + Math.random().toString(36).substring(2, 15);
+
+  const payload = {
+    iss: 'https://accounts.google.com',
+    azp: 'mock-client-id.apps.googleusercontent.com',
+    aud: 'mock-client-id.apps.googleusercontent.com',
+    sub: sub,
+    email: userData?.email || `${sub}@gmail.com`,
+    email_verified: userData?.email_verified ?? true,
+    name: userData?.name || 'Test Google User',
+    picture: userData?.picture || 'https://lh3.googleusercontent.com/mock-avatar',
+    given_name: userData?.name?.split(' ')[0] || 'Test',
+    family_name: userData?.name?.split(' ')[1] || 'User',
+    iat: now,
+    exp: now + 3600 // 1 hour
+  };
+
+  const base64UrlEncode = (obj: object): string => {
+    const json = JSON.stringify(obj);
+    const base64 = Buffer.from(json).toString('base64');
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  };
+
+  const headerEncoded = base64UrlEncode(header);
+  const payloadEncoded = base64UrlEncode(payload);
+  const signature = base64UrlEncode({ sig: 'mock-google-signature' });
+
+  return `${headerEncoded}.${payloadEncoded}.${signature}`;
+}
+
+// ============================================
+// Token Utilities
+// ============================================
+
+/**
+ * Get just the JWT token from storage (without full auth state)
+ */
+export async function getStoredToken(context: BrowserContext): Promise<string | null> {
+  const authState = await getAuthState(context);
+  return authState?.token || null;
+}
+
+/**
+ * Decode a JWT token and check if it's expired
+ */
+export function verifyTokenNotExpired(token: string): { valid: boolean; expiresAt: number; error?: string } {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return { valid: false, expiresAt: 0, error: 'Invalid token format' };
+    }
+
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+
+    if (!payload.exp) {
+      return { valid: false, expiresAt: 0, error: 'Token missing expiration' };
+    }
+
+    const expiresAt = payload.exp * 1000; // Convert to milliseconds
+    const now = Date.now();
+
+    if (expiresAt < now) {
+      return { valid: false, expiresAt, error: 'Token is expired' };
+    }
+
+    return { valid: true, expiresAt };
+  } catch (error) {
+    return { valid: false, expiresAt: 0, error: 'Failed to decode token' };
+  }
+}
+
+/**
+ * Decode JWT payload without verification
+ */
+export function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    return JSON.parse(Buffer.from(parts[1], 'base64').toString());
+  } catch {
+    return null;
+  }
+}
+
+// ============================================
+// Auth State Change Detection
+// ============================================
+
+/**
+ * Wait for auth state to change from a previous state
+ * Useful for testing async auth operations
+ */
+export async function waitForAuthStateChange(
+  context: BrowserContext,
+  options: {
+    previousToken?: string | null;
+    timeout?: number;
+    expectAuthenticated?: boolean;
+  } = {}
+): Promise<{ changed: boolean; newState: AuthState | null }> {
+  const { previousToken = null, timeout = 5000, expectAuthenticated } = options;
+  const startTime = Date.now();
+  const pollInterval = 100;
+
+  while (Date.now() - startTime < timeout) {
+    const currentState = await getAuthState(context);
+    const currentToken = currentState?.token || null;
+
+    // Check if state changed
+    if (currentToken !== previousToken) {
+      // If we have specific expectation, verify it
+      if (expectAuthenticated !== undefined) {
+        const isAuth = currentState !== null &&
+                       currentState.token !== null &&
+                       currentState.expiresAt > Date.now();
+        if (isAuth === expectAuthenticated) {
+          return { changed: true, newState: currentState };
+        }
+      } else {
+        return { changed: true, newState: currentState };
+      }
+    }
+
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  }
+
+  // Timeout - return current state
+  const finalState = await getAuthState(context);
+  return { changed: false, newState: finalState };
+}
+
+// ============================================
+// OAuth Flow Simulation
+// ============================================
+
+/**
+ * Simulate a successful Google OAuth callback
+ * This mimics what happens when the backend returns auth data after Google OAuth
+ */
+export async function simulateGoogleOAuthSuccess(
+  context: BrowserContext,
+  userData?: Partial<MockUserProfile>
+): Promise<{ token: string; user: MockUserProfile }> {
+  const user = generateMockUserProfile({
+    ...userData,
+    // Google users typically have avatar from Google
+    avatar_url: userData?.avatar_url || 'https://lh3.googleusercontent.com/mock-avatar',
+  });
+
+  const token = generateMockJwtToken({ userId: user.id });
+  const payload = decodeJwtPayload(token);
+
+  const serviceWorkers = context.serviceWorkers();
+  if (serviceWorkers.length === 0) {
+    throw new Error('No service workers found');
+  }
+
+  const backgroundPage = serviceWorkers[0];
+
+  // Simulate what EXTENSION_AUTH_CALLBACK_RELAY handler does
+  await backgroundPage.evaluate(
+    ({ authToken, userProfile, tokenPayload }) => {
+      return new Promise<void>((resolve, reject) => {
+        const authState = {
+          token: authToken,
+          expiresAt: (tokenPayload as { exp: number }).exp * 1000,
+          userId: (tokenPayload as { sub: string }).sub,
+          userProfile: userProfile,
+        };
+
+        chrome.storage.local.set({ authState, userProfile }, () => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            // Notify other parts of extension
+            chrome.runtime.sendMessage({ type: 'AUTH_STATE_CHANGED', authenticated: true }).catch(() => {});
+            resolve();
+          }
+        });
+      });
+    },
+    { authToken: token, userProfile: user, tokenPayload: payload }
+  );
+
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  return { token, user };
+}
+
+/**
+ * Simulate Google OAuth flow cancellation (user closed popup)
+ */
+export async function simulateGoogleOAuthCancellation(
+  context: BrowserContext
+): Promise<void> {
+  // OAuth cancellation means no state change - auth state should remain as it was
+  // This is a no-op but useful for test clarity
+  const serviceWorkers = context.serviceWorkers();
+  if (serviceWorkers.length === 0) {
+    throw new Error('No service workers found');
+  }
+
+  // Verify auth state didn't change (this is what we're testing)
+  // The actual test should check state before and after
+}
+
+export type OAuthErrorType =
+  | 'user_cancelled'
+  | 'network_error'
+  | 'invalid_token'
+  | 'server_error'
+  | 'account_exists';
+
+/**
+ * Simulate Google OAuth flow error
+ */
+export async function simulateGoogleOAuthError(
+  context: BrowserContext,
+  errorType: OAuthErrorType
+): Promise<{ errorMessage: string }> {
+  const errorMessages: Record<OAuthErrorType, string> = {
+    user_cancelled: 'The user did not approve access.',
+    network_error: 'Network error occurred during authentication',
+    invalid_token: 'Invalid Google ID token',
+    server_error: 'Server error during authentication',
+    account_exists: 'An account with this email already exists',
+  };
+
+  // OAuth errors should not change auth state
+  // The extension should handle the error gracefully
+
+  return { errorMessage: errorMessages[errorType] };
+}
+
+// ============================================
+// Message Simulation Helpers
+// ============================================
+
+/**
+ * Send a message to the background script and get response
+ */
+export async function sendMessageToBackground(
+  context: BrowserContext,
+  message: { type: string; [key: string]: unknown }
+): Promise<unknown> {
+  const serviceWorkers = context.serviceWorkers();
+  if (serviceWorkers.length === 0) {
+    throw new Error('No service workers found');
+  }
+
+  const backgroundPage = serviceWorkers[0];
+
+  return await backgroundPage.evaluate((msg) => {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(msg, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }, message);
+}
+
+/**
+ * Simulate CHECK_AUTH message to background
+ */
+export async function checkAuthViaMessage(
+  context: BrowserContext
+): Promise<{ authenticated: boolean; userProfile: MockUserProfile | null }> {
+  const response = await sendMessageToBackground(context, { type: 'CHECK_AUTH' });
+  return response as { authenticated: boolean; userProfile: MockUserProfile | null };
+}
+
+/**
+ * Simulate LOGOUT message to background
+ */
+export async function logoutViaMessage(
+  context: BrowserContext
+): Promise<{ success: boolean }> {
+  const response = await sendMessageToBackground(context, { type: 'LOGOUT' });
+  return response as { success: boolean };
+}
+
+// ============================================
+// Test Data Generators
+// ============================================
+
+/**
+ * Generate complete auth scenario data for testing
+ */
+export function generateAuthScenario(scenario: 'new_user' | 'existing_user' | 'google_user'): {
+  user: MockUserProfile;
+  token: string;
+  googleIdToken?: string;
+} {
+  switch (scenario) {
+    case 'new_user':
+      const newUser = generateMockUserProfile({
+        gifs_count: 0,
+        follower_count: 0,
+        following_count: 0,
+      });
+      return {
+        user: newUser,
+        token: generateMockJwtToken({ userId: newUser.id }),
+      };
+
+    case 'existing_user':
+      const existingUser = generateMockUserProfile({
+        gifs_count: 15,
+        follower_count: 100,
+        following_count: 50,
+        is_verified: true,
+      });
+      return {
+        user: existingUser,
+        token: generateMockJwtToken({ userId: existingUser.id }),
+      };
+
+    case 'google_user':
+      const googleUser = generateMockUserProfile({
+        avatar_url: 'https://lh3.googleusercontent.com/mock-avatar',
+      });
+      return {
+        user: googleUser,
+        token: generateMockJwtToken({ userId: googleUser.id }),
+        googleIdToken: generateMockGoogleIdToken({
+          email: googleUser.email,
+          name: googleUser.display_name || googleUser.username,
+          sub: 'google-' + googleUser.id,
+        }),
+      };
+  }
 }
