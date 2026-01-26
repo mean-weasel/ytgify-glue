@@ -11,14 +11,9 @@ Rails.application.routes.draw do
   }
 
   # ============================================================
-  # Root is now the feed (requires auth for personalized, public otherwise)
+  # Marketing Routes (public landing pages at root)
   # ============================================================
-  root "home#feed"
-
-  # Marketing landing page at /promo
-  get "promo", to: "marketing#landing", as: :promo
-
-  # Static pages
+  root "marketing#landing"
   get "privacy-policy", to: "marketing#privacy", as: :privacy_policy
   get "terms-of-service", to: "marketing#terms", as: :terms_of_service
   get "welcome", to: "marketing#welcome"
@@ -33,65 +28,54 @@ Rails.application.routes.draw do
   get "share/:id", to: "marketing#share", as: :share               # Specific shared GIF
 
   # ============================================================
-  # App Routes (moved from /app to root level)
+  # App Routes (authenticated user features at /app)
   # ============================================================
-  get "trending", to: "home#trending", as: :trending
+  scope "/app", as: "app" do
+    get "/", to: "home#feed", as: :feed
+    get "trending", to: "home#trending", as: :trending
 
-  resources :gifs, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
-    member do
-      post :like, to: "likes#toggle"
-      get :remix, to: "remixes#new"
-      post :create_remix, to: "remixes#create"
+    resources :gifs, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
+      member do
+        post :like, to: "likes#toggle"
+        get :remix, to: "remixes#new"
+        post :create_remix, to: "remixes#create"
+      end
+      resources :comments, only: [ :create ]
     end
-    resources :comments, only: [ :create ]
+
+    # Top-level comment routes for edit, update, delete (outside nested route)
+    resources :comments, only: [ :edit, :update, :destroy ]
+
+    resources :users, only: [ :show ], param: :username do
+      member do
+        post :follow, to: "follows#toggle"
+        get :followers
+        get :following
+      end
+    end
+
+    resources :collections, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
+      member do
+        post "add_gif"
+        delete "remove_gif/:gif_id", action: :remove_gif, as: "remove_gif"
+      end
+    end
+
+    resources :hashtags, only: [ :index, :show ], param: :name do
+      collection do
+        get :trending
+      end
+    end
+
+    resources :notifications, only: [ :index ] do
+      member do
+        post :mark_as_read
+      end
+      collection do
+        post :mark_all_as_read
+      end
+    end
   end
-
-  # Top-level comment routes for edit, update, delete (outside nested route)
-  resources :comments, only: [ :edit, :update, :destroy ]
-
-  # Exclude Devise-reserved paths from username matching
-  resources :users, only: [ :show ], param: :username,
-    constraints: { username: /(?!sign_in|sign_out|sign_up|password|confirmation|unlock|edit)[^\/]+/ } do
-    member do
-      post :follow, to: "follows#toggle"
-      get :followers
-      get :following
-    end
-  end
-
-  resources :collections, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
-    member do
-      post "add_gif"
-      delete "remove_gif/:gif_id", action: :remove_gif, as: "remove_gif"
-    end
-  end
-
-  resources :hashtags, only: [ :index, :show ], param: :name do
-    collection do
-      get :trending
-    end
-  end
-
-  resources :notifications, only: [ :index ] do
-    member do
-      post :mark_as_read
-    end
-    collection do
-      post :mark_all_as_read
-    end
-  end
-
-  # ============================================================
-  # Redirects for old /app URLs (backward compatibility)
-  # ============================================================
-  get "/app", to: redirect("/")
-  get "/app/trending", to: redirect("/trending")
-  get "/app/gifs/:id", to: redirect("/gifs/%{id}")
-  get "/app/users/:username", to: redirect("/users/%{username}")
-  get "/app/collections", to: redirect("/collections")
-  get "/app/collections/:id", to: redirect("/collections/%{id}")
-  get "/app/notifications", to: redirect("/notifications")
-  get "/app/hashtags/:name", to: redirect("/hashtags/%{name}")
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

@@ -1,24 +1,24 @@
-<div class="min-h-screen flex items-center justify-center bg-[#0a0a0a] py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full space-y-8">
     <!-- Header -->
     <div class="text-center">
-      <%= link_to root_path, class: "inline-flex items-center space-x-2 text-2xl font-bold bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] bg-clip-text text-transparent hover:opacity-80 mb-8" do %>
-        <svg class="w-10 h-10 text-[#E91E8C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <%= link_to root_path, class: "inline-flex items-center space-x-2 text-2xl font-bold text-indigo-600 hover:text-indigo-700 mb-8" do %>
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
         </svg>
         <span>ytgify</span>
       <% end %>
-      <h2 class="mt-6 text-3xl font-bold text-white">
+      <h2 class="mt-6 text-3xl font-bold text-gray-900">
         Welcome back
       </h2>
-      <p class="mt-2 text-gray-400">
+      <p class="mt-2 text-gray-600">
         Sign in to your account
       </p>
     </div>
 
     <!-- Flash Messages -->
     <% if alert %>
-      <div class="bg-red-900/30 border border-red-800 text-red-400 px-4 py-3 rounded-lg mb-4" role="alert">
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4" role="alert">
         <div class="flex items-center">
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
@@ -29,65 +29,65 @@
     <% end %>
 
     <!-- Form -->
-    <div class="bg-gray-900 rounded-lg border border-gray-800 p-8">
+    <div class="bg-white rounded-lg shadow-lg p-8">
       <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { data: { turbo: false } }) do |f| %>
         <!-- Email -->
         <div class="mb-6">
-          <%= f.label :email, "Email address", class: "block text-sm font-medium text-gray-300 mb-2" %>
+          <%= f.label :email, "Email address", class: "block text-sm font-medium text-gray-700 mb-2" %>
           <%= f.email_field :email,
               autofocus: true,
               autocomplete: "email",
-              class: "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent" %>
+              class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" %>
         </div>
 
         <!-- Password -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-2">
-            <%= f.label :password, class: "block text-sm font-medium text-gray-300" %>
-            <%= link_to "Forgot password?", new_password_path(resource_name), class: "text-sm text-[#E91E8C] hover:text-[#E91E8C]/80" %>
+            <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
+            <%= link_to "Forgot password?", new_password_path(resource_name), class: "text-sm text-indigo-600 hover:text-indigo-700" %>
           </div>
           <%= f.password_field :password,
               autocomplete: "current-password",
-              class: "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent" %>
+              class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" %>
         </div>
 
         <!-- Remember me -->
         <% if devise_mapping.rememberable? %>
           <div class="mb-6">
             <label class="flex items-center">
-              <%= f.check_box :remember_me, class: "w-4 h-4 text-[#E91E8C] bg-gray-800 border-gray-700 rounded focus:ring-[#E91E8C]" %>
-              <span class="ml-2 text-sm text-gray-400">Remember me</span>
+              <%= f.check_box :remember_me, class: "w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" %>
+              <span class="ml-2 text-sm text-gray-700">Remember me</span>
             </label>
           </div>
         <% end %>
 
         <!-- Submit -->
         <div class="mb-6">
-          <%= f.submit "Sign In", class: "w-full px-4 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium cursor-pointer transition-colors" %>
+          <%= f.submit "Sign In", class: "w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium cursor-pointer transition-colors" %>
         </div>
       <% end %>
 
+      <!-- Divider -->
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-white text-gray-500">Or continue with</span>
+        </div>
+      </div>
+
       <!-- Google Sign-In -->
       <% if devise_mapping.omniauthable? && resource_class.omniauth_providers.present? %>
-        <!-- Divider -->
-        <div class="relative my-6">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-700"></div>
-          </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-gray-900 text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
         <div class="mb-6">
-          <%= button_to user_google_oauth2_omniauth_authorize_path, method: :post, data: { turbo: false }, class: "w-full inline-flex items-center justify-center px-4 py-3 border border-gray-700 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors" do %>
+          <%= button_to user_google_oauth2_omniauth_authorize_path, method: :post, data: { turbo: false }, class: "w-full inline-flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors" do %>
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            <span class="text-gray-300 font-medium">Continue with Google</span>
+            <span class="text-gray-700 font-medium">Continue with Google</span>
           <% end %>
         </div>
       <% end %>
@@ -95,22 +95,22 @@
       <!-- Divider -->
       <div class="relative my-6">
         <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-gray-700"></div>
+          <div class="w-full border-t border-gray-300"></div>
         </div>
         <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-gray-900 text-gray-500">Don't have an account?</span>
+          <span class="px-2 bg-white text-gray-500">Don't have an account?</span>
         </div>
       </div>
 
       <!-- Sign up link -->
       <div class="text-center">
-        <%= link_to "Create an account", new_registration_path(resource_name), class: "text-[#E91E8C] hover:text-[#E91E8C]/80 font-medium" %>
+        <%= link_to "Create an account", new_registration_path(resource_name), class: "text-indigo-600 hover:text-indigo-700 font-medium" %>
       </div>
     </div>
 
     <!-- Back to home -->
     <div class="text-center">
-      <%= link_to root_path, class: "text-sm text-gray-500 hover:text-gray-300" do %>
+      <%= link_to root_path, class: "text-sm text-gray-600 hover:text-gray-900" do %>
         ← Back to home
       <% end %>
     </div>

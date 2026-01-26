@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>YTGify Wizard - Auth States Mockup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .mockup-container {
+      display: flex;
+      gap: 60px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .mockup-section {
+      text-align: center;
+    }
+
+    .mockup-label {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* GIF Wizard Overlay */
+    .gif-wizard {
+      width: 360px;
+      background: rgba(17, 17, 17, 0.98);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Header */
+    .wizard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .wizard-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .wizard-title svg {
+      width: 22px;
+      height: 22px;
+      color: #667eea;
+    }
+    .wizard-title span {
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* Auth area in header */
+    .auth-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Sign In Button (not signed in) */
+    .signin-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .signin-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+    .signin-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* User Profile (signed in) */
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px 4px 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .user-profile:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .user-name {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Close button */
+    .close-btn {
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    /* Wizard Content */
+    .wizard-content {
+      padding: 16px;
+    }
+
+    /* Preview Area */
+    .preview-area {
+      background: #000;
+      border-radius: 8px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .preview-area::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+      opacity: 0.3;
+    }
+    .preview-text {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      z-index: 1;
+    }
+
+    /* Time Controls */
+    .time-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .time-input {
+      flex: 1;
+    }
+    .time-input label {
+      display: block;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 10px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .time-input input {
+      width: 100%;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+    }
+
+    /* Settings Row */
+    .settings-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .setting {
+      flex: 1;
+    }
+    .setting label {
+      display: block;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 10px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .setting select {
+      width: 100%;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* Create Button */
+    .create-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .create-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Upload hint for signed-in user */
+    .upload-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 11px;
+    }
+    .upload-hint svg {
+      width: 14px;
+      height: 14px;
+      color: #667eea;
+    }
+
+    /* Annotation arrows */
+    .annotation {
+      position: relative;
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: rgba(102, 126, 234, 0.15);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .annotation::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      right: 40px;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid rgba(102, 126, 234, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <h1>GIF Wizard - Authentication States</h1>
+
+  <div class="mockup-container">
+    <!-- Not Signed In State -->
+    <div class="mockup-section">
+      <div class="mockup-label">Not Signed In</div>
+      <div class="gif-wizard">
+        <div class="wizard-header">
+          <div class="wizard-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+              <line x1="7" y1="2" x2="7" y2="22"/>
+              <line x1="17" y1="2" x2="17" y2="22"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+            </svg>
+            <span>Create GIF</span>
+          </div>
+          <div class="auth-area">
+            <button class="signin-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Sign In
+            </button>
+            <button class="close-btn">&times;</button>
+          </div>
+        </div>
+
+        <div class="wizard-content">
+          <div class="preview-area">
+            <span class="preview-text">GIF Preview</span>
+          </div>
+
+          <div class="time-controls">
+            <div class="time-input">
+              <label>Start Time</label>
+              <input type="text" value="0:15" readonly />
+            </div>
+            <div class="time-input">
+              <label>End Time</label>
+              <input type="text" value="0:20" readonly />
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="setting">
+              <label>Resolution</label>
+              <select disabled><option>480p</option></select>
+            </div>
+            <div class="setting">
+              <label>Frame Rate</label>
+              <select disabled><option>15 FPS</option></select>
+            </div>
+          </div>
+
+          <button class="create-btn">Create GIF</button>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <strong>Sign In button:</strong> Subtle, in header corner.<br>
+        GIFs download locally only.
+      </div>
+    </div>
+
+    <!-- Signed In State -->
+    <div class="mockup-section">
+      <div class="mockup-label">Signed In</div>
+      <div class="gif-wizard">
+        <div class="wizard-header">
+          <div class="wizard-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+              <line x1="7" y1="2" x2="7" y2="22"/>
+              <line x1="17" y1="2" x2="17" y2="22"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+            </svg>
+            <span>Create GIF</span>
+          </div>
+          <div class="auth-area">
+            <div class="user-profile">
+              <div class="user-avatar">JW</div>
+              <span class="user-name">Jeremy</span>
+            </div>
+            <button class="close-btn">&times;</button>
+          </div>
+        </div>
+
+        <div class="wizard-content">
+          <div class="preview-area">
+            <span class="preview-text">GIF Preview</span>
+          </div>
+
+          <div class="time-controls">
+            <div class="time-input">
+              <label>Start Time</label>
+              <input type="text" value="0:15" readonly />
+            </div>
+            <div class="time-input">
+              <label>End Time</label>
+              <input type="text" value="0:20" readonly />
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="setting">
+              <label>Resolution</label>
+              <select disabled><option>480p</option></select>
+            </div>
+            <div class="setting">
+              <label>Frame Rate</label>
+              <select disabled><option>15 FPS</option></select>
+            </div>
+          </div>
+
+          <button class="create-btn">Create GIF</button>
+
+          <div class="upload-hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            GIF will be uploaded to your account
+          </div>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <strong>User avatar + name:</strong> Shows auth status.<br>
+        Upload hint confirms cloud save is enabled.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
