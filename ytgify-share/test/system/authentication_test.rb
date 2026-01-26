@@ -206,7 +206,7 @@ class AuthenticationTest < ApplicationSystemTestCase
 
     # Should no longer show authenticated navbar elements
     # Check that notification bell is gone (only shows for authenticated users)
-    assert_no_selector '#notifications_bell'
+    assert_no_selector "#notifications_bell"
 
     take_screenshot("auth-signout-success")
   end
