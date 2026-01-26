@@ -55,7 +55,9 @@ module.exports = (env, argv) => {
       // Define process.env variables for browser compatibility
       new webpack.DefinePlugin({
         'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-        'process.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || 'https://ytgify.com/api/v1'),
+        'process.env.API_BASE_URL': JSON.stringify(
+          process.env.API_BASE_URL || (isProduction ? 'https://ytgify.com/api/v1' : 'http://localhost:3000/api/v1')
+        ),
         'process.env.GOOGLE_CLIENT_ID': JSON.stringify(process.env.GOOGLE_CLIENT_ID || ''),
       }),
       new MiniCssExtractPlugin({

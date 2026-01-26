@@ -813,6 +813,8 @@ class YouTubeGifMaker {
       this.timelineOverlay = overlay;
 
       // Apply styles for the wizard overlay
+      // Use flex-start + overflow-y:auto so tall wizards don't get clipped
+      // The wizard container uses margin:auto for centering when space allows
       overlay.style.cssText = `
         position: fixed !important;
         top: 0 !important;
@@ -822,8 +824,10 @@ class YouTubeGifMaker {
         background: rgba(0, 0, 0, 0.85) !important;
         z-index: 2147483647 !important;
         display: flex !important;
-        align-items: center !important;
+        align-items: flex-start !important;
         justify-content: center !important;
+        overflow-y: auto !important;
+        padding: 20px 0 !important;
       `;
 
       document.body.appendChild(overlay);
@@ -2013,12 +2017,88 @@ class YouTubeGifMaker {
   }
 }
 
+// ========================================
+// Auth Callback Detection
+// ========================================
+// Check if we're on the OAuth callback page and relay auth data to background
+// This is more reliable than onMessageExternal for waking up inactive service workers
+function checkAuthCallback() {
+  const authDataElement = document.getElementById('ytgify-auth-data');
+  if (!authDataElement) return;
+
+  const token = authDataElement.dataset.token;
+  const userJson = authDataElement.dataset.user;
+  const extensionId = authDataElement.dataset.extensionId;
+
+  if (!token || !extensionId) {
+    console.log('[Content] Auth callback page detected but missing data');
+    return;
+  }
+
+  try {
+    const user = userJson ? JSON.parse(userJson) : null;
+
+    // Send to background via chrome.runtime.sendMessage
+    chrome.runtime.sendMessage(
+      {
+        type: 'EXTENSION_AUTH_CALLBACK_RELAY',
+        data: { token, user, extensionId }
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('[Content] Auth relay failed:', chrome.runtime.lastError);
+          window.dispatchEvent(new CustomEvent('ytgify-auth-result', {
+            detail: { success: false, error: chrome.runtime.lastError.message }
+          }));
+        } else if (response?.success) {
+          window.dispatchEvent(new CustomEvent('ytgify-auth-result', {
+            detail: { success: true }
+          }));
+        } else {
+          console.error('[Content] Auth relay failed:', response?.error);
+          window.dispatchEvent(new CustomEvent('ytgify-auth-result', {
+            detail: { success: false, error: response?.error || 'Unknown error' }
+          }));
+        }
+      }
+    );
+  } catch (error) {
+    console.error('[Content] Failed to parse auth data:', error);
+    // Still try to relay without user data
+    chrome.runtime.sendMessage(
+      {
+        type: 'EXTENSION_AUTH_CALLBACK_RELAY',
+        data: { token, user: null, extensionId }
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('[Content] Auth relay failed:', chrome.runtime.lastError);
+          window.dispatchEvent(new CustomEvent('ytgify-auth-result', {
+            detail: { success: false, error: chrome.runtime.lastError.message }
+          }));
+        } else if (response?.success) {
+          window.dispatchEvent(new CustomEvent('ytgify-auth-result', {
+            detail: { success: true }
+          }));
+        } else {
+          console.error('[Content] Auth relay failed:', response?.error);
+          window.dispatchEvent(new CustomEvent('ytgify-auth-result', {
+            detail: { success: false, error: response?.error || 'Unknown error' }
+          }));
+        }
+      }
+    );
+  }
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
+    checkAuthCallback(); // Check for auth callback first
     new YouTubeGifMaker();
   });
 } else {
+  checkAuthCallback(); // Check for auth callback first
   new YouTubeGifMaker();
 }
 
