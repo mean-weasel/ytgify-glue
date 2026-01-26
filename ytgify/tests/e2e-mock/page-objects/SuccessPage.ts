@@ -14,6 +14,12 @@ export class SuccessPage {
   readonly closeButton: Locator;
   readonly sizeDisplay: Locator;
   readonly dimensionsDisplay: Locator;
+  // Upload-related locators
+  readonly signInButton: Locator;
+  readonly uploadButton: Locator;
+  readonly viewOnWebsiteButton: Locator;
+  readonly retryUploadButton: Locator;
+  readonly uploadSubtext: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -25,6 +31,12 @@ export class SuccessPage {
     this.closeButton = page.locator('button:has-text("Close"), button:has-text("Done")');
     this.sizeDisplay = page.locator('.ytgif-size, .file-size');
     this.dimensionsDisplay = page.locator('.ytgif-dimensions, .gif-dimensions');
+    // Upload-related locators
+    this.signInButton = page.locator('button:has-text("Sign in to Share")');
+    this.uploadButton = page.locator('button:has-text("Upload to My Account")');
+    this.viewOnWebsiteButton = page.locator('button:has-text("View on YTgify")');
+    this.retryUploadButton = page.locator('button:has-text("Retry Upload")');
+    this.uploadSubtext = page.locator('.ytgif-connect-button-wrapper .ytgif-connect-subtext').first();
   }
 
   async waitForScreen(timeout: number = 15000) {
@@ -194,5 +206,121 @@ export class SuccessPage {
       },
       { timeout }
     );
+  }
+
+  // ========== Upload-related methods ==========
+
+  /**
+   * Check if the sign-in button is visible (user not authenticated)
+   */
+  async isSignInButtonVisible(): Promise<boolean> {
+    try {
+      return await this.signInButton.isVisible();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if the upload button is visible (user authenticated)
+   */
+  async isUploadButtonVisible(): Promise<boolean> {
+    try {
+      return await this.uploadButton.isVisible();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if the "View on YTgify" button is visible (upload successful)
+   */
+  async isViewOnWebsiteButtonVisible(): Promise<boolean> {
+    try {
+      return await this.viewOnWebsiteButton.isVisible();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if the retry upload button is visible (upload failed)
+   */
+  async isRetryUploadButtonVisible(): Promise<boolean> {
+    try {
+      return await this.retryUploadButton.isVisible();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the upload subtext message
+   */
+  async getUploadSubtext(): Promise<string> {
+    try {
+      const text = await this.uploadSubtext.textContent();
+      return text || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Click the sign-in button
+   */
+  async clickSignIn() {
+    await this.signInButton.click();
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Click the upload button
+   */
+  async clickUpload() {
+    await this.uploadButton.click();
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Click the view on website button
+   */
+  async clickViewOnWebsite() {
+    await this.viewOnWebsiteButton.click();
+    await this.page.waitForTimeout(500);
+  }
+
+  /**
+   * Check if upload is in progress (uploading... text visible)
+   */
+  async isUploading(): Promise<boolean> {
+    try {
+      const uploadingButton = this.page.locator('button:has-text("Uploading...")');
+      return await uploadingButton.isVisible();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the current upload state
+   */
+  async getUploadState(): Promise<'not-authenticated' | 'ready' | 'uploading' | 'success' | 'error'> {
+    if (await this.isSignInButtonVisible()) {
+      return 'not-authenticated';
+    }
+    if (await this.isUploading()) {
+      return 'uploading';
+    }
+    if (await this.isViewOnWebsiteButtonVisible()) {
+      return 'success';
+    }
+    if (await this.isRetryUploadButtonVisible()) {
+      return 'error';
+    }
+    if (await this.isUploadButtonVisible()) {
+      return 'ready';
+    }
+    return 'not-authenticated';
   }
 }

@@ -1,19 +1,19 @@
-<div id="<%= dom_id(gif) %>" class="bg-white rounded-lg shadow-lg p-6 mb-6">
+<div id="<%= dom_id(gif) %>" class="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-6">
   <!-- Title -->
   <% if gif.title.present? %>
-    <h1 class="text-2xl font-bold text-gray-900 mb-4"><%= gif.title %></h1>
+    <h1 class="text-2xl font-bold text-white mb-4"><%= gif.title %></h1>
   <% end %>
 
   <!-- Description -->
   <% if gif.description.present? %>
-    <p class="text-gray-700 mb-4 whitespace-pre-line"><%= gif.description %></p>
+    <p class="text-gray-300 mb-4 whitespace-pre-line"><%= gif.description %></p>
   <% end %>
 
   <!-- Hashtags -->
   <% if gif.hashtags.any? %>
     <div class="flex flex-wrap gap-2 mb-4">
       <% gif.hashtags.each do |hashtag| %>
-        <%= link_to app_hashtag_path(hashtag.name), class: "inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium hover:bg-indigo-200" do %>
+        <%= link_to hashtag_path(hashtag.name), class: "inline-block px-3 py-1 bg-[#E91E8C]/20 text-[#E91E8C] rounded-full text-sm font-medium hover:bg-[#E91E8C]/30" do %>
           #<%= hashtag.name %>
         <% end %>
       <% end %>
@@ -23,21 +23,21 @@
   <!-- Privacy Badge -->
   <div class="flex items-center space-x-2 mb-4">
     <% if gif.privacy_public_access? %>
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400">
         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
         </svg>
         Public
       </span>
     <% elsif gif.privacy_unlisted? %>
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-400">
         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
         </svg>
         Unlisted
       </span>
     <% else %>
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400">
         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
         </svg>
@@ -55,8 +55,8 @@
   <% if user_signed_in? && current_user == gif.user %>
     <div class="flex space-x-3">
       <%= link_to "Edit GIF",
-          edit_app_gif_path(gif),
-          class: "inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors" %>
+          edit_gif_path(gif),
+          class: "inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium transition-colors" %>
     </div>
   <% end %>
 </div>

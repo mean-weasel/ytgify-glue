@@ -1,0 +1,70 @@
+<%# Left Sidebar - Navigation and Categories %>
+<%# Reference: /mockups/feed.html lines 93-131 %>
+<aside class="hidden lg:block w-56 flex-shrink-0 p-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+  <!-- Feed Filters -->
+  <div class="mb-6">
+    <%= link_to root_path, class: "flex items-center space-x-3 px-3 py-2 rounded-lg #{current_page?(root_path) ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'text-gray-400 hover:bg-gray-800 hover:text-white transition'}" do %>
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+      </svg>
+      <span class="font-medium"><%= user_signed_in? ? "For You" : "Popular" %></span>
+    <% end %>
+
+    <%= link_to trending_path, class: "flex items-center space-x-3 px-3 py-2 rounded-lg #{current_page?(trending_path) ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'text-gray-400 hover:bg-gray-800 hover:text-white transition'}" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+      </svg>
+      <span>Trending</span>
+    <% end %>
+
+    <% if user_signed_in? %>
+      <%= link_to "#", class: "flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Following</span>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Categories -->
+  <div class="border-t border-gray-800 pt-4">
+    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Categories</h3>
+    <nav class="space-y-1">
+      <% categories = [
+        { name: "Funny", tag: "funny" },
+        { name: "Gaming", tag: "gaming" },
+        { name: "Sports", tag: "sports" },
+        { name: "Animals", tag: "animals" },
+        { name: "Music", tag: "music" },
+        { name: "Reactions", tag: "reaction" },
+        { name: "Movies & TV", tag: "movies" },
+        { name: "Art & Creative", tag: "art" }
+      ] %>
+      <% categories.each do |category| %>
+        <%= link_to hashtag_path(category[:tag]), class: "block px-3 py-2 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition" do %>
+          <%= category[:name] %>
+        <% end %>
+      <% end %>
+    </nav>
+  </div>
+
+  <% if user_signed_in? %>
+    <!-- Quick Actions -->
+    <div class="border-t border-gray-800 pt-4 mt-4">
+      <%= link_to new_gif_path, class: "flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>Upload GIF</span>
+      <% end %>
+
+      <%= link_to collections_path, class: "flex items-center space-x-3 px-3 py-2 rounded-lg #{request.path.start_with?('/collections') ? 'bg-[#E91E8C]/20 text-[#E91E8C]' : 'text-gray-400 hover:bg-gray-800 hover:text-white transition'}" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+        </svg>
+        <span>Collections</span>
+      <% end %>
+    </div>
+  <% end %>
+</aside>

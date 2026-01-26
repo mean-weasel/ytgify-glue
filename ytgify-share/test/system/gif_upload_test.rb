@@ -11,7 +11,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   # Helper to sign in via redirect (works around Playwright/Turbo issue)
-  def sign_in_via_redirect(target_path = new_app_gif_path)
+  def sign_in_via_redirect(target_path = new_gif_path)
     # Navigate to protected page (triggers redirect to sign in)
     visit target_path
 
@@ -34,7 +34,7 @@ class GifUploadTest < ApplicationSystemTestCase
   # ========== SUCCESSFUL CREATION TESTS ==========
 
   test "user can create public GIF with valid YouTube URL and timestamps" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Should now be on GIF creation page
     assert_page_has_text "Create"
@@ -76,7 +76,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "user can create unlisted GIF" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Fill in required fields
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -102,7 +102,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "user can create private GIF" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Fill in required fields
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -134,7 +134,7 @@ class GifUploadTest < ApplicationSystemTestCase
   # ========== PRIVACY & VISIBILITY TESTS ==========
 
   test "public GIF appears in public feed" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Create a public GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -148,7 +148,7 @@ class GifUploadTest < ApplicationSystemTestCase
     end
 
     # Navigate to home page (public feed)
-    visit app_feed_path
+    visit root_path
 
     # GIF should appear in feed
     assert_page_has_text "Public Feed Test GIF"
@@ -157,7 +157,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "public GIF visible to all users" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Create public GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -173,7 +173,7 @@ class GifUploadTest < ApplicationSystemTestCase
     gif_path = "/gifs/#{created_gif.id}"
 
     # Navigate away (simulating sign out by visiting public page)
-    visit app_feed_path
+    visit root_path
 
     # Visit GIF directly
     visit gif_path
@@ -183,7 +183,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "unlisted GIF accessible via direct URL but not in feed" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Create unlisted GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -200,7 +200,7 @@ class GifUploadTest < ApplicationSystemTestCase
     gif_path = "/gifs/#{created_gif.id}"
 
     # Check it's NOT in public feed
-    visit app_feed_path
+    visit root_path
     body_text = @page.text_content("body")
     assert !body_text.include?("Unlisted Visibility Test"), "Unlisted GIF should not appear in feed"
 
@@ -214,7 +214,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "private GIF only accessible to owner" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Create private GIF
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -240,7 +240,7 @@ class GifUploadTest < ApplicationSystemTestCase
   # ========== FORM VALIDATION TESTS ==========
 
   test "YouTube URL required" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Fill in everything except YouTube URL
     @page.fill('input[name="gif[youtube_timestamp_start]"]', "0.0")
@@ -269,7 +269,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "title required" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Fill in everything except title
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -293,7 +293,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "start timestamp required" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Fill in everything except start timestamp
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -317,7 +317,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "end timestamp required" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Fill in everything except end timestamp
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')
@@ -341,7 +341,7 @@ class GifUploadTest < ApplicationSystemTestCase
   end
 
   test "end timestamp must be greater than start timestamp" do
-    sign_in_via_redirect(new_app_gif_path)
+    sign_in_via_redirect(new_gif_path)
 
     # Fill in with invalid timestamp range
     @page.evaluate('document.querySelector(\'input[name="gif[youtube_video_url]"]\').value = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"')

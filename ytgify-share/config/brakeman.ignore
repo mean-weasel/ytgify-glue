@@ -3,16 +3,16 @@
     {
       "warning_type": "Cross-Site Scripting",
       "warning_code": 4,
-      "fingerprint": "3d1ea7047317e149c1f90cb9414d66d3c7b713c41384140ecca7b0ad1592ee1c",
+      "fingerprint": "df4d0e576a62fc2ffd2681d3eb8c30920f3314199400459f2fce438a4d3b3867",
       "check_name": "LinkToHref",
       "message": "Potentially unsafe model attribute in `link_to` href",
       "file": "app/views/gifs/show.html.erb",
-      "line": 166,
+      "line": 78,
       "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
-      "code": "link_to(Gif.find(params[:id]).safe_youtube_url, :target => \"_blank\", :rel => \"noopener noreferrer\", :class => \"flex items-center space-x-2 text-indigo-600 hover:text-indigo-700\")",
+      "code": "link_to(Gif.find(params[:id]).safe_youtube_url, :target => \"_blank\", :rel => \"noopener noreferrer\", :class => \"hover:text-white transition\")",
       "note": "URL is validated by Gif#youtube_video_url_is_safe to only allow youtube.com/youtu.be domains"
     }
   ],
-  "updated": "2025-11-27",
-  "brakeman_version": "7.0.0"
+  "updated": "2026-01-24",
+  "brakeman_version": "7.1.1"
 }

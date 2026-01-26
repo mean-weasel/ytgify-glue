@@ -1,203 +1,305 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="max-w-6xl mx-auto">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Main Content (Left - 2/3) -->
-      <div class="lg:col-span-2">
-        <!-- GIF Display -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-          <div class="aspect-video bg-gray-900 flex items-center justify-center">
-            <% if @gif.file.attached? %>
-              <%= image_tag @gif.file, alt: @gif.title, class: "max-w-full max-h-full object-contain" %>
-            <% elsif @gif.thumbnail_url.present? %>
-              <%= image_tag @gif.thumbnail_url, alt: @gif.title, class: "max-w-full max-h-full object-contain" %>
-            <% else %>
-              <div class="text-gray-400">
-                <svg class="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                </svg>
-              </div>
-            <% end %>
-          </div>
+<%# GIF Detail Page - Single-column layout %>
+<%# Reference: /mockups/gif-detail.html %>
+<main class="pt-16 pb-20 lg:pb-8">
+  <div class="max-w-4xl mx-auto px-4 py-6">
 
-          <!-- GIF Info Bar -->
-          <div class="p-4 border-t border-gray-200">
-            <div class="flex items-center justify-between">
-              <!-- Like, Comment, View Counts -->
-              <div class="flex items-center space-x-6">
-                <%= turbo_frame_tag "like_#{@gif.id}" do %>
-                  <% if user_signed_in? %>
-                    <%= form_with url: like_app_gif_path(@gif),
-                        method: :post,
-                        data: { controller: "like" } do %>
-                      <button type="submit" class="flex items-center space-x-2 hover:text-red-500 transition-colors group">
-                        <svg data-like-target="icon"
-                             class="w-6 h-6 <%= 'fill-current text-red-500' if current_user.liked?(@gif) %>"
-                             fill="<%= current_user.liked?(@gif) ? 'currentColor' : 'none' %>"
-                             stroke="currentColor"
-                             viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                        <span data-like-target="count" class="text-lg font-semibold"><%= @gif.like_count %></span>
-                      </button>
-                    <% end %>
-                  <% else %>
-                    <%= link_to new_user_session_path, class: "flex items-center space-x-2 text-gray-600 hover:text-red-500" do %>
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                      <span class="text-lg font-semibold"><%= @gif.like_count %></span>
-                    <% end %>
-                  <% end %>
-                <% end %>
-
-                <%= render "comments/count", gif: @gif %>
-
-                <div class="flex items-center space-x-2 text-gray-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <span class="text-lg font-semibold"><%= @gif.view_count || 0 %></span>
-                </div>
-              </div>
-
-              <!-- Share Button -->
-              <button class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                <span class="font-medium">Share</span>
-              </button>
-
-              <!-- Remix Button -->
-              <% if user_signed_in? && @gif.remixable_by?(current_user) %>
-                <%= link_to remix_app_gif_path(@gif),
-                    class: "flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors" do %>
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span class="font-medium">Remix</span>
-                <% end %>
-              <% elsif !user_signed_in? %>
-                <%= link_to new_user_session_path,
-                    class: "flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors" do %>
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span class="font-medium">Sign in to Remix</span>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-        </div>
-
-        <!-- Comments Section -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h2 class="text-xl font-bold text-gray-900 mb-6">
-            Comments
-            <span id="comment_count_header_<%= @gif.id %>" class="text-gray-600">(<%= @gif.comment_count %>)</span>
-          </h2>
-
-          <!-- Comment Form -->
-          <% if user_signed_in? %>
-            <%= turbo_frame_tag "new_comment" do %>
-              <%= render "comments/form", gif: @gif, comment: nil %>
-            <% end %>
-          <% else %>
-            <div class="mb-8 text-center py-6 bg-gray-50 rounded-lg">
-              <p class="text-gray-600 mb-3">Sign in to leave a comment</p>
-              <%= link_to "Sign In", new_user_session_path, class: "inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" %>
-            </div>
-          <% end %>
-
-          <!-- Comments List -->
-          <%= turbo_frame_tag "comments", class: "space-y-6" do %>
-            <% if @comments.any? %>
-              <%= render partial: "comments/comment", collection: @comments %>
-            <% else %>
-              <div class="text-center py-12 text-gray-500">
-                <svg class="mx-auto h-12 w-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <p>No comments yet. Be the first!</p>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Sidebar (Right - 1/3) -->
-      <div class="lg:col-span-1">
-        <!-- Title and Description -->
-        <%= turbo_frame_tag dom_id(@gif) do %>
-          <%= render "gif_display", gif: @gif %>
-        <% end %>
-
-        <!-- Creator Info -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <%= link_to app_user_path(@gif.user.username), class: "flex items-center space-x-3 flex-1 min-w-0" do %>
-              <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0">
-                <%= @gif.user.username.first.upcase %>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-semibold text-gray-900 truncate"><%= @gif.user.display_name %></div>
-                <div class="text-sm text-gray-600">@<%= @gif.user.username %></div>
-              </div>
-            <% end %>
-
-            <%= render "follows/button", user: @gif.user %>
-          </div>
-
-          <!-- Follower Count -->
-          <div class="mb-4">
-            <%= render "follows/follower_count", user: @gif.user %>
-          </div>
-
-          <% if @gif.user.bio.present? %>
-            <p class="text-sm text-gray-600"><%= @gif.user.bio %></p>
-          <% end %>
-        </div>
-
-        <!-- Video Source -->
-        <% if @gif.safe_youtube_url.present? %>
-          <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h3 class="font-semibold text-gray-900 mb-3">Source</h3>
-            <%= link_to @gif.safe_youtube_url,
-                target: "_blank",
-                rel: "noopener noreferrer",
-                class: "flex items-center space-x-2 text-indigo-600 hover:text-indigo-700" do %>
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-              </svg>
-              <span>Watch on YouTube</span>
-            <% end %>
-            <% if @gif.youtube_timestamp_start && @gif.youtube_timestamp_end %>
-              <div class="mt-2 text-sm text-gray-600">
-                <%= Time.at(@gif.youtube_timestamp_start).utc.strftime("%M:%S") %> - <%= Time.at(@gif.youtube_timestamp_end).utc.strftime("%M:%S") %>
-              </div>
-            <% end %>
+    <!-- GIF Player Section -->
+    <div class="mb-6">
+      <div class="relative aspect-video bg-gray-900 rounded-xl overflow-hidden">
+        <% if @gif.file.attached? %>
+          <%= image_tag @gif.file, alt: @gif.title, class: "w-full h-full object-contain bg-black" %>
+        <% elsif @gif.thumbnail_url.present? %>
+          <%= image_tag @gif.thumbnail_url, alt: @gif.title, class: "w-full h-full object-contain bg-black" %>
+        <% else %>
+          <div class="flex items-center justify-center h-full text-gray-600">
+            <svg class="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+            </svg>
           </div>
         <% end %>
 
-        <!-- Actions (if owner) -->
-        <% if user_signed_in? && current_user == @gif.user %>
-          <div class="bg-white rounded-lg shadow-lg p-6">
-            <h3 class="font-semibold text-gray-900 mb-3">Manage</h3>
-            <div class="space-y-2">
-              <%= link_to edit_app_gif_path(@gif), class: "block w-full text-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors" do %>
-                Edit GIF
-              <% end %>
-              <%= button_to app_gif_path(@gif),
-                  method: :delete,
-                  data: { turbo_confirm: "Are you sure you want to delete this GIF?" },
-                  class: "block w-full text-center px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-medium transition-colors" do %>
-                Delete GIF
-              <% end %>
-            </div>
+        <!-- Duration Badge -->
+        <% if @gif.duration %>
+          <div class="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-3 py-1 rounded">
+            <%= Time.at(@gif.duration).utc.strftime("%M:%S") %>
           </div>
         <% end %>
       </div>
     </div>
+
+    <!-- Info Section -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+      <!-- Left: Creator & Caption -->
+      <div class="md:col-span-2">
+        <!-- Creator -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-3">
+            <%= link_to user_path(@gif.user.username), class: "flex-shrink-0" do %>
+              <div class="w-12 h-12 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-lg font-bold">
+                <%= @gif.user.username.first.upcase %>
+              </div>
+            <% end %>
+            <div>
+              <%= link_to user_path(@gif.user.username), class: "font-semibold hover:text-[#E91E8C] transition" do %>
+                <%= @gif.user.display_name %>
+              <% end %>
+              <p class="text-gray-500 text-sm"><%= @gif.user.follower_count || 0 %> followers</p>
+            </div>
+          </div>
+          <%= render "follows/button", user: @gif.user %>
+        </div>
+
+        <!-- Title -->
+        <h1 class="text-2xl font-bold mb-3"><%= @gif.title %></h1>
+
+        <!-- Description -->
+        <% if @gif.description.present? %>
+          <p class="text-gray-300 mb-4 whitespace-pre-line"><%= @gif.description %></p>
+        <% end %>
+
+        <!-- Hashtags -->
+        <% if @gif.hashtags.any? %>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <% @gif.hashtags.each do |hashtag| %>
+              <%= link_to hashtag_path(hashtag.name), class: "text-[#E91E8C] hover:underline" do %>
+                #<%= hashtag.name %>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Source -->
+        <% if @gif.safe_youtube_url.present? %>
+          <div class="flex items-center space-x-2 text-gray-400 text-sm mb-4">
+            <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/>
+              <path fill="white" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <%= link_to @gif.safe_youtube_url, target: "_blank", rel: "noopener noreferrer", class: "hover:text-white transition" do %>
+              Source: YouTube
+            <% end %>
+            <% if @gif.youtube_timestamp_start && @gif.youtube_timestamp_end %>
+              <span class="text-gray-600">• <%= Time.at(@gif.youtube_timestamp_start).utc.strftime("%M:%S") %> - <%= Time.at(@gif.youtube_timestamp_end).utc.strftime("%M:%S") %></span>
+            <% end %>
+          </div>
+        <% end %>
+
+        <p class="text-gray-400 text-sm">Posted <%= time_ago_in_words(@gif.created_at) %> ago</p>
+      </div>
+
+      <!-- Right: Stats & Actions -->
+      <div class="bg-gray-900 rounded-xl p-5">
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-4 mb-6 text-center">
+          <div>
+            <p class="text-2xl font-bold"><%= number_to_human(@gif.like_count, precision: 1, significant: false, format: '%n%u', units: { thousand: 'k', million: 'M' }) %></p>
+            <p class="text-gray-500 text-sm">Likes</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold"><%= number_to_human(@gif.view_count || 0, precision: 1, significant: false, format: '%n%u', units: { thousand: 'k', million: 'M' }) %></p>
+            <p class="text-gray-500 text-sm">Views</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold"><%= @gif.comment_count %></p>
+            <p class="text-gray-500 text-sm">Comments</p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+          <!-- Like Button -->
+          <%= turbo_frame_tag "like_#{@gif.id}" do %>
+            <% if user_signed_in? %>
+              <%= form_with url: like_gif_path(@gif), method: :post, data: { controller: "like" } do %>
+                <button type="submit" class="w-full flex items-center justify-center space-x-2 py-3 <%= current_user.liked?(@gif) ? 'bg-[#E91E8C]' : 'bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE]' %> rounded-lg font-medium hover:opacity-90 transition">
+                  <svg class="w-5 h-5" fill="<%= current_user.liked?(@gif) ? 'currentColor' : 'none' %>" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  <span><%= current_user.liked?(@gif) ? 'Liked' : 'Like' %></span>
+                </button>
+              <% end %>
+            <% else %>
+              <%= link_to new_user_session_path, class: "w-full flex items-center justify-center space-x-2 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-lg font-medium hover:opacity-90 transition" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                <span>Like</span>
+              <% end %>
+            <% end %>
+          <% end %>
+
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Save to Collection -->
+            <% if user_signed_in? %>
+              <button
+                data-action="click->collection-modal#show:prevent"
+                data-gif-id="<%= @gif.id %>"
+                class="flex items-center justify-center space-x-2 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                </svg>
+                <span class="text-sm">Save</span>
+              </button>
+            <% else %>
+              <%= link_to new_user_session_path, class: "flex items-center justify-center space-x-2 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                </svg>
+                <span class="text-sm">Save</span>
+              <% end %>
+            <% end %>
+
+            <!-- Share -->
+            <button
+              data-controller="share"
+              data-share-url-value="<%= gif_url(@gif) %>"
+              data-share-title-value="<%= @gif.title %>"
+              data-action="click->share#share"
+              class="flex items-center justify-center space-x-2 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+              </svg>
+              <span class="text-sm">Share</span>
+            </button>
+          </div>
+
+          <!-- Remix Button -->
+          <% if user_signed_in? && @gif.remixable_by?(current_user) %>
+            <%= link_to remix_gif_path(@gif), class: "w-full flex items-center justify-center space-x-2 py-3 border border-[#E91E8C] text-[#E91E8C] hover:bg-[#E91E8C]/10 rounded-lg transition" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span>Remix this GIF</span>
+            <% end %>
+          <% elsif !user_signed_in? %>
+            <%= link_to new_user_session_path, class: "w-full flex items-center justify-center space-x-2 py-3 border border-gray-600 text-gray-400 hover:bg-gray-800 rounded-lg transition" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span>Sign in to Remix</span>
+            <% end %>
+          <% end %>
+
+          <!-- Manage (if owner) -->
+          <% if user_signed_in? && current_user == @gif.user %>
+            <div class="border-t border-gray-700 pt-3 mt-3">
+              <%= link_to edit_gif_path(@gif), class: "block w-full text-center px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg text-sm transition" do %>
+                Edit GIF
+              <% end %>
+              <%= button_to gif_path(@gif),
+                  method: :delete,
+                  data: { turbo_confirm: "Are you sure you want to delete this GIF?" },
+                  class: "block w-full text-center px-4 py-2 text-red-400 hover:bg-red-900/30 rounded-lg text-sm transition" do %>
+                Delete GIF
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="bg-gray-900 rounded-xl p-5">
+      <h2 class="text-lg font-semibold mb-4 flex items-center space-x-2">
+        <span>Comments</span>
+        <span id="comment_count_header_<%= @gif.id %>" class="text-gray-500">(<%= @gif.comment_count %>)</span>
+      </h2>
+
+      <!-- Comment Form -->
+      <% if user_signed_in? %>
+        <%= turbo_frame_tag "new_comment" do %>
+          <%= render "comments/form", gif: @gif, comment: nil %>
+        <% end %>
+      <% else %>
+        <div class="flex items-start space-x-3 mb-6 pb-6 border-b border-gray-800">
+          <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+            ?
+          </div>
+          <div class="flex-1">
+            <%= link_to new_user_session_path, class: "block w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-500 hover:border-[#E91E8C] transition" do %>
+              Sign in to add a comment...
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Comments List -->
+      <%= turbo_frame_tag "comments", class: "space-y-6" do %>
+        <% if @comments.any? %>
+          <%= render partial: "comments/comment", collection: @comments %>
+        <% else %>
+          <div class="text-center py-12 text-gray-500">
+            <svg class="mx-auto h-12 w-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p>No comments yet. Be the first!</p>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
   </div>
-</div>
+</main>
+
+<!-- Collection Modal -->
+<% if user_signed_in? %>
+  <div
+    data-controller="collection-modal"
+    data-gif-id="<%= @gif.id %>"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
+    data-collection-modal-target="modal"
+    data-action="click->collection-modal#clickOutside"
+  >
+    <div class="absolute inset-0 bg-black bg-opacity-70"></div>
+    <div class="relative bg-gray-900 rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden border border-gray-700">
+      <div class="flex items-center justify-between p-6 border-b border-gray-700">
+        <h3 class="text-lg font-semibold text-white">Save to Collection</h3>
+        <button data-action="click->collection-modal#hide" class="text-gray-400 hover:text-white transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="overflow-y-auto max-h-[50vh] p-6">
+        <% if current_user.collections.any? %>
+          <div class="space-y-2">
+            <% current_user.collections.order(updated_at: :desc).each do |coll| %>
+              <%= button_to add_gif_collection_path(coll, gif_id: @gif.id),
+                  method: :post,
+                  class: "w-full flex items-center justify-between p-4 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors text-left group" do %>
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-medium text-white group-hover:text-[#E91E8C] transition-colors"><%= coll.name %></h4>
+                  <p class="text-sm text-gray-500"><%= coll.gifs.count %> GIFs</p>
+                </div>
+                <svg class="w-5 h-5 text-gray-500 group-hover:text-[#E91E8C] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+            <p class="text-gray-400 mb-4">You don't have any collections yet</p>
+            <%= link_to new_collection_path, class: "inline-block px-4 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
+              Create Collection
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <div class="border-t border-gray-700 p-6">
+        <%= link_to new_collection_path, class: "w-full flex items-center justify-center space-x-2 px-4 py-3 border-2 border-[#E91E8C] text-[#E91E8C] rounded-lg hover:bg-[#E91E8C]/10 font-medium transition-colors" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>New Collection</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Mobile Bottom Navigation -->
+<%= render "shared/mobile_bottom_nav" %>

@@ -2,36 +2,42 @@
   <!-- Followers List -->
   <div class="space-y-4 mb-8">
     <% followers.each do |follower| %>
-      <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-indigo-200 transition-all">
+      <div class="flex items-center justify-between py-3">
         <!-- User Info -->
-        <%= link_to app_user_path(follower.username), class: "flex items-center space-x-4 flex-1 min-w-0" do %>
+        <%= link_to user_path(follower.username), class: "flex items-center space-x-3 flex-1 min-w-0" do %>
           <!-- Avatar -->
-          <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0">
+          <div class="w-12 h-12 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
             <%= follower.username.first.upcase %>
           </div>
 
           <!-- Details -->
           <div class="flex-1 min-w-0">
-            <div class="font-semibold text-gray-900 truncate"><%= follower.display_name %></div>
-            <div class="text-sm text-gray-600">@<%= follower.username %></div>
-
-            <!-- Stats -->
-            <div class="flex items-center space-x-4 text-xs text-gray-500 mt-1">
-              <span><%= number_with_delimiter(follower.follower_count) %> followers</span>
-              <span><%= number_with_delimiter(follower.gifs.count) %> GIFs</span>
+            <div class="font-medium text-white truncate hover:text-[#E91E8C] transition">
+              <%= follower.display_name || follower.username %>
+            </div>
+            <div class="text-sm text-gray-500">
+              <%= number_to_human(follower.follower_count || 0, precision: 1, significant: false, format: '%n%u', units: { thousand: 'k', million: 'M' }) %> followers
             </div>
           </div>
         <% end %>
 
         <!-- Follow Button -->
-        <% if user_signed_in? %>
-          <% if current_user != follower %>
-            <div id="follow_button_<%= follower.id %>">
-              <%= render "follows/button", user: follower, following: current_user.following?(follower) %>
-            </div>
+        <% if user_signed_in? && current_user != follower %>
+          <% if current_user.following?(follower) %>
+            <%= button_to follow_user_path(follower.username),
+                method: :post,
+                class: "px-4 py-2 border border-gray-600 text-gray-400 rounded-full text-sm font-medium hover:bg-gray-800 transition" do %>
+              Following
+            <% end %>
+          <% else %>
+            <%= button_to follow_user_path(follower.username),
+                method: :post,
+                class: "px-4 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full text-sm font-medium hover:opacity-90 transition" do %>
+              Follow
+            <% end %>
           <% end %>
-        <% else %>
-          <%= link_to new_user_session_path, class: "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors text-sm" do %>
+        <% elsif !user_signed_in? %>
+          <%= link_to new_user_session_path, class: "px-4 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full text-sm font-medium hover:opacity-90 transition" do %>
             Follow
           <% end %>
         <% end %>
@@ -42,19 +48,19 @@
   <!-- Pagination -->
   <% if pagy.pages > 1 %>
     <div class="flex justify-center items-center space-x-2">
-      <%== pagy_nav(pagy, link_extra: 'data-turbo-frame="profile_content" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-gray-700"') %>
+      <%== pagy_nav(pagy, link_extra: 'data-turbo-frame="profile_content" class="px-4 py-2 border border-gray-700 rounded-md hover:bg-gray-800 transition text-gray-300"') %>
     </div>
   <% end %>
 <% else %>
   <!-- Empty State -->
   <div class="text-center py-16">
-    <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="mx-auto h-16 w-16 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
     </svg>
 
-    <h3 class="text-xl font-semibold text-gray-700 mb-2">No followers yet</h3>
+    <h3 class="text-xl font-semibold text-white mb-2">No followers yet</h3>
 
-    <p class="text-gray-600 mb-6">
+    <p class="text-gray-400 mb-6">
       <% if user_signed_in? && current_user == user %>
         You don't have any followers yet. Share your GIFs to grow your audience!
       <% else %>

@@ -47,7 +47,7 @@ class FollowsController < ApplicationController
         end
 
         format.html do
-          redirect_back fallback_location: app_user_path(@user.username), notice: message
+          redirect_back fallback_location: user_path(@user.username), notice: message
         end
       end
     rescue ActiveRecord::RecordInvalid => e
@@ -65,7 +65,7 @@ class FollowsController < ApplicationController
         end
 
         format.html do
-          redirect_back fallback_location: app_user_path(@user.username), alert: "Failed to update follow status"
+          redirect_back fallback_location: user_path(@user.username), alert: "Failed to update follow status"
         end
       end
     rescue => e
@@ -86,7 +86,7 @@ class FollowsController < ApplicationController
         end
 
         format.html do
-          redirect_back fallback_location: app_user_path(@user.username), alert: "Something went wrong"
+          redirect_back fallback_location: user_path(@user.username), alert: "Something went wrong"
         end
       end
     end

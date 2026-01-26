@@ -1,0 +1,93 @@
+<%# Right Sidebar - Trending Tags and Suggested Creators %>
+<%# Reference: /mockups/feed.html lines 369-445 %>
+<aside class="hidden xl:block w-72 flex-shrink-0 p-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+  <!-- Trending Tags -->
+  <div class="mb-6">
+    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Trending Tags</h3>
+    <div class="flex flex-wrap gap-2">
+      <% trending_tags = Hashtag.joins(:gif_hashtags)
+                                .group('hashtags.id')
+                                .order('COUNT(gif_hashtags.id) DESC')
+                                .limit(8)
+                                .pluck(:name) %>
+      <% if trending_tags.any? %>
+        <% trending_tags.each do |tag| %>
+          <%= link_to hashtag_path(tag), class: "px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm transition" do %>
+            #<%= tag %>
+          <% end %>
+        <% end %>
+      <% else %>
+        <% %w[funny gaming cats sports reaction music fail cute].each do |tag| %>
+          <%= link_to hashtag_path(tag), class: "px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm transition" do %>
+            #<%= tag %>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Suggested Creators -->
+  <div class="border-t border-gray-800 pt-6">
+    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Suggested Creators</h3>
+    <div class="space-y-4">
+      <% suggested_users = User.joins(:gifs)
+                               .where.not(id: current_user&.id)
+                               .group('users.id')
+                               .order('COUNT(gifs.id) DESC')
+                               .limit(3) %>
+      <% if suggested_users.any? %>
+        <% suggested_users.each do |user| %>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-sm font-bold">
+                <%= user.username.first.upcase %>
+              </div>
+              <div>
+                <%= link_to user_path(user.username), class: "font-medium text-sm hover:text-[#E91E8C] transition" do %>
+                  <%= user.username %>
+                <% end %>
+                <p class="text-gray-500 text-xs"><%= user.follower_count || 0 %> followers</p>
+              </div>
+            </div>
+            <% if user_signed_in? && current_user != user %>
+              <div data-controller="follow" data-follow-user-id-value="<%= user.id %>">
+                <% if current_user.following?(user) %>
+                  <%= button_to follow_user_path(user.username),
+                      method: :post,
+                      data: { follow_target: "button", action: "follow#toggle" },
+                      class: "px-3 py-1 border border-gray-600 text-gray-400 rounded-full text-xs font-medium hover:bg-gray-800 transition" do %>
+                    Following
+                  <% end %>
+                <% else %>
+                  <%= button_to follow_user_path(user.username),
+                      method: :post,
+                      data: { follow_target: "button", action: "follow#toggle" },
+                      class: "px-3 py-1 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full text-xs font-medium hover:opacity-90 transition" do %>
+                    Follow
+                  <% end %>
+                <% end %>
+              </div>
+            <% elsif !user_signed_in? %>
+              <%= link_to new_user_session_path, class: "px-3 py-1 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full text-xs font-medium hover:opacity-90 transition" do %>
+                Follow
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="text-gray-500 text-sm">No creators to suggest yet.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Footer Links -->
+  <div class="mt-8 pt-6 border-t border-gray-800">
+    <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
+      <%= link_to "About", promo_path, class: "hover:text-gray-400" %>
+      <%= link_to "Privacy", privacy_policy_path, class: "hover:text-gray-400" %>
+      <%= link_to "Terms", terms_of_service_path, class: "hover:text-gray-400" %>
+      <%= link_to "Blog", blog_path, class: "hover:text-gray-400" %>
+    </div>
+    <p class="text-xs text-gray-600 mt-3">&copy; <%= Time.current.year %> YTgify</p>
+  </div>
+</aside>

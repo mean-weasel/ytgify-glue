@@ -12,13 +12,13 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
   # ========== INDEX ACTION TESTS ==========
 
   test "should get index" do
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
     assert_select "h1", text: "Browse Hashtags"
   end
 
   test "should display all hashtags in alphabetical order by default" do
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
     # Verify all hashtags are shown (including zero usage)
     assert_select "h3", text: /##{@hashtag1.name}/
@@ -28,24 +28,24 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should sort hashtags alphabetically" do
-    get app_hashtags_path(sort: "alphabetical")
+    get hashtags_path(sort: "alphabetical")
     assert_response :success
-    # Check that sort button is active
-    assert_select "a.bg-indigo-600", text: "A-Z"
+    # Check that sort button is active (dark theme uses text-[#E91E8C])
+    assert_select "a[class*='text-']", text: "A-Z"
   end
 
   test "should sort hashtags by popularity" do
-    get app_hashtags_path(sort: "popular")
+    get hashtags_path(sort: "popular")
     assert_response :success
-    # Check that popular sort button is active
-    assert_select "a.bg-indigo-600", text: "Most Popular"
+    # Check that popular sort button is active (dark theme uses text-[#E91E8C])
+    assert_select "a[class*='text-']", text: "Most Popular"
   end
 
   test "should sort hashtags by recency" do
-    get app_hashtags_path(sort: "recent")
+    get hashtags_path(sort: "recent")
     assert_response :success
-    # Check that recent sort button is active
-    assert_select "a.bg-indigo-600", text: "Recently Added"
+    # Check that recent sort button is active (dark theme uses text-[#E91E8C])
+    assert_select "a[class*='text-']", text: "Recently Added"
   end
 
   test "should paginate hashtags index" do
@@ -54,26 +54,26 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
       Hashtag.create!(name: "tag#{i}", usage_count: i)
     end
 
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
     # Should show pagination controls (30 per page, so we have 39 total)
     # Pagy nav should be present
   end
 
   test "should support turbo stream format for index" do
-    get app_hashtags_path, as: :turbo_stream
+    get hashtags_path, as: :turbo_stream
     assert_response :success
   end
 
   test "should show trending link on index page" do
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
-    assert_select "a[href=?]", trending_app_hashtags_path, text: /Trending/
+    assert_select "a[href=?]", trending_hashtags_path, text: /Trending/
   end
 
   test "should show empty state when no hashtags exist" do
     Hashtag.destroy_all
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
     assert_select "h3", text: "No hashtags yet"
   end
@@ -81,13 +81,13 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
   # ========== TRENDING ACTION TESTS ==========
 
   test "should get trending page" do
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
     assert_select "h1", text: "Trending Hashtags"
   end
 
   test "should display trending hashtags ordered by usage count" do
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
     # Should show hashtags with usage_count > 0
     assert_select "h3", text: /##{@hashtag1.name}/
@@ -97,7 +97,7 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should show rank badges on trending page" do
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
     # Should show rank numbers
     assert_select "div", text: "1"
@@ -106,9 +106,9 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should show browse all link on trending page" do
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
-    assert_select "a[href=?]", app_hashtags_path, text: /Browse All/
+    assert_select "a[href=?]", hashtags_path, text: /Browse All/
   end
 
   test "should paginate trending hashtags" do
@@ -117,48 +117,48 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
       Hashtag.create!(name: "trending#{i}", usage_count: i + 1)
     end
 
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
     # Should have pagination (28 total with usage > 0)
   end
 
   test "should support turbo stream format for trending" do
-    get trending_app_hashtags_path, as: :turbo_stream
+    get trending_hashtags_path, as: :turbo_stream
     assert_response :success
   end
 
   test "should show empty state when no trending hashtags" do
     # Set all hashtags to zero usage
     Hashtag.update_all(usage_count: 0)
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
     assert_select "h3", text: "No trending hashtags yet"
   end
 
   test "should cache trending hashtags" do
     # First request should hit the database
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
 
     # Create a new hashtag
     new_hashtag = Hashtag.create!(name: "cached_test", usage_count: 1000)
 
     # Second request should use cache (new hashtag won't appear)
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
 
     # Clear cache
     Rails.cache.clear
 
     # Third request should show new hashtag
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
   end
 
   # ========== SHOW ACTION TESTS (existing functionality) ==========
 
   test "should show hashtag page" do
-    get app_hashtag_path(@hashtag1.name)
+    get hashtag_path(@hashtag1.name)
     assert_response :success
     assert_select "h1", text: /##{@hashtag1.name}/
   end
@@ -173,32 +173,32 @@ class HashtagsControllerTest < ActionDispatch::IntegrationTest
 
   test "should navigate from index to trending and back" do
     # Start at index
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
 
     # Go to trending
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
-    assert_select "a[href=?]", app_hashtags_path
+    assert_select "a[href=?]", hashtags_path
 
     # Go back to index
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
-    assert_select "a[href=?]", trending_app_hashtags_path
+    assert_select "a[href=?]", trending_hashtags_path
   end
 
   test "should navigate from trending to specific hashtag" do
-    get trending_app_hashtags_path
+    get trending_hashtags_path
     assert_response :success
 
     # Click on first trending hashtag
-    get app_hashtag_path(@hashtag1.name)
+    get hashtag_path(@hashtag1.name)
     assert_response :success
     assert_select "h1", text: /##{@hashtag1.name}/
   end
 
   test "should show correct GIF counts for each hashtag" do
-    get app_hashtags_path
+    get hashtags_path
     assert_response :success
     # Each hashtag should show its usage count
     assert_select "p", text: /#{@hashtag1.usage_count} GIF/

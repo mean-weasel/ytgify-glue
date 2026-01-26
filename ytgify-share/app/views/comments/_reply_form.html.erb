@@ -1,10 +1,10 @@
 <%= turbo_frame_tag "reply_form_#{parent_comment.id}" do %>
   <%= form_with model: [gif, gif.comments.build(parent_comment_id: parent_comment.id)],
-                url: app_gif_comments_path(gif),
+                url: gif_comments_path(gif),
                 class: "mt-4 flex space-x-3" do |f| %>
     <%= f.hidden_field :parent_comment_id %>
 
-    <div class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-semibold flex-shrink-0">
+    <div class="w-10 h-10 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-full flex items-center justify-center font-semibold flex-shrink-0">
       <%= current_user.username.first.upcase %>
     </div>
 
@@ -13,10 +13,10 @@
           placeholder: "Write a reply...",
           rows: 2,
           autofocus: true,
-          class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none #{'border-red-500' if local_assigns[:comment]&.errors&.any?}" %>
+          class: "w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent resize-none #{'border-red-500' if local_assigns[:comment]&.errors&.any?}" %>
 
       <% if local_assigns[:comment]&.errors&.any? %>
-        <div class="mt-2 text-sm text-red-600">
+        <div class="mt-2 text-sm text-red-400">
           <%= comment.errors.full_messages.to_sentence %>
         </div>
       <% end %>
@@ -25,9 +25,9 @@
         <%= link_to "Cancel",
             "#",
             onclick: "this.closest('turbo-frame').innerHTML = ''; return false;",
-            class: "px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50" %>
+            class: "px-4 py-2 text-sm text-gray-300 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700" %>
         <%= f.submit "Reply",
-            class: "px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium cursor-pointer transition-colors",
+            class: "px-6 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium cursor-pointer transition-colors",
             data: { turbo_submits_with: "Replying..." } %>
       </div>
     </div>

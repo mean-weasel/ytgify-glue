@@ -1,86 +1,84 @@
-<div class="container mx-auto px-4 py-8">
-  <!-- Feed Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-      <% if user_signed_in? %>
-        Your Feed
-      <% else %>
-        Discover GIFs
-      <% end %>
-    </h1>
-    <p class="text-gray-600">
-      <% if user_signed_in? %>
-        Personalized GIFs based on your interests and the creators you follow
-      <% else %>
-        Popular GIFs from the ytgify community. <%= link_to "Sign in", new_user_session_path, class: "text-indigo-600 hover:text-indigo-700 font-medium" %> for a personalized feed.
-      <% end %>
-    </p>
-  </div>
+<%# Feed Page - Single-column layout with 3-panel structure %>
+<%# Reference: /mockups/feed.html %>
+<main class="pt-16 min-h-screen pb-20 lg:pb-0">
+  <div class="max-w-7xl mx-auto flex">
 
-  <!-- Feed Filters -->
-  <div class="flex items-center space-x-4 mb-6 pb-4 border-b border-gray-200">
-    <%= link_to app_feed_path, class: "px-4 py-2 rounded-lg font-medium #{request.path == app_feed_path ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}" do %>
-      <% if user_signed_in? %>
-        For You
-      <% else %>
-        Popular
-      <% end %>
-    <% end %>
-    <%= link_to app_trending_path, class: "px-4 py-2 rounded-lg font-medium #{request.path == app_trending_path ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}" do %>
-      Trending
-    <% end %>
-    <% if user_signed_in? %>
-      <%= link_to "#", class: "px-4 py-2 rounded-lg font-medium text-gray-600 hover:bg-gray-100" do %>
-        Following
-      <% end %>
-    <% end %>
-  </div>
+    <!-- Left Sidebar (Desktop) -->
+    <%= render "shared/left_sidebar" %>
 
-  <!-- GIF Grid with Infinite Scroll -->
-  <%= turbo_frame_tag "gifs", data: { controller: "infinite-scroll" } do %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="gif-grid">
-      <%= render partial: "gifs/gif_card", collection: @gifs, as: :gif %>
-    </div>
+    <!-- Feed Column -->
+    <div class="flex-1 max-w-2xl mx-auto px-4 py-6">
 
-    <!-- Load More Trigger -->
-    <% if @pagy.next %>
-      <%= turbo_frame_tag "page_#{@pagy.next}",
-          src: url_for(page: @pagy.next),
-          loading: :lazy,
-          data: { infinite_scroll_target: "trigger" } do %>
-        <div class="flex justify-center py-12">
-          <div class="flex items-center space-x-3 text-gray-600">
-            <svg class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="font-medium">Loading more GIFs...</span>
-          </div>
+      <!-- Mobile Tab Bar -->
+      <div class="flex lg:hidden border-b border-gray-800 mb-6 -mx-4 px-4">
+        <%= link_to root_path, class: "flex-1 py-3 text-center font-medium #{current_page?(root_path) ? 'text-[#E91E8C] border-b-2 border-[#E91E8C]' : 'text-gray-400'}" do %>
+          <%= user_signed_in? ? "For You" : "Popular" %>
+        <% end %>
+        <%= link_to trending_path, class: "flex-1 py-3 text-center font-medium #{current_page?(trending_path) ? 'text-[#E91E8C] border-b-2 border-[#E91E8C]' : 'text-gray-400'}" do %>
+          Trending
+        <% end %>
+        <% if user_signed_in? %>
+          <%= link_to "#", class: "flex-1 py-3 text-center font-medium text-gray-400" do %>
+            Following
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- GIF Feed Items -->
+      <%= turbo_frame_tag "gifs", data: { controller: "infinite-scroll" } do %>
+        <div class="space-y-8" id="gif-feed">
+          <%= render partial: "gifs/gif_card", collection: @gifs, as: :gif %>
+        </div>
+
+        <!-- Load More Trigger -->
+        <% if @pagy.next %>
+          <%= turbo_frame_tag "page_#{@pagy.next}",
+              src: url_for(page: @pagy.next),
+              loading: :lazy,
+              data: { infinite_scroll_target: "trigger" } do %>
+            <div class="flex justify-center py-12">
+              <div class="flex items-center space-x-3 text-gray-400">
+                <svg class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="font-medium">Loading more GIFs...</span>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      <% end %>
+
+      <!-- Empty State -->
+      <% if @gifs.empty? %>
+        <div class="text-center py-20">
+          <svg class="mx-auto h-24 w-24 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+          </svg>
+          <h3 class="text-xl font-semibold text-white mb-2">No GIFs yet</h3>
+          <p class="text-gray-400 mb-6">Be the first to share some awesome YouTube GIFs!</p>
+          <% if user_signed_in? %>
+            <%= link_to new_gif_path, class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Upload Your First GIF
+            <% end %>
+          <% else %>
+            <%= link_to new_user_session_path, class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
+              Sign In to Upload
+            <% end %>
+          <% end %>
         </div>
       <% end %>
-    <% end %>
-  <% end %>
 
-  <!-- Empty State -->
-  <% if @gifs.empty? %>
-    <div class="text-center py-20">
-      <svg class="mx-auto h-24 w-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-      </svg>
-      <h3 class="text-xl font-semibold text-gray-700 mb-2">No GIFs yet</h3>
-      <p class="text-gray-500 mb-6">Be the first to share some awesome YouTube GIFs!</p>
-      <% if user_signed_in? %>
-        <%= link_to new_app_gif_path, class: "inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Upload Your First GIF
-        <% end %>
-      <% else %>
-        <%= link_to new_user_session_path, class: "inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium" do %>
-          Sign In to Upload
-        <% end %>
-      <% end %>
     </div>
-  <% end %>
-</div>
+
+    <!-- Right Sidebar (Desktop) -->
+    <%= render "shared/right_sidebar" %>
+
+  </div>
+</main>
+
+<!-- Mobile Bottom Navigation -->
+<%= render "shared/mobile_bottom_nav" %>

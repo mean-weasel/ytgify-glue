@@ -2417,3 +2417,51 @@
 .ytgif-feedback-actions .ytgif-button-primary:hover:not(:disabled) {
   box-shadow: 0 4px 20px rgba(153, 102, 204, 0.3);
 }
+
+/* ========================================
+   Upload Button States
+   ======================================== */
+
+/* Disabled state for buttons */
+.ytgif-button-secondary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ytgif-button-secondary:disabled:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: none;
+}
+
+/* Upload success state */
+.ytgif-upload-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border-color: #10b981 !important;
+}
+
+.ytgif-upload-success:hover {
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Upload error state */
+.ytgif-upload-error {
+  border-color: #ef4444 !important;
+}
+
+.ytgif-upload-error:hover {
+  border-color: #dc2626 !important;
+}
+
+.ytgif-error-text {
+  color: #ef4444 !important;
+}
+
+/* Spinner animation for upload */
+.ytgif-spinner {
+  animation: ytgif-spin 1s linear infinite;
+}
+
+@keyframes ytgif-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

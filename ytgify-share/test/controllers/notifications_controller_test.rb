@@ -10,13 +10,13 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
   # INDEX action tests
   test "index should require authentication" do
-    get app_notifications_path
+    get notifications_path
     assert_redirected_to new_user_session_path
   end
 
   test "index should show user's notifications" do
     sign_in @alice
-    get app_notifications_path
+    get notifications_path
 
     assert_response :success
     assert_select "h1", text: "Notifications"
@@ -24,11 +24,11 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
   test "index should only show current user's notifications" do
     sign_in @alice
-    get app_notifications_path
+    get notifications_path
 
     assert_response :success
     # Verify via JSON response
-    get app_notifications_path, as: :json
+    get notifications_path, as: :json
     json = JSON.parse(response.body)
 
     # Alice should see her notifications
@@ -40,7 +40,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
   test "index should calculate unread count" do
     sign_in @alice
-    get app_notifications_path, as: :json
+    get notifications_path, as: :json
 
     assert_response :success
     json = JSON.parse(response.body)
@@ -50,7 +50,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
   test "index should respond to JSON format" do
     sign_in @alice
-    get app_notifications_path, as: :json
+    get notifications_path, as: :json
 
     assert_response :success
     json_response = JSON.parse(response.body)
@@ -61,7 +61,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
   # MARK_AS_READ action tests
   test "mark_as_read should require authentication" do
     notification = notifications(:alice_like_notification)
-    post mark_as_read_app_notification_path(notification)
+    post mark_as_read_notification_path(notification)
 
     assert_redirected_to new_user_session_path
   end
@@ -71,7 +71,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     notification = notifications(:alice_like_notification)
     assert_nil notification.read_at
 
-    post mark_as_read_app_notification_path(notification)
+    post mark_as_read_notification_path(notification)
 
     notification.reload
     assert_not_nil notification.read_at
@@ -84,7 +84,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
     # Attempting to mark another user's notification should result in an error
     begin
-      post mark_as_read_app_notification_path(bob_notification)
+      post mark_as_read_notification_path(bob_notification)
     rescue ActiveRecord::RecordNotFound
       # Expected - notification not found in current_user's scope
     end
@@ -98,7 +98,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     notification = notifications(:alice_like_notification)
 
-    post mark_as_read_app_notification_path(notification)
+    post mark_as_read_notification_path(notification)
 
     assert_response :redirect
   end
@@ -107,7 +107,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     notification = notifications(:alice_like_notification)
 
-    post mark_as_read_app_notification_path(notification), as: :json
+    post mark_as_read_notification_path(notification), as: :json
 
     assert_response :success
     json_response = JSON.parse(response.body)
@@ -118,7 +118,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     notification = notifications(:alice_like_notification)
 
-    post mark_as_read_app_notification_path(notification), as: :turbo_stream
+    post mark_as_read_notification_path(notification), as: :turbo_stream
 
     assert_response :success
   end
@@ -144,7 +144,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
   # MARK_ALL_AS_READ action tests
   test "mark_all_as_read should require authentication" do
-    post mark_all_as_read_app_notifications_path
+    post mark_all_as_read_notifications_path
 
     assert_redirected_to new_user_session_path
   end
@@ -155,7 +155,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     # Alice has 1 unread notification
     assert_equal 1, @alice.notifications.unread.count
 
-    post mark_all_as_read_app_notifications_path
+    post mark_all_as_read_notifications_path
 
     # All should now be read
     assert_equal 0, @alice.notifications.unread.count
@@ -168,7 +168,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     bob_unread_count = @bob.notifications.unread.count
     assert_equal 1, bob_unread_count
 
-    post mark_all_as_read_app_notifications_path
+    post mark_all_as_read_notifications_path
 
     # Bob's unread count should remain unchanged
     assert_equal bob_unread_count, @bob.notifications.unread.count
@@ -177,16 +177,16 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
   test "mark_all_as_read should redirect to notifications path with notice" do
     sign_in @alice
 
-    post mark_all_as_read_app_notifications_path
+    post mark_all_as_read_notifications_path
 
-    assert_redirected_to app_notifications_path
+    assert_redirected_to notifications_path
     assert_equal "All notifications marked as read", flash[:notice]
   end
 
   test "mark_all_as_read should respond to JSON format" do
     sign_in @alice
 
-    post mark_all_as_read_app_notifications_path, as: :json
+    post mark_all_as_read_notifications_path, as: :json
 
     assert_response :success
     json_response = JSON.parse(response.body)
@@ -196,7 +196,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
   test "mark_all_as_read should respond to Turbo Stream format" do
     sign_in @alice
 
-    post mark_all_as_read_app_notifications_path, as: :turbo_stream
+    post mark_all_as_read_notifications_path, as: :turbo_stream
 
     assert_response :success
   end
@@ -211,7 +211,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     )
 
     sign_in user_no_notifications
-    get app_notifications_path, as: :json
+    get notifications_path, as: :json
 
     assert_response :success
     json = JSON.parse(response.body)
@@ -231,15 +231,15 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
     # Should not raise error
     assert_nothing_raised do
-      post mark_all_as_read_app_notifications_path
+      post mark_all_as_read_notifications_path
     end
 
-    assert_redirected_to app_notifications_path
+    assert_redirected_to notifications_path
   end
 
   test "index JSON should include actor information" do
     sign_in @alice
-    get app_notifications_path, as: :json
+    get notifications_path, as: :json
 
     assert_response :success
     json = JSON.parse(response.body)
@@ -252,7 +252,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
   test "index JSON should include all required notification fields" do
     sign_in @alice
-    get app_notifications_path, as: :json
+    get notifications_path, as: :json
 
     assert_response :success
     json = JSON.parse(response.body)
@@ -271,7 +271,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_nil notification.read_at
 
     freeze_time do
-      post mark_as_read_app_notification_path(notification)
+      post mark_as_read_notification_path(notification)
 
       notification.reload
       assert_equal Time.current.to_i, notification.read_at.to_i
@@ -285,7 +285,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert unread_before > 0, "Alice should have unread notifications for this test"
 
     freeze_time do
-      post mark_all_as_read_app_notifications_path
+      post mark_all_as_read_notifications_path
 
       # All should be marked as read with current timestamp
       @alice.notifications.each do |n|
