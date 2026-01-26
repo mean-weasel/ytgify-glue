@@ -1,506 +1,154 @@
-import { ExtensionMessage } from '@/types';
-import { messageHandler } from './message-handler';
-import { backgroundWorker } from './worker';
-import { logger } from '@/lib/logger';
-import { initializeMessageBus } from '@/shared/message-bus';
-import { sharedLogger, sharedErrorHandler, extensionStateManager } from '@/shared';
-import { engagementTracker } from '@/shared/engagement-tracker';
-import { databaseCleanup } from '@/shared/database-cleanup';
-import { TokenManager } from './token-manager';
-import { StorageAdapter } from '@/lib/storage/storage-adapter';
-import { apiClient } from '@/lib/api/api-client';
+// Minimal background script with Google OAuth
+console.log('[Background] Service worker starting...');
 
-// Service Worker lifecycle events with enhanced logging and error handling
-chrome.runtime.onInstalled.addListener(
-  sharedErrorHandler.wrapWithErrorBoundary(
-    async (details) => {
-      const endTimer = await sharedLogger.startPerformanceTimer('extension_installation');
+// API client for backend communication
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
 
-      try {
-        sharedLogger.info(
-          '[Background] YTgify extension installed',
-          {
-            reason: details.reason,
-            version: chrome.runtime.getManifest().version,
-          },
-          'background'
-        );
-
-        sharedLogger.trackEvent('extension_installed', {
-          reason: details.reason,
-          version: chrome.runtime.getManifest().version,
-        });
-
-        // Initialize default storage
-        await initializeStorage();
-
-        if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-          // First install - log the event without opening a tab
-          sharedLogger.info('[Background] First install completed', {}, 'background');
-          sharedLogger.trackUserAction('first_install');
-
-          // Initialize engagement tracking
-          await engagementTracker.initializeEngagement();
-          sharedLogger.info('[Background] Engagement tracking initialized', {}, 'background');
-
-          // Set up token refresh alarm
-          await TokenManager.setupTokenRefreshAlarm();
-          sharedLogger.info('[Background] Token refresh alarm initialized', {}, 'background');
-        }
-
-        // Handle extension updates - clean up old IndexedDB data
-        if (details.reason === chrome.runtime.OnInstalledReason.UPDATE) {
-          // Skip cleanup if this is a development reload (no previous version means fresh load)
-          const previousVersion = details.previousVersion;
-
-          if (!previousVersion) {
-            sharedLogger.info(
-              '[Background] Skipping IndexedDB cleanup - no previous version (development reload)',
-              { version: chrome.runtime.getManifest().version },
-              'background'
-            );
-          } else {
-            try {
-              // Check if database exists first
-              const dbExists = await databaseCleanup.databaseExists();
-
-              if (!dbExists) {
-                sharedLogger.info(
-                  '[Background] No IndexedDB to cleanup - database does not exist',
-                  { version: chrome.runtime.getManifest().version, previousVersion },
-                  'background'
-                );
-              } else {
-                sharedLogger.info(
-                  '[Background] Extension updated - cleaning up IndexedDB',
-                  { version: chrome.runtime.getManifest().version, previousVersion },
-                  'background'
-                );
-
-                const deleted = await databaseCleanup.deleteDatabase();
-
-                if (deleted) {
-                  sharedLogger.info(
-                    '[Background] IndexedDB cleanup completed successfully',
-                    {},
-                    'background'
-                  );
-                  sharedLogger.trackEvent('indexeddb_cleanup_completed', {
-                    version: chrome.runtime.getManifest().version,
-                    previousVersion,
-                  });
-                } else {
-                  sharedLogger.warn(
-                    '[Background] IndexedDB cleanup returned false',
-                    {},
-                    'background'
-                  );
-                }
-              }
-            } catch (error) {
-              // Improved error serialization
-              const errorMessage =
-                error instanceof Error
-                  ? `${error.name}: ${error.message}`
-                  : String(error);
-
-              sharedLogger.error(
-                `[Background] Failed to cleanup IndexedDB during update: ${errorMessage}`,
-                {
-                  errorType: error instanceof Error ? error.name : typeof error,
-                  errorMessage: error instanceof Error ? error.message : String(error),
-                  errorStack: error instanceof Error ? error.stack : undefined,
-                  version: chrome.runtime.getManifest().version,
-                  previousVersion,
-                },
-                'background'
-              );
-              // Don't throw - cleanup failure shouldn't block extension startup
-            }
-          }
-        }
-
-        endTimer();
-      } catch (error) {
-        endTimer();
-        sharedErrorHandler.handleError(error, { context: 'extension_installation' });
-        throw error;
-      }
-    },
-    {
-      maxRetries: 1,
-      fallbackAction: async () => {
-        sharedLogger.error('[Background] Installation fallback triggered', {}, 'background');
-      },
-    }
-  )
-);
-
-chrome.runtime.onStartup.addListener(
-  sharedErrorHandler.wrapWithErrorBoundary(
-    async () => {
-      sharedLogger.info('[Background] YTgify extension started', {}, 'background');
-      sharedLogger.trackEvent('extension_started');
-
-      // Initialize extension state on startup
-      await extensionStateManager.clearRuntimeState();
-
-      // Check and refresh token if needed
-      await TokenManager.onServiceWorkerActivation();
-    },
-    {
-      maxRetries: 0,
-    }
-  )
-);
-
-// Auth-related message types handled by the second onMessage listener
-const AUTH_MESSAGE_TYPES = [
-  'CHECK_AUTH',
-  'REFRESH_TOKEN',
-  'TRIGGER_AUTH',
-  'LOGIN',
-  'GOOGLE_LOGIN',
-  'LOGOUT',
-  'GET_USER_PROFILE',
-  'EXTENSION_AUTH_CALLBACK_RELAY',
-  'AUTH_STATE_CHANGED',
-];
-
-// Enhanced message routing with comprehensive error handling and performance tracking
-chrome.runtime.onMessage.addListener(
-  (
-    message: ExtensionMessage,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response: ExtensionMessage) => void
-  ) => {
-    const messageStartTime = performance.now();
-    const messageId = message?.id || 'unknown';
-    const messageType = message?.type || 'unknown';
-
-    // Handle auth callback relay directly here for reliability
-    // Chrome's multiple onMessage listeners can be problematic
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((message as any).type === 'EXTENSION_AUTH_CALLBACK_RELAY') {
-      (async () => {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const authData = (message as any).data;
-          const token = authData?.token as string;
-          const user = authData?.user;
-
-          if (!token) {
-            console.error('[Background] No token in auth callback relay');
-            sendResponse({ type: 'ERROR_RESPONSE', success: false, error: 'No token provided' } as ExtensionMessage);
-            return;
-          }
-
-          // Decode token to get expiration
-          const parts = token.split('.');
-          if (parts.length !== 3) {
-            throw new Error('Invalid JWT format');
-          }
-          const payload = JSON.parse(atob(parts[1]));
-
-          // Save auth state
-          const authState = {
-            token: token,
-            expiresAt: payload.exp * 1000,
-            userId: payload.sub,
-            userProfile: user || null,
-          };
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await StorageAdapter.saveAuthState(authState as any);
-          if (user) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await StorageAdapter.saveUserProfile(user as any);
-          }
-
-          // Set up token refresh alarm
-          await TokenManager.setupTokenRefreshAlarm();
-
-          sendResponse({ type: 'SUCCESS_RESPONSE', success: true } as ExtensionMessage);
-
-          // Notify any open popups that auth state changed
-          chrome.runtime.sendMessage({ type: 'AUTH_STATE_CHANGED', authenticated: true }).catch(() => {
-            // Popup might not be open, ignore error
-          });
-        } catch (error) {
-          console.error('[Background] Failed to process auth callback relay:', error);
-          sendResponse({ type: 'ERROR_RESPONSE', success: false, error: error instanceof Error ? error.message : 'Auth failed' } as ExtensionMessage);
-        }
-      })();
-      return true; // Keep channel open for async response
-    }
-
-    // Skip other auth-related messages - they're handled by the dedicated auth listener below
-    if (AUTH_MESSAGE_TYPES.includes(messageType)) {
-      return false; // Let the next listener handle it
-    }
-
-    try {
-      // Validate message structure
-      if (!message || !message.type) {
-        sharedLogger.warn(
-          '[Background] Invalid message received',
-          {
-            message,
-            sender: sender.tab?.url,
-          },
-          'background'
-        );
-
-        sharedLogger.trackEvent('invalid_message_received', {
-          senderUrl: sender.tab?.url,
-          senderId: sender.tab?.id,
-        });
-
-        sendResponse({
-          type: 'ERROR_RESPONSE',
-          success: false,
-          error: 'Invalid message structure',
-        } as ExtensionMessage);
-        return false;
-      }
-
-      sharedLogger.debug(
-        '[Background] Received message',
-        {
-          type: messageType,
-          from: sender.tab?.url || 'popup',
-          messageId: messageId,
-        },
-        'background'
-      );
-
-      sharedLogger.trackEvent('message_received', {
-        messageType,
-        source: sender.tab?.url ? 'content' : 'popup',
-      });
-
-      // Use enhanced message handler with error recovery
-      return sharedErrorHandler
-        .withRecovery(() => messageHandler.handleMessage(message, sender, sendResponse), {
-          maxRetries: 1,
-          delayMs: 100,
-          fallbackAction: async () => {
-            sharedLogger.warn(
-              '[Background] Using message fallback handler',
-              {
-                messageType,
-                messageId,
-              },
-              'background'
-            );
-
-            sendResponse({
-              type: 'ERROR_RESPONSE',
-              success: false,
-              error: 'Message handling temporarily unavailable',
-            } as ExtensionMessage);
-          },
-        })
-        .then((requiresAsyncResponse) => {
-          sharedLogger.trackPerformance('message_handling', messageStartTime, {
-            messageType,
-            success: true,
-          });
-          return requiresAsyncResponse;
-        })
-        .catch((error) => {
-          sharedLogger.trackPerformance('message_handling', messageStartTime, {
-            messageType,
-            success: false,
-            error: error instanceof Error ? error.message : String(error),
-          });
-
-          sharedLogger.error(
-            '[Background] Message handling failed',
-            {
-              error: error instanceof Error ? error.message : String(error),
-              messageType,
-              messageId,
-            },
-            'background'
-          );
-
-          sharedErrorHandler.handleError(error, {
-            messageType,
-            messageId,
-            senderId: sender.tab?.id,
-            senderUrl: sender.tab?.url,
-            context: 'message_handling',
-          });
-
-          sendResponse({
-            type: 'ERROR_RESPONSE',
-            success: false,
-            error: error instanceof Error ? error.message : 'Message handling failed',
-          } as ExtensionMessage);
-
-          return false;
-        });
-    } catch (error) {
-      sharedLogger.trackPerformance('message_handling', messageStartTime, {
-        messageType,
-        success: false,
-        critical: true,
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      sharedLogger.error(
-        '[Background] Critical message handling error',
-        {
-          error: error instanceof Error ? error.message : String(error),
-        },
-        'background'
-      );
-
-      sharedErrorHandler.handleError(error, {
-        messageType,
-        messageId,
-        context: 'critical_message_handling',
-      });
-
-      sendResponse({
-        type: 'ERROR_RESPONSE',
-        success: false,
-        error: 'Critical error in message processing',
-      } as ExtensionMessage);
-
-      return false;
-    }
-  }
-);
-
-// Handle keyboard command
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command === '_execute_action') {
-    // Get the active tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    if (!tab || !tab.id || !tab.url) {
-      return;
-    }
-
-    const isYouTubePage =
-      tab.url.includes('youtube.com/watch') || tab.url.includes('youtube.com/shorts');
-
-    if (!isYouTubePage) {
-      await chrome.tabs.update(tab.id, { url: 'https://www.youtube.com' });
-      return;
-    }
-
-    // Send message to content script to show wizard
-    try {
-      await chrome.tabs.sendMessage(tab.id, {
-        type: 'SHOW_WIZARD_DIRECT',
-        data: { triggeredBy: 'command' },
-      });
-    } catch (error) {
-      console.error('[BACKGROUND] Failed to send message:', error);
-    }
+// Initialize alarms listener (required since alarms permission is declared)
+chrome.alarms.onAlarm.addListener((alarm) => {
+  console.log('[Background] Alarm triggered:', alarm.name);
+  if (alarm.name === 'token-refresh') {
+    // Token refresh logic could go here
+    console.log('[Background] Token refresh alarm - checking token...');
   }
 });
 
-// ========================================
-// Auth Message Handlers (Phase 1)
-// ========================================
+// Helper to decode JWT payload
+function decodeJwtPayload(token: string): { sub: string; exp: number } {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const payload = JSON.parse(atob(base64));
+  return payload;
+}
+
+async function googleLogin(idToken: string) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/google`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id_token: idToken }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  // Decode JWT to get expiration and user ID
+  const decoded = decodeJwtPayload(data.token);
+
+  // Store in authState format that StorageAdapter expects
+  const authState = {
+    token: data.token,
+    expiresAt: decoded.exp * 1000, // Convert to milliseconds
+    userId: decoded.sub,
+    userProfile: data.user,
+  };
+
+  await chrome.storage.local.set({
+    authState: authState,
+    userProfile: data.user, // Also store separately for legacy compatibility
+  });
+
+  console.log('[Background] Auth state saved to storage');
+
+  return data;
+}
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'CHECK_AUTH') {
-    // Check if user is authenticated
-    (async () => {
-      const status = await TokenManager.checkAuthStatus();
-      const profile = status.authenticated ? await StorageAdapter.getUserProfile() : null;
+  console.log('[Background] Message received:', message.type);
 
+  if (message.type === 'PING') {
+    console.log('[Background] PING received, sending PONG');
+    sendResponse({ type: 'PONG', success: true });
+    return false;
+  }
+
+  if (message.type === 'CHECK_AUTH') {
+    (async () => {
+      const result = await chrome.storage.local.get(['authState', 'userProfile']);
+      const authState = result.authState;
       sendResponse({
-        authenticated: status.authenticated,
-        userProfile: profile,
-        expiresIn: status.expiresIn,
-        needsRefresh: status.needsRefresh,
+        authenticated: !!authState?.token,
+        userProfile: authState?.userProfile || result.userProfile || null,
       });
     })();
     return true;
   }
 
-  if (message.type === 'REFRESH_TOKEN') {
-    // Manual token refresh requested
+  if (message.type === 'LOGOUT') {
     (async () => {
-      const success = await TokenManager.manualRefresh();
-      sendResponse({ success });
-    })();
-    return true;
-  }
-
-  if (message.type === 'TRIGGER_AUTH') {
-    console.log('[Background] TRIGGER_AUTH received - opening popup');
-    // Open the extension popup which will show the auth view
-    chrome.action.openPopup().catch((error) => {
-      // openPopup may fail if popup is already open or in some contexts
-      console.warn('[Background] Could not open popup:', error);
-    });
-    sendResponse({ success: true });
-    return false;
-  }
-
-  if (message.type === 'LOGIN') {
-    // Handle login request from popup/content script
-    (async () => {
-      try {
-        const { email, password } = message.data;
-        const response = await apiClient.login(email, password);
-        sendResponse({ success: true, data: response });
-      } catch (error) {
-        sendResponse({
-          success: false,
-          error: error instanceof Error ? error.message : 'Login failed',
-        });
-      }
+      await chrome.storage.local.remove(['authState', 'userProfile']);
+      sendResponse({ success: true });
     })();
     return true;
   }
 
   if (message.type === 'GOOGLE_LOGIN') {
-    // Handle Google OAuth via tab-based flow (visible to browser automation)
-    // Opens a tab to Rails backend OAuth which redirects through Google
-    // The callback page has a content script that relays auth data back
+    console.log('[Background] GOOGLE_LOGIN received');
     (async () => {
       try {
-        console.log('[Background] Starting tab-based Google OAuth flow');
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        console.log('[Background] Client ID available:', !!clientId);
 
-        const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
-        const extensionId = chrome.runtime.id;
-
-        // Build OAuth URL - Rails handles the Google OAuth redirect
-        const authUrl = `${apiBaseUrl}/users/auth/google_oauth2?source=extension&extension_id=${extensionId}`;
-
-        console.log('[Background] Opening OAuth tab:', authUrl);
-
-        // Get the window ID from the sender tab to open OAuth in the same window
-        const windowId = sender.tab?.windowId;
-        const createOptions: chrome.tabs.CreateProperties = { url: authUrl };
-        if (windowId) {
-          createOptions.windowId = windowId;
+        if (!clientId) {
+          console.error('[Background] GOOGLE_CLIENT_ID not configured');
+          sendResponse({
+            success: false,
+            error: 'Google Sign-In is not configured',
+          });
+          return;
         }
 
-        // Open new tab for OAuth in the same window as the requesting tab
-        chrome.tabs.create(createOptions, (_tab) => {
-          if (chrome.runtime.lastError) {
-            console.error('[Background] Failed to open OAuth tab:', chrome.runtime.lastError);
-            sendResponse({
-              success: false,
-              error: chrome.runtime.lastError.message || 'Failed to open OAuth tab',
-            });
-            return;
-          }
-          // Auth completion handled by EXTENSION_AUTH_CALLBACK_RELAY message
-          // from content script on the callback page
-          sendResponse({ success: true, message: 'OAuth tab opened' });
+        // Use chrome.identity.launchWebAuthFlow for OAuth
+        const redirectUri = chrome.identity.getRedirectURL();
+        const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+        authUrl.searchParams.set('client_id', clientId);
+        authUrl.searchParams.set('redirect_uri', redirectUri);
+        authUrl.searchParams.set('response_type', 'id_token');
+        authUrl.searchParams.set('scope', 'openid email profile');
+        authUrl.searchParams.set('nonce', Math.random().toString(36).substring(2));
+
+        console.log('[Background] Starting Google OAuth flow...');
+        console.log('[Background] Redirect URI:', redirectUri);
+
+        const responseUrl = await new Promise<string>((resolve, reject) => {
+          chrome.identity.launchWebAuthFlow(
+            { url: authUrl.toString(), interactive: true },
+            (callbackUrl) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+              } else if (callbackUrl) {
+                resolve(callbackUrl);
+              } else {
+                reject(new Error('No callback URL received'));
+              }
+            }
+          );
         });
+
+        console.log('[Background] OAuth flow completed, extracting token...');
+
+        // Extract id_token from the callback URL
+        const hashParams = new URLSearchParams(responseUrl.split('#')[1]);
+        const idToken = hashParams.get('id_token');
+
+        if (!idToken) {
+          throw new Error('No ID token in response');
+        }
+
+        console.log('[Background] ID token extracted, authenticating with backend...');
+
+        // Send token to backend
+        const response = await googleLogin(idToken);
+
+        console.log('[Background] Google login successful');
+        sendResponse({ success: true, data: response });
       } catch (error) {
-        console.error('[Background] Google OAuth failed:', error);
+        console.error('[Background] Google login failed:', error);
         sendResponse({
           success: false,
           error: error instanceof Error ? error.message : 'Google login failed',
@@ -510,333 +158,52 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message.type === 'LOGOUT') {
-    // Handle logout request
+  // Handle auth callback relay from content script (tab-based OAuth)
+  if (message.type === 'EXTENSION_AUTH_CALLBACK_RELAY') {
     (async () => {
       try {
-        await apiClient.logout();
-        await TokenManager.clearTokenRefreshAlarm();
-        sendResponse({ success: true });
-      } catch (error) {
-        sendResponse({
-          success: false,
-          error: error instanceof Error ? error.message : 'Logout failed',
-        });
-      }
-    })();
-    return true;
-  }
-
-  if (message.type === 'GET_USER_PROFILE') {
-    // Get cached or fetch user profile
-    (async () => {
-      try {
-        let profile = await StorageAdapter.getUserProfile();
-
-        if (!profile) {
-          // Fetch from API if not cached
-          profile = await apiClient.getCurrentUser();
-        }
-
-        sendResponse({ success: true, data: profile });
-      } catch (error) {
-        sendResponse({
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to get profile',
-        });
-      }
-    })();
-    return true;
-  }
-
-  return false;
-});
-
-// ========================================
-// External Message Handler (from web pages)
-// ========================================
-
-chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
-  console.log('[Background] External message received:', message.type, 'from:', sender.url);
-
-  if (message.type === 'EXTENSION_AUTH_CALLBACK') {
-    // Handle async operations in an IIFE, return true synchronously
-    (async () => {
-      try {
-        const { token, user } = message.data;
+        const authData = message.data;
+        const token = authData?.token as string;
+        const user = authData?.user;
 
         if (!token) {
-          console.error('[Background] No token in auth callback');
+          console.error('[Background] No token in auth callback relay');
           sendResponse({ success: false, error: 'No token provided' });
           return;
         }
 
         // Decode token to get expiration
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-          throw new Error('Invalid JWT format');
-        }
-        const payload = JSON.parse(atob(parts[1]));
+        const decoded = decodeJwtPayload(token);
 
         // Save auth state
         const authState = {
           token: token,
-          expiresAt: payload.exp * 1000,
-          userId: payload.sub,
+          expiresAt: decoded.exp * 1000,
+          userId: decoded.sub,
           userProfile: user || null,
         };
 
-        await StorageAdapter.saveAuthState(authState);
-        if (user) {
-          await StorageAdapter.saveUserProfile(user);
-        }
-
-        // Set up token refresh alarm
-        await TokenManager.setupTokenRefreshAlarm();
-
-        console.log('[Background] External auth saved successfully');
-        sendResponse({ success: true });
-
-        // Notify any open popups that auth state changed
-        chrome.runtime.sendMessage({ type: 'AUTH_STATE_CHANGED', authenticated: true }).catch(() => {
-          // Popup might not be open, ignore error
+        await chrome.storage.local.set({
+          authState: authState,
+          userProfile: user || null,
         });
+
+        console.log('[Background] Auth state saved from callback relay');
+
+        // Notify other parts of the extension
+        chrome.runtime.sendMessage({ type: 'AUTH_STATE_CHANGED', authenticated: true }).catch(() => {});
+
+        sendResponse({ success: true });
       } catch (error) {
-        console.error('[Background] Failed to process external auth:', error);
+        console.error('[Background] Auth callback relay failed:', error);
         sendResponse({ success: false, error: error instanceof Error ? error.message : 'Auth failed' });
       }
     })();
-
-    // Return true synchronously to keep message channel open for async response
     return true;
   }
 
-  // Unknown message type
-  sendResponse({ success: false, error: 'Unknown message type' });
+  // Default: don't handle
   return false;
 });
 
-// ========================================
-// Token Refresh Alarm Handler
-// ========================================
-
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === 'refreshToken') {
-    await TokenManager.onTokenRefreshAlarm();
-  }
-});
-
-// Enhanced service worker with new architecture
-// All message handling is now managed by the MessageHandler
-// All video processing is managed by the BackgroundWorker
-
-// Initialize enhanced logging for service worker lifecycle
-chrome.runtime.onInstalled.addListener((details) => {
-  logger.info('[Background] YTgify extension installed', {
-    reason: details.reason,
-    version: chrome.runtime.getManifest().version,
-  });
-});
-
-// Initialize storage and preferences with comprehensive error handling and analytics
-async function initializeStorage(): Promise<void> {
-  const endTimer = await sharedLogger.startPerformanceTimer('storage_initialization');
-
-  try {
-    const result = await sharedErrorHandler.withRecovery(
-      () => chrome.storage.local.get(['userPreferences']),
-      {
-        maxRetries: 3,
-        delayMs: 500,
-        exponentialBackoff: true,
-      }
-    );
-
-    if (!result.userPreferences) {
-      // Set default preferences optimized for video processing
-      const defaultPreferences = {
-        defaultFrameRate: 15,
-        defaultQuality: 'medium' as const,
-        maxDuration: 10,
-        autoSave: true,
-        theme: 'system' as const,
-        showThumbnails: true,
-        gridSize: 'medium' as const,
-        maxStorageSize: 100, // 100MB
-        autoCleanup: true,
-        cleanupOlderThan: 30, // 30 days
-        // New preferences for enhanced worker
-        maxConcurrentJobs: 3,
-        enableProgressUpdates: true,
-        jobTimeout: 300000, // 5 minutes
-        preferWebCodecs: true,
-        enableAdvancedGifOptimization: true,
-        // Analytics and error reporting preferences
-        analyticsEnabled: false, // Privacy-first default
-        errorReportingEnabled: true,
-        performanceMonitoringEnabled: true,
-      };
-
-      await sharedErrorHandler.withRecovery(
-        () => chrome.storage.local.set({ userPreferences: defaultPreferences }),
-        {
-          maxRetries: 3,
-          delayMs: 500,
-          exponentialBackoff: true,
-        }
-      );
-
-      sharedLogger.info('[Background] Initialized enhanced default preferences', {}, 'background');
-      sharedLogger.trackEvent('preferences_initialized', { isFirstTime: true });
-    } else {
-      sharedLogger.info('[Background] Using existing user preferences', {}, 'background');
-      sharedLogger.trackEvent('preferences_loaded', { isFirstTime: false });
-
-      // Migrate old preferences if needed
-      await migratePreferences(result.userPreferences);
-    }
-
-    endTimer();
-  } catch (error) {
-    endTimer();
-    sharedLogger.error(
-      '[Background] Failed to initialize storage',
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-      'background'
-    );
-
-    sharedErrorHandler.handleError(error, { context: 'storage_initialization' });
-
-    // Fallback to minimal defaults
-    sharedErrorHandler.showUserFeedback({
-      type: 'warning',
-      title: 'Storage Initialization Warning',
-      message: 'Could not load user preferences. Using defaults.',
-      actions: [
-        {
-          label: 'Retry',
-          action: () => initializeStorage(),
-        },
-      ],
-    });
-
-    throw error;
-  }
-}
-
-// Migrate preferences to ensure compatibility with new features
-async function migratePreferences(preferences: Record<string, unknown>): Promise<void> {
-  try {
-    let needsUpdate = false;
-    const updatedPreferences = { ...preferences };
-
-    // Add new analytics preferences if missing
-    if (!('analyticsEnabled' in updatedPreferences)) {
-      updatedPreferences.analyticsEnabled = false; // Privacy-first default
-      needsUpdate = true;
-    }
-
-    if (!('errorReportingEnabled' in updatedPreferences)) {
-      updatedPreferences.errorReportingEnabled = true;
-      needsUpdate = true;
-    }
-
-    if (!('performanceMonitoringEnabled' in updatedPreferences)) {
-      updatedPreferences.performanceMonitoringEnabled = true;
-      needsUpdate = true;
-    }
-
-    if (needsUpdate) {
-      await chrome.storage.local.set({ userPreferences: updatedPreferences });
-      sharedLogger.info(
-        '[Background] Migrated user preferences',
-        {
-          addedFields: Object.keys(updatedPreferences).filter((key) => !(key in preferences)),
-        },
-        'background'
-      );
-
-      sharedLogger.trackEvent('preferences_migrated');
-    }
-  } catch (error) {
-    sharedLogger.warn(
-      '[Background] Failed to migrate preferences',
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-      'background'
-    );
-  }
-}
-
-// Enhanced cleanup and error recovery
-chrome.runtime.onSuspend.addListener(() => {
-  logger.info('[Background] Service worker suspending - performing cleanup');
-
-  try {
-    // Cleanup message handler resources
-    messageHandler.cleanup();
-
-    // Cleanup old worker jobs
-    backgroundWorker.cleanupOldJobs();
-
-    // Clear logger buffer if needed
-    logger.clearLogBuffer();
-  } catch (error) {
-    logger.error('[Background] Error during cleanup', { error });
-  }
-});
-
-// Enhanced keep-alive mechanism with monitoring
-function keepAlive(): void {
-  chrome.runtime.onMessage.addListener(() => {
-    // This listener keeps the service worker active during processing
-    return false;
-  });
-
-  // Periodic cleanup and monitoring
-  setInterval(() => {
-    try {
-      // Clean up old jobs every 5 minutes
-      const cleanedJobs = backgroundWorker.cleanupOldJobs();
-
-      if (cleanedJobs > 0) {
-        logger.debug('[Background] Cleaned up old jobs', { count: cleanedJobs });
-      }
-
-      // Log worker status periodically
-      const workerStats = backgroundWorker.getQueueStatus();
-      const handlerStats = messageHandler.getStatistics();
-
-      if (workerStats.queueLength > 0 || handlerStats.activeJobs > 0) {
-        logger.debug('[Background] Worker status', { workerStats, handlerStats });
-      }
-    } catch (error) {
-      logger.error('[Background] Error in periodic cleanup', { error });
-    }
-  }, 300000); // Every 5 minutes
-}
-
-// Initialize enhanced keep-alive mechanism
-keepAlive();
-
-// Initialize the new message bus alongside the existing system
-initializeMessageBus({
-  enableLogging: true,
-  requestTimeout: 30000,
-  maxRetries: 3,
-  validateMessages: true,
-  enableProgressTracking: true,
-});
-
-// Log successful initialization
-logger.info('[Background] Enhanced background service worker initialized', {
-  messageHandlerEnabled: true,
-  backgroundWorkerEnabled: true,
-  messageBusEnabled: true,
-  webCodecsSupported: 'VideoDecoder' in globalThis,
-});
-
-export {};
+console.log('[Background] Service worker ready');
