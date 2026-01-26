@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>YTGify Wizard - Auth Header Mockup (Accurate)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 24px;
+      font-weight: 500;
+    }
+
+    .mockup-container {
+      display: flex;
+      gap: 60px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .mockup-section {
+      text-align: center;
+    }
+
+    .mockup-label {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* === Actual Wizard Styles (from wizard-styles.css) === */
+    .ytgif-wizard-container {
+      position: relative;
+      width: 520px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    /* Header Container - modified to include auth */
+    .ytgif-wizard-header-container {
+      position: relative;
+      padding: 16px 20px;
+      background: linear-gradient(to bottom, #2d2d2d 0%, rgba(45, 45, 45, 0.8) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Auth area in header - left side */
+    .ytgif-header-auth {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    /* Sign In Button (not signed in) */
+    .ytgif-signin-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ytgif-signin-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+    .ytgif-signin-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* User Profile (signed in) */
+    .ytgif-user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px 4px 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .ytgif-user-profile:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .ytgif-user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff0066 0%, #9966cc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .ytgif-user-name {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Progress Indicator - center */
+    .ytgif-wizard-progress {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+
+    .ytgif-progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .ytgif-progress-dot.active:nth-child(1) {
+      background: #ff0000;
+      transform: scale(1.3);
+    }
+    .ytgif-progress-dot.active:nth-child(2) {
+      background: #ff0066;
+    }
+    .ytgif-progress-dot.active:nth-child(3) {
+      background: #cc3399;
+    }
+    .ytgif-progress-dot.active:nth-child(4) {
+      background: #9966cc;
+    }
+
+    /* Close Button - right side */
+    .ytgif-wizard-close {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ytgif-wizard-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+
+    /* Screen Content */
+    .ytgif-wizard-screen {
+      padding: 20px;
+    }
+
+    .ytgif-wizard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .ytgif-back-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ytgif-wizard-title {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .ytgif-wizard-helper {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* Video Preview Placeholder */
+    .ytgif-preview-area {
+      background: #000;
+      border-radius: 8px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .ytgif-preview-area::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+      opacity: 0.2;
+    }
+    .ytgif-preview-text {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      z-index: 1;
+    }
+
+    /* Timeline Placeholder */
+    .ytgif-timeline {
+      height: 48px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 12px;
+    }
+
+    /* Resolution/FPS buttons placeholder */
+    .ytgif-options-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .ytgif-option-btn {
+      flex: 1;
+      padding: 10px 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .ytgif-option-btn.active {
+      background: rgba(255, 0, 102, 0.2);
+      border-color: #ff0066;
+      color: white;
+    }
+
+    /* Primary Button */
+    .ytgif-button-primary {
+      width: 100%;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #ff0066 0%, #9966cc 100%);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ytgif-button-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(255, 0, 102, 0.4);
+    }
+
+    /* Annotation */
+    .annotation {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: rgba(255, 0, 102, 0.15);
+      border: 1px solid rgba(255, 0, 102, 0.3);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* Data attribute for testing */
+    [data-testid] {
+      /* For browser automation to find elements */
+    }
+  </style>
+</head>
+<body>
+  <h1>GIF Wizard - Auth in Header (Accurate Design)</h1>
+
+  <div class="mockup-container">
+    <!-- Not Signed In State -->
+    <div class="mockup-section">
+      <div class="mockup-label">Not Signed In</div>
+      <div class="ytgif-wizard-container">
+        <!-- Header with auth -->
+        <div class="ytgif-wizard-header-container">
+          <div class="ytgif-header-auth">
+            <button class="ytgif-signin-btn" data-testid="wizard-signin-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Sign In
+            </button>
+          </div>
+
+          <!-- Progress dots (centered) -->
+          <div class="ytgif-wizard-progress">
+            <div class="ytgif-progress-dot active"></div>
+            <div class="ytgif-progress-dot"></div>
+            <div class="ytgif-progress-dot"></div>
+            <div class="ytgif-progress-dot"></div>
+          </div>
+
+          <button class="ytgif-wizard-close">&times;</button>
+        </div>
+
+        <!-- Screen Content -->
+        <div class="ytgif-wizard-screen">
+          <div class="ytgif-wizard-header">
+            <button class="ytgif-back-button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <h2 class="ytgif-wizard-title">Select Your Perfect Moment</h2>
+            <div style="width: 36px"></div>
+          </div>
+
+          <p class="ytgif-wizard-helper">Drag the timeline to choose your clip</p>
+
+          <div class="ytgif-preview-area">
+            <span class="ytgif-preview-text">Video Preview</span>
+          </div>
+
+          <div class="ytgif-timeline">Timeline Scrubber</div>
+
+          <div class="ytgif-options-row">
+            <div class="ytgif-option-btn active">144p</div>
+            <div class="ytgif-option-btn">240p</div>
+            <div class="ytgif-option-btn">360p</div>
+            <div class="ytgif-option-btn">480p</div>
+          </div>
+
+          <div class="ytgif-options-row">
+            <div class="ytgif-option-btn active">5 fps</div>
+            <div class="ytgif-option-btn">10 fps</div>
+            <div class="ytgif-option-btn">15 fps</div>
+          </div>
+
+          <button class="ytgif-button-primary">
+            Continue to Customize
+          </button>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <strong>Sign In button in header:</strong> Visible on all screens.<br>
+        data-testid="wizard-signin-btn" for browser automation.
+      </div>
+    </div>
+
+    <!-- Signed In State -->
+    <div class="mockup-section">
+      <div class="mockup-label">Signed In</div>
+      <div class="ytgif-wizard-container">
+        <!-- Header with user profile -->
+        <div class="ytgif-wizard-header-container">
+          <div class="ytgif-header-auth">
+            <div class="ytgif-user-profile" data-testid="wizard-user-profile">
+              <div class="ytgif-user-avatar">JW</div>
+              <span class="ytgif-user-name">Jeremy</span>
+            </div>
+          </div>
+
+          <!-- Progress dots (centered) -->
+          <div class="ytgif-wizard-progress">
+            <div class="ytgif-progress-dot active"></div>
+            <div class="ytgif-progress-dot"></div>
+            <div class="ytgif-progress-dot"></div>
+            <div class="ytgif-progress-dot"></div>
+          </div>
+
+          <button class="ytgif-wizard-close">&times;</button>
+        </div>
+
+        <!-- Screen Content -->
+        <div class="ytgif-wizard-screen">
+          <div class="ytgif-wizard-header">
+            <button class="ytgif-back-button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <h2 class="ytgif-wizard-title">Select Your Perfect Moment</h2>
+            <div style="width: 36px"></div>
+          </div>
+
+          <p class="ytgif-wizard-helper">Drag the timeline to choose your clip</p>
+
+          <div class="ytgif-preview-area">
+            <span class="ytgif-preview-text">Video Preview</span>
+          </div>
+
+          <div class="ytgif-timeline">Timeline Scrubber</div>
+
+          <div class="ytgif-options-row">
+            <div class="ytgif-option-btn active">144p</div>
+            <div class="ytgif-option-btn">240p</div>
+            <div class="ytgif-option-btn">360p</div>
+            <div class="ytgif-option-btn">480p</div>
+          </div>
+
+          <div class="ytgif-options-row">
+            <div class="ytgif-option-btn active">5 fps</div>
+            <div class="ytgif-option-btn">10 fps</div>
+            <div class="ytgif-option-btn">15 fps</div>
+          </div>
+
+          <button class="ytgif-button-primary">
+            Continue to Customize
+          </button>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <strong>User avatar shows auth status.</strong><br>
+        GIFs auto-upload to account after creation.<br>
+        data-testid="wizard-user-profile" for verification.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

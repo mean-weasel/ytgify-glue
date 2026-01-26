@@ -1,0 +1,3 @@
+setup:
+  project: ytgify-share
+  config: dev

@@ -589,8 +589,8 @@ export class MessageBus {
 // Export singleton instance
 const messageBus = MessageBus.getInstance();
 
-// Convenience functions for common patterns
-export function initializeMessageBus(options?: MessageBusOptions): MessageBus {
+// Convenience functions for common patterns (internal use)
+function _initializeMessageBus(options?: MessageBusOptions): MessageBus {
   const bus = MessageBus.getInstance(options);
   bus.initialize();
   return bus;

@@ -281,7 +281,15 @@ Devise.setup do |config|
                     scope: "email,profile",
                     prompt: "select_account",
                     image_aspect_ratio: "square",
-                    image_size: 100
+                    image_size: 100,
+                    setup: lambda { |env|
+                      # Capture extension source parameter before OAuth redirect
+                      request = Rack::Request.new(env)
+                      if request.params["source"] == "extension"
+                        env["rack.session"]["omniauth.source"] = "extension"
+                        env["rack.session"]["omniauth.extension_id"] = request.params["extension_id"]
+                      end
+                    }
                   }
 
   # ==> Warden configuration

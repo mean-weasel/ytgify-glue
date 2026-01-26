@@ -1,18 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import './styles.css';
 import './styles-modern.css';
 import { PopupWithAuth } from './components/PopupWithAuth';
 
-// Google Client ID from environment variable
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+// Debug: log Google OAuth availability at startup
+console.log('[YTGify] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'configured' : 'NOT SET');
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <PopupWithAuth />
-    </GoogleOAuthProvider>
+    <PopupWithAuth />
   </React.StrictMode>
 );

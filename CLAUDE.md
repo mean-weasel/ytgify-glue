@@ -17,24 +17,56 @@ Each sub-project has its own CLAUDE.md with component-specific details.
 **Backend:** Production-ready with marketing site, blog, and social features
 **Integration:** Full JWT authentication and GIF upload from extensions to backend
 
-## Root Commands
+## First Time Setup
 
 ```bash
-# Development
-npm run backend:start       # Rails dev server (port 3000)
-npm run backend:test        # Rails test mode (port 3001)
-npm run extension:build     # Chrome production build
-npm run extension:build:dev # Chrome dev build (watch mode)
+# 1. Install Doppler CLI (https://docs.doppler.com/docs/install-cli)
+# 2. Login to Doppler
+doppler login
 
-# CI/CD
+# 3. Configure Doppler for both projects
+make setup
+```
+
+**Doppler projects required:**
+- `ytgify` - Chrome extension credentials (GOOGLE_CLIENT_ID)
+- `ytgify-share` - Rails backend credentials (RAILS_MASTER_KEY, DATABASE_URL, AWS_*, etc.)
+
+## Development Commands (Makefile)
+
+```bash
+# Daily development
+make dev-backend         # Rails server on port 3000 (Doppler + mise)
+make dev-extension-build # Build extension for local testing (Doppler)
+make dev-extension       # Extension with watch mode (Doppler)
+
+# Build
+make build               # Production extension build
+make build-production    # Chrome Web Store build (strips localhost)
+
+# Test
+make test                # Run all tests
+make test-backend        # Rails tests only
+make test-extension      # Extension tests only
+
+# Utilities
+make check-doppler       # Verify Doppler configuration
+make db-reset            # Reset database and seed test data
+make clean               # Clean build artifacts
+make install             # Install all dependencies
+```
+
+## Legacy npm Commands (CI/CD)
+
+```bash
 npm run ci:chrome           # Lint + typecheck + tests + build
 npm run ci:firefox          # Lint + typecheck + tests + build
 npm run ci:rails            # Rails tests
 npm run ci:all              # All CI checks
-
-# Integration tests (requires Rails on port 3000)
-npm run test:integration
+npm run test:integration    # Integration tests (requires Rails on port 3000)
 ```
+
+**Local development always uses Doppler** for credentials (Google OAuth, AWS, etc.).
 
 ## Architecture
 

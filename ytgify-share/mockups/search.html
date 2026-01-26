@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YTgify - Search Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1a1a1a; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="bg-[#0a0a0a] text-white min-h-screen">
+
+  <!-- Header with Search Focus -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center space-x-4">
+      <!-- Back Button -->
+      <button class="p-2 -ml-2 text-gray-400 hover:text-white md:hidden">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+
+      <!-- Logo (Desktop) -->
+      <a href="feed.html" class="hidden md:flex items-center space-x-2 flex-shrink-0">
+        <div class="w-8 h-8 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+          </svg>
+        </div>
+        <span class="text-xl font-bold">ytgify</span>
+      </a>
+
+      <!-- Search Bar (Prominent) -->
+      <div class="flex-1 max-w-2xl">
+        <div class="relative">
+          <input type="text"
+                 value="funny cats"
+                 placeholder="Search GIFs, creators, tags..."
+                 class="w-full bg-gray-900 border border-gray-700 rounded-full px-5 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-[#E91E8C] focus:border-transparent pl-12">
+          <svg class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <button class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="hidden md:flex items-center space-x-4">
+        <button class="bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white px-4 py-2 rounded-full text-sm font-medium">
+          + Upload
+        </button>
+        <button class="relative p-2 text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </button>
+        <button class="w-8 h-8 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-sm font-bold">
+          N
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-16 pb-20 md:pb-8">
+    <div class="max-w-3xl mx-auto px-4">
+
+      <!-- Search Results Header -->
+      <div class="py-6 border-b border-gray-800">
+        <h1 class="text-2xl font-bold mb-4">Results for "funny cats"</h1>
+
+        <!-- Related Tags -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="text-gray-500 text-sm mr-2">Related:</span>
+          <a href="#" class="px-3 py-1.5 bg-[#E91E8C]/20 text-[#E91E8C] rounded-full text-sm hover:bg-[#E91E8C]/30 transition">#funny (12.4k)</a>
+          <a href="#" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm transition">#cats (8.9k)</a>
+          <a href="#" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm transition">#cute (6.2k)</a>
+          <a href="#" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm transition">#pets (4.1k)</a>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex space-x-1 bg-gray-900 rounded-lg p-1 w-fit">
+          <button class="px-4 py-2 bg-gray-800 rounded-md text-sm font-medium">All</button>
+          <button class="px-4 py-2 text-gray-400 hover:text-white text-sm transition">GIFs</button>
+          <button class="px-4 py-2 text-gray-400 hover:text-white text-sm transition">Creators</button>
+          <button class="px-4 py-2 text-gray-400 hover:text-white text-sm transition">Collections</button>
+        </div>
+      </div>
+
+      <!-- Creators Section (Horizontal Scroll) -->
+      <div class="py-6 border-b border-gray-800">
+        <h2 class="text-lg font-semibold mb-4">Creators</h2>
+        <div class="flex space-x-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          <!-- Creator Card 1 -->
+          <a href="profile.html" class="flex flex-col items-center space-y-2 flex-shrink-0 w-20">
+            <div class="w-16 h-16 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-xl font-bold">
+              C
+            </div>
+            <span class="text-sm truncate w-full text-center">catlovers</span>
+            <span class="text-xs text-gray-500">24k</span>
+          </a>
+          <!-- Creator Card 2 -->
+          <a href="#" class="flex flex-col items-center space-y-2 flex-shrink-0 w-20">
+            <div class="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xl font-bold">
+              F
+            </div>
+            <span class="text-sm truncate w-full text-center">funnypets</span>
+            <span class="text-xs text-gray-500">18k</span>
+          </a>
+          <!-- Creator Card 3 -->
+          <a href="#" class="flex flex-col items-center space-y-2 flex-shrink-0 w-20">
+            <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center text-xl font-bold">
+              M
+            </div>
+            <span class="text-sm truncate w-full text-center">meowgifs</span>
+            <span class="text-xs text-gray-500">12k</span>
+          </a>
+          <!-- Creator Card 4 -->
+          <a href="#" class="flex flex-col items-center space-y-2 flex-shrink-0 w-20">
+            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-xl font-bold">
+              P
+            </div>
+            <span class="text-sm truncate w-full text-center">petmemes</span>
+            <span class="text-xs text-gray-500">9.4k</span>
+          </a>
+          <!-- Creator Card 5 -->
+          <a href="#" class="flex flex-col items-center space-y-2 flex-shrink-0 w-20">
+            <div class="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-xl font-bold">
+              K
+            </div>
+            <span class="text-sm truncate w-full text-center">kittyking</span>
+            <span class="text-xs text-gray-500">7.8k</span>
+          </a>
+          <!-- See More -->
+          <a href="#" class="flex flex-col items-center justify-center space-y-2 flex-shrink-0 w-20">
+            <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+            <span class="text-sm text-gray-400">See all</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- GIF Results (Single Column) -->
+      <div class="py-6">
+        <h2 class="text-lg font-semibold mb-4">GIFs</h2>
+
+        <div class="space-y-8">
+          <!-- Result 1 -->
+          <article class="rounded-xl overflow-hidden">
+            <div class="relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden">
+              <img src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" alt="GIF" class="w-full h-full object-cover">
+              <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">0:04</span>
+            </div>
+            <div class="pt-4">
+              <div class="flex items-center space-x-3 mb-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-xs font-bold">
+                  M
+                </div>
+                <span class="text-sm text-gray-400">memequeen · 2h ago</span>
+              </div>
+              <p class="text-lg mb-2">Cat typing furiously at keyboard</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="text-[#E91E8C] text-sm">#funny</span>
+                <span class="text-[#E91E8C] text-sm">#cats</span>
+                <span class="text-[#E91E8C] text-sm">#typing</span>
+              </div>
+              <div class="flex items-center space-x-4 text-gray-400 text-sm">
+                <span>2.4k likes</span>
+                <span>142 comments</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Result 2 -->
+          <article class="rounded-xl overflow-hidden">
+            <div class="relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden">
+              <img src="https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif" alt="GIF" class="w-full h-full object-cover">
+              <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">0:03</span>
+            </div>
+            <div class="pt-4">
+              <div class="flex items-center space-x-3 mb-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold">
+                  F
+                </div>
+                <span class="text-sm text-gray-400">funnypets · 4h ago</span>
+              </div>
+              <p class="text-lg mb-2">When the catnip hits different</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="text-[#E91E8C] text-sm">#cats</span>
+                <span class="text-[#E91E8C] text-sm">#funny</span>
+                <span class="text-[#E91E8C] text-sm">#catnip</span>
+              </div>
+              <div class="flex items-center space-x-4 text-gray-400 text-sm">
+                <span>1.8k likes</span>
+                <span>89 comments</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Result 3 -->
+          <article class="rounded-xl overflow-hidden">
+            <div class="relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden">
+              <img src="https://media.giphy.com/media/ICOgUNjpvO0PC/giphy.gif" alt="GIF" class="w-full h-full object-cover">
+              <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">0:02</span>
+            </div>
+            <div class="pt-4">
+              <div class="flex items-center space-x-3 mb-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center text-xs font-bold">
+                  C
+                </div>
+                <span class="text-sm text-gray-400">catlovers · 1d ago</span>
+              </div>
+              <p class="text-lg mb-2">Cat being dramatic as usual</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="text-[#E91E8C] text-sm">#funny</span>
+                <span class="text-[#E91E8C] text-sm">#cats</span>
+                <span class="text-[#E91E8C] text-sm">#drama</span>
+              </div>
+              <div class="flex items-center space-x-4 text-gray-400 text-sm">
+                <span>3.1k likes</span>
+                <span>198 comments</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Load More -->
+          <button class="w-full py-4 bg-gray-900 hover:bg-gray-800 rounded-xl text-gray-400 hover:text-white transition flex items-center justify-center space-x-2">
+            <span>Load more results</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-gray-800 md:hidden z-50">
+    <div class="flex items-center justify-around h-16">
+      <a href="feed.html" class="flex flex-col items-center space-y-1 text-gray-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span class="text-xs">Home</span>
+      </a>
+      <a href="#" class="flex flex-col items-center space-y-1 text-[#E91E8C]">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-xs">Search</span>
+      </a>
+      <a href="#" class="flex flex-col items-center space-y-1 text-gray-400">
+        <div class="w-10 h-10 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center -mt-4">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+      </a>
+      <a href="#" class="flex flex-col items-center space-y-1 text-gray-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        <span class="text-xs">Alerts</span>
+      </a>
+      <a href="profile.html" class="flex flex-col items-center space-y-1 text-gray-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        <span class="text-xs">Profile</span>
+      </a>
+    </div>
+  </nav>
+
+</body>
+</html>

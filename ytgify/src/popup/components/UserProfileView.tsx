@@ -105,7 +105,7 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({ onLogoutSucces
     const baseUrl =
       process.env.API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:3000';
     chrome.tabs.create({
-      url: `${baseUrl}/@${profile?.username}`,
+      url: `${baseUrl}/app/users/${profile?.username}`,
     });
   };
 

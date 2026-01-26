@@ -114,6 +114,12 @@ export class MockYouTubeServer {
         return;
       }
 
+      // Route: /mock-auth-callback - Serve auth callback page for testing
+      if (url.pathname === '/mock-auth-callback') {
+        this.serveAuthCallbackPage(res);
+        return;
+      }
+
       // 404 - Not found
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('Not Found');
@@ -324,6 +330,31 @@ export class MockYouTubeServer {
       console.error('[Mock YouTube Server] Error reading search template:', error);
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('Error loading search template');
+    }
+  }
+
+  private serveAuthCallbackPage(res: http.ServerResponse) {
+    const templatePath = path.join(this.fixturesPath, 'mock-youtube', 'mock-auth-callback.html');
+
+    if (!fs.existsSync(templatePath)) {
+      console.error(`[Mock YouTube Server] Auth callback template not found at ${templatePath}`);
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Auth callback template not found');
+      return;
+    }
+
+    try {
+      const html = fs.readFileSync(templatePath, 'utf-8');
+
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache'
+      });
+      res.end(html);
+    } catch (error) {
+      console.error('[Mock YouTube Server] Error reading auth callback template:', error);
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Error loading auth callback template');
     }
   }
 

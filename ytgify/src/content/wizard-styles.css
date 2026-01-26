@@ -18,7 +18,7 @@
   position: relative;
   width: 90%;
   max-width: 600px;
-  max-height: 90vh; /* Limit height to 90% of viewport */
+  max-height: calc(100vh - 40px); /* Account for overlay padding */
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
@@ -27,6 +27,7 @@
   animation: slideUp 0.3s ease;
   display: flex;
   flex-direction: column;
+  margin: auto; /* Center when space allows, stay at top when too tall */
 }
 
 @keyframes slideUp {
@@ -53,17 +54,19 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Header Container */
+/* Header Container - Sticky to stay visible when wizard scrolls */
 .ytgif-wizard-header-container {
-  position: relative;
+  position: sticky;
+  top: 0;
   padding: 16px 40px;
-  background: linear-gradient(to bottom, #2d2d2d 0%, rgba(45, 45, 45, 0.8) 100%);
+  background: linear-gradient(to bottom, #2d2d2d 0%, rgba(45, 45, 45, 1) 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 20;
   min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 /* Close Button */
@@ -96,6 +99,77 @@
   display: flex;
   gap: 8px;
   z-index: 5;
+}
+
+/* Header Auth Area */
+.ytgif-header-auth {
+  display: flex;
+  align-items: center;
+  z-index: 10;
+}
+
+/* Sign In Button */
+.ytgif-signin-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ytgif-signin-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.ytgif-signin-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* User Profile (signed in) */
+.ytgif-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ytgif-user-profile:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ytgif-user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff0066 0%, #9966cc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ytgif-user-name {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ytgif-progress-dot {

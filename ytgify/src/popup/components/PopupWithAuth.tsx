@@ -98,7 +98,7 @@ export const PopupWithAuth: React.FC = () => {
   // If showing trending section
   if (showTrendingSection) {
     return (
-      <div style={{ width: '360px' }}>
+      <div className="auth-container">
         {/* Header with back button */}
         <div
           style={{
@@ -138,7 +138,7 @@ export const PopupWithAuth: React.FC = () => {
   // If showing auth section (login or profile)
   if (showAuthSection) {
     return (
-      <div style={{ width: '360px' }}>
+      <div className="auth-container">
         {/* Header with back button */}
         <div
           style={{

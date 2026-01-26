@@ -15,17 +15,35 @@ Absolute Mode
 
 YTgify is a Chrome Manifest V3 extension that enables users to create GIFs directly from YouTube videos with an integrated visual wizard. The extension injects UI overlays into YouTube pages, processes video frames in the content script, and manages GIF encoding through a background service worker.
 
+## First Time Setup
+
+```bash
+# From root directory (ytgify-glue/)
+make setup  # Configures Doppler for both extension and backend
+```
+
+Requires Doppler CLI and access to `ytgify` Doppler project.
+
 ## Essential Development Commands
 
-### Build & Development
+### Build & Development (from root directory)
 ```bash
-npm run build
-npm run dev
-npm run build:production
+make dev-extension-build  # Recommended: builds with Doppler credentials
+make dev-extension        # Watch mode with Doppler
+```
+
+### Build & Development (from this directory)
+```bash
+npm run build:dev        # Local dev build (Doppler + localhost:3000)
+npm run dev              # Local dev with watch mode (Doppler + localhost:3000)
+npm run build            # Production build (API → ytgify.com)
+npm run build:production # Chrome Web Store build (strips localhost permissions)
 npm run typecheck
 npm run lint
 npm run lint:fix
 ```
+
+**Local development always uses Doppler** for credentials (Google OAuth, etc.).
 
 ### Testing
 ```bash
@@ -38,8 +56,9 @@ npm test                   # Unit tests
 E2E tests use a local mock YouTube server with generated test videos. Run `npm run generate:test-videos` if video files are missing.
 
 ### Loading Extension
-1. `npm run build`
+1. `npm run build:dev` (local) or `npm run build` (production)
 2. Chrome: `chrome://extensions/` → Developer mode → Load unpacked → `dist/`
+3. Reload extension after each build
 
 ## Architecture Overview
 

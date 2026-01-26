@@ -327,16 +327,16 @@ export type ExtensionMessage =
   | SaveGifResponse
   | ContentFrameExtractionRequest;
 
-// Type guards for message validation
-export function isExtractFramesRequest(message: BaseMessage): message is ExtractFramesRequest {
+// Type guards for message validation (prefixed with _ to indicate internal use)
+function _isExtractFramesRequest(message: BaseMessage): message is ExtractFramesRequest {
   return message.type === 'EXTRACT_FRAMES';
 }
 
-export function isEncodeGifRequest(message: BaseMessage): message is EncodeGifRequest {
+function _isEncodeGifRequest(message: BaseMessage): message is EncodeGifRequest {
   return message.type === 'ENCODE_GIF';
 }
 
-export function isGetVideoStateRequest(message: BaseMessage): message is GetVideoStateRequest {
+function _isGetVideoStateRequest(message: BaseMessage): message is GetVideoStateRequest {
   return message.type === 'GET_VIDEO_STATE';
 }
 
@@ -348,7 +348,7 @@ function _isHideTimelineRequest(message: BaseMessage): message is HideTimelineRe
   return message.type === 'HIDE_TIMELINE';
 }
 
-export function isTimelineSelectionUpdate(message: BaseMessage): message is TimelineSelectionUpdate {
+function _isTimelineSelectionUpdate(message: BaseMessage): message is TimelineSelectionUpdate {
   return message.type === 'TIMELINE_SELECTION_UPDATE';
 }
 
@@ -356,15 +356,15 @@ function _isOpenEditorRequest(message: BaseMessage): message is OpenEditorReques
   return message.type === 'OPEN_EDITOR';
 }
 
-export function isLogMessage(message: BaseMessage): message is LogMessage {
+function _isLogMessage(message: BaseMessage): message is LogMessage {
   return message.type === 'LOG';
 }
 
-export function isDownloadGifRequest(message: BaseMessage): message is DownloadGifRequest {
+function _isDownloadGifRequest(message: BaseMessage): message is DownloadGifRequest {
   return message.type === 'DOWNLOAD_GIF';
 }
 
-export function isGetJobStatusRequest(message: BaseMessage): message is GetJobStatusRequest {
+function _isGetJobStatusRequest(message: BaseMessage): message is GetJobStatusRequest {
   return message.type === 'GET_JOB_STATUS';
 }
 

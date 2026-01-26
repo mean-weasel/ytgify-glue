@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YTGify - Sign In Complete</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 48px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      background: #10b981;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+    .icon.error {
+      background: #ef4444;
+    }
+    .icon.loading {
+      background: #6366f1;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 16px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    .status {
+      margin-top: 24px;
+      padding: 12px 16px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #374151;
+    }
+  </style>
+</head>
+<body>
+  <!-- Data for content script to pick up -->
+    <div id="ytgify-auth-data"
+         data-token="<%= @jwt_token %>"
+         data-user="<%= CGI.escapeHTML(@user_data.to_json).html_safe %>"
+         data-extension-id="<%= @extension_id %>"
+         style="display: none;"></div>
+
+    <div class="card">
+    <div class="icon loading" id="statusIcon">
+      <svg id="loadingIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32">
+          <animate attributeName="stroke-dashoffset" values="32;0" dur="1s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      <svg id="successIcon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+      <svg id="errorIcon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </div>
+    <h1 id="title">Connecting to Extension...</h1>
+    <p id="message">Please wait while we complete your sign-in.</p>
+    <div class="status" id="status">Sending authentication data...</div>
+  </div>
+
+  <script>
+    const extensionId = '<%= @extension_id %>';
+
+    console.log('[Auth Callback] Extension ID:', extensionId);
+    console.log('[Auth Callback] Waiting for content script to relay auth data...');
+
+    let succeeded = false;
+
+    function showSuccess() {
+      if (succeeded) return;
+      succeeded = true;
+      document.getElementById('statusIcon').className = 'icon';
+      document.getElementById('statusIcon').style.background = '#10b981';
+      document.getElementById('loadingIcon').style.display = 'none';
+      document.getElementById('successIcon').style.display = 'block';
+      document.getElementById('title').textContent = 'Sign In Complete!';
+      document.getElementById('message').textContent = 'You can now close this tab and return to the YTGify extension.';
+      document.getElementById('status').textContent = 'Authentication successful';
+      document.getElementById('status').style.background = '#d1fae5';
+      document.getElementById('status').style.color = '#065f46';
+
+      // Auto-close tab after 3 seconds
+      setTimeout(function() {
+        window.close();
+      }, 3000);
+    }
+
+    function showError(errorMsg) {
+      if (succeeded) return;
+      document.getElementById('statusIcon').className = 'icon error';
+      document.getElementById('loadingIcon').style.display = 'none';
+      document.getElementById('errorIcon').style.display = 'block';
+      document.getElementById('title').textContent = 'Connection Failed';
+      document.getElementById('message').textContent = 'Could not connect to the YTGify extension. Please make sure the extension is installed and try again.';
+      document.getElementById('status').textContent = errorMsg || 'Extension not found';
+      document.getElementById('status').style.background = '#fee2e2';
+      document.getElementById('status').style.color = '#991b1b';
+    }
+
+    // Listen for auth result from content script
+    // The content script reads the auth data from the hidden div and relays it to the background
+    // This is more reliable than direct external messaging for waking up inactive service workers
+    window.addEventListener('ytgify-auth-result', function(event) {
+      console.log('[Auth Callback] Got result from content script:', event.detail);
+      if (event.detail.success) {
+        showSuccess();
+      } else {
+        showError(event.detail.error || 'Authentication failed');
+      }
+    });
+
+    // Timeout if content script doesn't respond within 10 seconds
+    setTimeout(function() {
+      if (!succeeded) {
+        console.log('[Auth Callback] Timeout waiting for content script');
+        showError('Extension did not respond. Make sure the YTGify extension is installed and enabled.');
+      }
+    }, 10000);
+
+    // Update status to show we're waiting
+    document.getElementById('status').textContent = 'Connecting to extension...';
+  </script>
+</body>
+</html>

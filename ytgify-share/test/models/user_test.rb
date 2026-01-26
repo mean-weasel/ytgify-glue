@@ -440,4 +440,152 @@ class UserTest < ActiveSupport::TestCase
     assert_includes followed, user3
     assert_not_includes followed, user1
   end
+
+  # ========================================
+  # GOOGLE OAUTH TESTS
+  # ========================================
+
+  test "find_or_create_from_google creates new user" do
+    assert_difference("User.count", 1) do
+      user = User.find_or_create_from_google(
+        uid: "google_uid_123",
+        email: "googleuser@gmail.com",
+        name: "Google User"
+      )
+
+      assert_equal "google_oauth2", user.provider
+      assert_equal "google_uid_123", user.uid
+      assert_equal "googleuser@gmail.com", user.email
+      assert_equal "Google User", user.display_name
+      assert user.username.start_with?("googleuser")
+    end
+  end
+
+  test "find_or_create_from_google finds existing user by provider/uid" do
+    existing = User.create!(
+      provider: "google_oauth2",
+      uid: "google_uid_456",
+      email: "existing@gmail.com",
+      username: "existinguser",
+      password: Devise.friendly_token[0, 20]
+    )
+
+    assert_no_difference("User.count") do
+      user = User.find_or_create_from_google(
+        uid: "google_uid_456",
+        email: "different@gmail.com",  # Email doesn't matter when uid matches
+        name: "Different Name"
+      )
+
+      assert_equal existing.id, user.id
+    end
+  end
+
+  test "find_or_create_from_google links existing email account to Google" do
+    existing = User.create!(
+      email: "linkme@gmail.com",
+      username: "linkmeuser",
+      password: "password123"
+    )
+
+    assert_nil existing.provider
+    assert_nil existing.uid
+
+    assert_no_difference("User.count") do
+      user = User.find_or_create_from_google(
+        uid: "google_uid_789",
+        email: "linkme@gmail.com",
+        name: "Link Me User"
+      )
+
+      assert_equal existing.id, user.id
+      assert_equal "google_oauth2", user.reload.provider
+      assert_equal "google_uid_789", user.uid
+    end
+  end
+
+  test "find_or_create_from_google generates unique username on collision" do
+    User.create!(
+      email: "taken@example.com",
+      username: "collision",
+      password: "password123"
+    )
+
+    user = User.find_or_create_from_google(
+      uid: "google_uid_collision",
+      email: "collision@gmail.com",
+      name: "Collision User"
+    )
+
+    assert_not_equal "collision", user.username
+    assert user.username.start_with?("collision")
+  end
+
+  test "from_omniauth creates new user from Google auth hash" do
+    auth = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: "omni_uid_123",
+      info: {
+        email: "omniuser@gmail.com",
+        name: "Omni User"
+      }
+    )
+
+    assert_difference("User.count", 1) do
+      user = User.from_omniauth(auth)
+
+      assert_equal "google_oauth2", user.provider
+      assert_equal "omni_uid_123", user.uid
+      assert_equal "omniuser@gmail.com", user.email
+      assert_equal "Omni User", user.display_name
+    end
+  end
+
+  test "from_omniauth finds existing user by provider/uid" do
+    existing = User.create!(
+      provider: "google_oauth2",
+      uid: "omni_uid_456",
+      email: "omniexisting@gmail.com",
+      username: "omniexisting",
+      password: Devise.friendly_token[0, 20]
+    )
+
+    auth = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: "omni_uid_456",
+      info: {
+        email: "different@gmail.com",
+        name: "Different"
+      }
+    )
+
+    assert_no_difference("User.count") do
+      user = User.from_omniauth(auth)
+      assert_equal existing.id, user.id
+    end
+  end
+
+  test "from_omniauth links existing email account" do
+    existing = User.create!(
+      email: "omnilinkme@gmail.com",
+      username: "omnilinkme",
+      password: "password123"
+    )
+
+    auth = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: "omni_uid_link",
+      info: {
+        email: "omnilinkme@gmail.com",
+        name: "Omni Link Me"
+      }
+    )
+
+    assert_no_difference("User.count") do
+      user = User.from_omniauth(auth)
+      assert_equal existing.id, user.id
+      assert_equal "google_oauth2", user.reload.provider
+      assert_equal "omni_uid_link", user.uid
+    end
+  end
 end

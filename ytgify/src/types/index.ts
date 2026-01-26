@@ -38,15 +38,4 @@ export {
   SaveGifRequest,
   SaveGifResponse,
   ExtensionMessage,
-  isExtractFramesRequest,
-  isEncodeGifRequest,
-  isGetVideoStateRequest,
-  
-  
-  isTimelineSelectionUpdate,
-  
-  isLogMessage,
-  isDownloadGifRequest,
-  isGetJobStatusRequest,
-  
 } from './messages';

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YTgify - Profile Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1a1a1a; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="bg-[#0a0a0a] text-white min-h-screen">
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <button class="md:hidden p-2 -ml-2 text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <a href="feed.html" class="flex items-center space-x-2">
+          <div class="w-8 h-8 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+            </svg>
+          </div>
+          <span class="text-xl font-bold hidden sm:inline">ytgify</span>
+        </a>
+        <nav class="hidden md:flex items-center space-x-6 ml-4">
+          <a href="feed.html" class="text-gray-400 hover:text-white transition">Feed</a>
+          <a href="#" class="text-gray-400 hover:text-white transition">Trending</a>
+          <a href="#" class="text-gray-400 hover:text-white transition">Collections</a>
+        </nav>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="hidden md:block relative">
+          <input type="text" placeholder="Search GIFs..." class="w-64 bg-gray-900 border border-gray-700 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E91E8C]">
+        </div>
+        <button class="bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white px-4 py-2 rounded-full text-sm font-medium">
+          <span class="hidden sm:inline">+ Upload</span>
+          <svg class="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+        <button class="relative p-2 text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </button>
+        <button class="w-8 h-8 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-sm font-bold">
+          N
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="pt-16 pb-20 md:pb-8">
+    <div class="max-w-3xl mx-auto px-4">
+
+      <!-- Profile Header -->
+      <div class="py-8 border-b border-gray-800">
+        <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+          <!-- Avatar -->
+          <div class="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center text-4xl md:text-5xl font-bold flex-shrink-0">
+            M
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1 text-center md:text-left">
+            <div class="flex flex-col md:flex-row md:items-center md:space-x-4 mb-3">
+              <h1 class="text-2xl font-bold">memequeen</h1>
+              <div class="flex items-center justify-center md:justify-start space-x-2 mt-2 md:mt-0">
+                <button class="px-6 py-2 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full text-sm font-medium hover:opacity-90 transition">
+                  Follow
+                </button>
+                <button class="p-2 bg-gray-800 hover:bg-gray-700 rounded-full transition">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <p class="text-gray-400 mb-4 max-w-md">Professional meme curator. Cat enthusiast. Making the internet a funnier place one GIF at a time. 🎬</p>
+
+            <!-- Stats -->
+            <div class="flex items-center justify-center md:justify-start space-x-6">
+              <div class="text-center">
+                <span class="font-bold">48</span>
+                <span class="text-gray-500 ml-1">GIFs</span>
+              </div>
+              <button class="text-center hover:text-[#E91E8C] transition">
+                <span class="font-bold">12.4k</span>
+                <span class="text-gray-500 ml-1">Followers</span>
+              </button>
+              <button class="text-center hover:text-[#E91E8C] transition">
+                <span class="font-bold">892</span>
+                <span class="text-gray-500 ml-1">Following</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="sticky top-16 bg-[#0a0a0a] z-40 border-b border-gray-800">
+        <div class="flex">
+          <button class="flex-1 py-4 text-center font-medium border-b-2 border-[#E91E8C] text-[#E91E8C]">
+            GIFs
+          </button>
+          <button class="flex-1 py-4 text-center font-medium text-gray-400 hover:text-white transition">
+            Liked
+          </button>
+          <button class="flex-1 py-4 text-center font-medium text-gray-400 hover:text-white transition">
+            Collections
+          </button>
+        </div>
+      </div>
+
+      <!-- GIF Feed (Single Column) -->
+      <div class="py-6 space-y-8">
+
+        <!-- GIF Card 1 -->
+        <article class="rounded-xl overflow-hidden">
+          <div class="relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden">
+            <img src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" alt="GIF" class="w-full h-full object-cover">
+            <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">0:04</span>
+          </div>
+          <div class="pt-4">
+            <p class="text-lg mb-2">When you're "working from home" but actually watching YouTube</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#funny</a>
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#cats</a>
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#wfh</a>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-gray-800">
+              <div class="flex items-center space-x-6">
+                <button class="flex items-center space-x-2 text-[#E91E8C]">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                  </svg>
+                  <span class="text-sm">2.4k</span>
+                </button>
+                <button class="flex items-center space-x-2 text-gray-400 hover:text-white transition">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                  </svg>
+                  <span class="text-sm">142</span>
+                </button>
+              </div>
+              <span class="text-gray-500 text-sm">2h ago</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- GIF Card 2 -->
+        <article class="rounded-xl overflow-hidden">
+          <div class="relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden">
+            <img src="https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif" alt="GIF" class="w-full h-full object-cover">
+            <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">0:03</span>
+          </div>
+          <div class="pt-4">
+            <p class="text-lg mb-2">My face when the coffee finally kicks in</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#coffee</a>
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#morning</a>
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#reaction</a>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-gray-800">
+              <div class="flex items-center space-x-6">
+                <button class="flex items-center space-x-2 text-gray-400 hover:text-[#E91E8C] transition">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  <span class="text-sm">1.8k</span>
+                </button>
+                <button class="flex items-center space-x-2 text-gray-400 hover:text-white transition">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                  </svg>
+                  <span class="text-sm">89</span>
+                </button>
+              </div>
+              <span class="text-gray-500 text-sm">1d ago</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- GIF Card 3 -->
+        <article class="rounded-xl overflow-hidden">
+          <div class="relative aspect-[4/3] bg-gray-900 rounded-xl overflow-hidden">
+            <img src="https://media.giphy.com/media/l4FGuhL4U2WyjdkaY/giphy.gif" alt="GIF" class="w-full h-full object-cover">
+            <span class="absolute bottom-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">0:05</span>
+          </div>
+          <div class="pt-4">
+            <p class="text-lg mb-2">POV: You remembered it's Friday</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#friday</a>
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#happy</a>
+              <a href="#" class="text-[#E91E8C] text-sm hover:underline">#weekend</a>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-gray-800">
+              <div class="flex items-center space-x-6">
+                <button class="flex items-center space-x-2 text-gray-400 hover:text-[#E91E8C] transition">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                  <span class="text-sm">3.2k</span>
+                </button>
+                <button class="flex items-center space-x-2 text-gray-400 hover:text-white transition">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                  </svg>
+                  <span class="text-sm">256</span>
+                </button>
+              </div>
+              <span class="text-gray-500 text-sm">3d ago</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-[#0a0a0a] border-t border-gray-800 md:hidden z-50">
+    <div class="flex items-center justify-around h-16">
+      <a href="feed.html" class="flex flex-col items-center space-y-1 text-gray-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span class="text-xs">Home</span>
+      </a>
+      <a href="#" class="flex flex-col items-center space-y-1 text-gray-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <span class="text-xs">Search</span>
+      </a>
+      <a href="#" class="flex flex-col items-center space-y-1 text-gray-400">
+        <div class="w-10 h-10 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-full flex items-center justify-center -mt-4">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+      </a>
+      <a href="#" class="flex flex-col items-center space-y-1 text-gray-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        <span class="text-xs">Alerts</span>
+      </a>
+      <a href="#" class="flex flex-col items-center space-y-1 text-[#E91E8C]">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-xs">Profile</span>
+      </a>
+    </div>
+  </nav>
+
+</body>
+</html>
