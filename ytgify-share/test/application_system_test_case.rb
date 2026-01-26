@@ -85,13 +85,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     @page.fill('input[name="user[email]"]', user.email)
     @page.fill('input[name="user[password]"]', "password123")
 
-    # Submit form using requestSubmit which triggers all form events
-    @page.expect_navigation do
-      @page.evaluate('document.querySelector("form").requestSubmit()')
-    end
+    # Click submit button directly (more reliable than JS evaluation with expect_navigation)
+    @page.click('input[type="submit"]')
+    wait_for_page_load
 
-    # Verify signed in
-    assert_page_has_text user.username
+    # Verify signed in by checking for user avatar button (dropdown toggle with first letter of username)
+    # The navbar shows authenticated-only elements when signed in
+    assert_selector 'button[data-action="click->dropdown#toggle"]'
   end
 
   def sign_out

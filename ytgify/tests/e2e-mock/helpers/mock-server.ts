@@ -11,6 +11,52 @@ export interface MockServerConfig {
   host?: string;
 }
 
+// ============================================
+// Mock API Types
+// ============================================
+
+interface MockUser {
+  id: string;
+  email: string;
+  username: string;
+  display_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  is_verified: boolean;
+  gifs_count: number;
+  total_likes_received: number;
+  follower_count: number;
+  following_count: number;
+  created_at: string;
+  updated_at: string;
+  google_uid?: string;
+}
+
+interface MockAuthState {
+  users: Map<string, MockUser & { password?: string }>;
+  tokens: Map<string, { userId: string; expiresAt: number }>;
+  revokedTokens: Set<string>;
+}
+
+// Helper to generate mock JWT
+function generateMockJwt(userId: string, expiresInSeconds: number = 900): string {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const payload = {
+    sub: userId,
+    jti: 'jti-' + Math.random().toString(36).substring(2, 15),
+    exp: Math.floor(Date.now() / 1000) + expiresInSeconds,
+    iat: Math.floor(Date.now() / 1000)
+  };
+
+  const base64UrlEncode = (obj: object): string => {
+    const json = JSON.stringify(obj);
+    const base64 = Buffer.from(json).toString('base64');
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  };
+
+  return `${base64UrlEncode(header)}.${base64UrlEncode(payload)}.${base64UrlEncode({ sig: 'mock' })}`;
+}
+
 export interface VideoConfig {
   title: string;
   src: string;
@@ -25,10 +71,80 @@ export class MockYouTubeServer {
   private host: string = 'localhost';
   private fixturesPath: string;
 
+  // Mock auth state for API testing
+  private authState: MockAuthState = {
+    users: new Map(),
+    tokens: new Map(),
+    revokedTokens: new Set()
+  };
+
   constructor(config: MockServerConfig = {}) {
     this.host = config.host || 'localhost';
     this.port = config.port || 0; // 0 = assign random available port
     this.fixturesPath = path.join(__dirname, '..', 'fixtures');
+    this.initializeTestUsers();
+  }
+
+  /**
+   * Initialize default test users
+   */
+  private initializeTestUsers(): void {
+    const now = new Date().toISOString();
+
+    // Default test user for email/password login
+    this.authState.users.set('test@example.com', {
+      id: 'test-user-123',
+      email: 'test@example.com',
+      username: 'testuser',
+      display_name: 'Test User',
+      bio: 'A test user account',
+      avatar_url: null,
+      is_verified: false,
+      gifs_count: 5,
+      total_likes_received: 10,
+      follower_count: 20,
+      following_count: 15,
+      created_at: now,
+      updated_at: now,
+      password: 'password123'
+    });
+
+    // Test user created via Google OAuth
+    this.authState.users.set('googleuser@gmail.com', {
+      id: 'google-user-456',
+      email: 'googleuser@gmail.com',
+      username: 'googleuser',
+      display_name: 'Google Test User',
+      bio: null,
+      avatar_url: 'https://lh3.googleusercontent.com/mock-avatar',
+      is_verified: true,
+      gifs_count: 0,
+      total_likes_received: 0,
+      follower_count: 0,
+      following_count: 0,
+      created_at: now,
+      updated_at: now,
+      google_uid: 'google-oauth-uid-456'
+    });
+  }
+
+  /**
+   * Reset auth state (useful between tests)
+   */
+  resetAuthState(): void {
+    this.authState = {
+      users: new Map(),
+      tokens: new Map(),
+      revokedTokens: new Set()
+    };
+    this.initializeTestUsers();
+  }
+
+  /**
+   * Add a test user programmatically
+   */
+  addTestUser(user: MockUser & { password?: string }): void {
+    this.authState.users.set(user.email, user);
   }
 
   async start(): Promise<string> {
@@ -72,12 +188,18 @@ export class MockYouTubeServer {
 
       // Enable CORS
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
       if (req.method === 'OPTIONS') {
         res.writeHead(200);
         res.end();
+        return;
+      }
+
+      // API Routes
+      if (url.pathname.startsWith('/api/v1/auth/')) {
+        this.handleAuthApi(req, res, url);
         return;
       }
 
@@ -357,6 +479,448 @@ export class MockYouTubeServer {
       res.end('Error loading auth callback template');
     }
   }
+
+  // ============================================
+  // Auth API Handlers
+  // ============================================
+
+  private handleAuthApi(req: http.IncomingMessage, res: http.ServerResponse, url: URL): void {
+    const endpoint = url.pathname.replace('/api/v1/auth/', '');
+
+    switch (endpoint) {
+      case 'register':
+        if (req.method === 'POST') {
+          this.handleRegister(req, res);
+        } else {
+          this.sendJsonError(res, 405, 'Method not allowed');
+        }
+        break;
+
+      case 'login':
+        if (req.method === 'POST') {
+          this.handleLogin(req, res);
+        } else {
+          this.sendJsonError(res, 405, 'Method not allowed');
+        }
+        break;
+
+      case 'google':
+        if (req.method === 'POST') {
+          this.handleGoogleAuth(req, res);
+        } else {
+          this.sendJsonError(res, 405, 'Method not allowed');
+        }
+        break;
+
+      case 'refresh':
+        if (req.method === 'POST') {
+          this.handleRefresh(req, res);
+        } else {
+          this.sendJsonError(res, 405, 'Method not allowed');
+        }
+        break;
+
+      case 'logout':
+        if (req.method === 'DELETE') {
+          this.handleLogout(req, res);
+        } else {
+          this.sendJsonError(res, 405, 'Method not allowed');
+        }
+        break;
+
+      case 'me':
+        if (req.method === 'GET') {
+          this.handleMe(req, res);
+        } else {
+          this.sendJsonError(res, 405, 'Method not allowed');
+        }
+        break;
+
+      default:
+        this.sendJsonError(res, 404, 'Endpoint not found');
+    }
+  }
+
+  private async handleRegister(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    try {
+      const body = await this.parseJsonBody(req);
+
+      if (!body.user) {
+        this.sendJsonError(res, 400, 'Missing user parameter');
+        return;
+      }
+
+      const userParams = body.user as { email?: string; username?: string; password?: string; password_confirmation?: string };
+      const { email, username, password, password_confirmation } = userParams;
+
+      // Validation
+      if (!email) {
+        this.sendJsonError(res, 422, 'Email is required');
+        return;
+      }
+      if (!username) {
+        this.sendJsonError(res, 422, 'Username is required');
+        return;
+      }
+      if (!password || password.length < 6) {
+        this.sendJsonError(res, 422, 'Password must be at least 6 characters');
+        return;
+      }
+      if (password !== password_confirmation) {
+        this.sendJsonError(res, 422, 'Password confirmation does not match');
+        return;
+      }
+
+      // Check for duplicates
+      if (this.authState.users.has(email)) {
+        this.sendJsonError(res, 422, 'Email has already been taken');
+        return;
+      }
+
+      const existingUsername = Array.from(this.authState.users.values()).find(u => u.username === username);
+      if (existingUsername) {
+        this.sendJsonError(res, 422, 'Username has already been taken');
+        return;
+      }
+
+      // Create user
+      const now = new Date().toISOString();
+      const userId = 'user-' + Math.random().toString(36).substring(2, 15);
+      const newUser: MockUser & { password: string } = {
+        id: userId,
+        email,
+        username,
+        display_name: null,
+        bio: null,
+        avatar_url: null,
+        is_verified: false,
+        gifs_count: 0,
+        total_likes_received: 0,
+        follower_count: 0,
+        following_count: 0,
+        created_at: now,
+        updated_at: now,
+        password
+      };
+
+      this.authState.users.set(email, newUser);
+
+      // Generate token
+      const token = generateMockJwt(userId);
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      this.authState.tokens.set(payload.jti, { userId, expiresAt: payload.exp * 1000 });
+
+      // Return response (exclude password)
+      const { password: _, ...userResponse } = newUser;
+      this.sendJson(res, 201, { token, user: userResponse });
+
+    } catch (error) {
+      console.error('[Mock Server] Register error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  private async handleLogin(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    try {
+      const body = await this.parseJsonBody(req) as {
+        email?: string;
+        password?: string;
+        user?: { email?: string; password?: string };
+      };
+
+      // Support both { email, password } and { user: { email, password } } formats
+      const email = body.email || body.user?.email;
+      const password = body.password || body.user?.password;
+
+      if (!email) {
+        this.sendJsonError(res, 400, 'Email is required');
+        return;
+      }
+      if (!password) {
+        this.sendJsonError(res, 400, 'Password is required');
+        return;
+      }
+
+      const user = this.authState.users.get(email);
+
+      // Don't reveal if user exists or not
+      if (!user || user.password !== password) {
+        this.sendJsonError(res, 401, 'Invalid email or password');
+        return;
+      }
+
+      // Generate token
+      const token = generateMockJwt(user.id);
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      this.authState.tokens.set(payload.jti, { userId: user.id, expiresAt: payload.exp * 1000 });
+
+      // Return response (exclude password)
+      const { password: _, ...userResponse } = user;
+      this.sendJson(res, 200, { token, user: userResponse });
+
+    } catch (error) {
+      console.error('[Mock Server] Login error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  private async handleGoogleAuth(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    try {
+      const body = await this.parseJsonBody(req) as { id_token?: string };
+      const { id_token } = body;
+
+      if (!id_token) {
+        this.sendJsonError(res, 400, 'id_token is required');
+        return;
+      }
+
+      // Decode the mock Google ID token
+      let googlePayload: { email?: string; sub?: string; email_verified?: boolean; exp?: number; name?: string; picture?: string };
+      try {
+        const parts = id_token.split('.');
+        if (parts.length !== 3) {
+          throw new Error('Invalid token format');
+        }
+        googlePayload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+      } catch {
+        this.sendJsonError(res, 401, 'Invalid Google ID token');
+        return;
+      }
+
+      // Validate token structure
+      if (!googlePayload.email || !googlePayload.sub) {
+        this.sendJsonError(res, 401, 'Invalid Google ID token');
+        return;
+      }
+
+      if (googlePayload.email_verified === false) {
+        this.sendJsonError(res, 401, 'Email not verified');
+        return;
+      }
+
+      // Check if token is expired
+      if (googlePayload.exp && googlePayload.exp * 1000 < Date.now()) {
+        this.sendJsonError(res, 401, 'Google token expired');
+        return;
+      }
+
+      // Find existing user by Google UID or email
+      let user = Array.from(this.authState.users.values()).find(
+        u => u.google_uid === googlePayload.sub
+      );
+
+      if (!user) {
+        // Check if email exists (link accounts)
+        user = this.authState.users.get(googlePayload.email);
+        if (user) {
+          // Link Google account to existing user
+          user.google_uid = googlePayload.sub;
+          user.avatar_url = user.avatar_url || googlePayload.picture || null;
+        }
+      }
+
+      const now = new Date().toISOString();
+
+      if (!user) {
+        // Create new user from Google data
+        const userId = 'user-' + Math.random().toString(36).substring(2, 15);
+        const username = googlePayload.email.split('@')[0] + Math.random().toString(36).substring(2, 6);
+
+        user = {
+          id: userId,
+          email: googlePayload.email,
+          username,
+          display_name: googlePayload.name || null,
+          bio: null,
+          avatar_url: googlePayload.picture || null,
+          is_verified: true, // Google users are verified
+          gifs_count: 0,
+          total_likes_received: 0,
+          follower_count: 0,
+          following_count: 0,
+          created_at: now,
+          updated_at: now,
+          google_uid: googlePayload.sub
+        };
+
+        this.authState.users.set(user.email, user);
+      }
+
+      // Generate token
+      const token = generateMockJwt(user.id);
+      const jwtPayload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      this.authState.tokens.set(jwtPayload.jti, { userId: user.id, expiresAt: jwtPayload.exp * 1000 });
+
+      // Return response (exclude password if exists)
+      const { password: _, ...userResponse } = user as MockUser & { password?: string };
+      this.sendJson(res, 200, { token, user: userResponse });
+
+    } catch (error) {
+      console.error('[Mock Server] Google auth error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  private async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        this.sendJsonError(res, 401, 'Authorization required');
+        return;
+      }
+
+      const oldToken = authHeader.substring(7);
+      let payload;
+      try {
+        payload = JSON.parse(Buffer.from(oldToken.split('.')[1], 'base64').toString());
+      } catch {
+        this.sendJsonError(res, 401, 'Invalid token');
+        return;
+      }
+
+      // Check if token is revoked
+      if (this.authState.revokedTokens.has(payload.jti)) {
+        this.sendJsonError(res, 401, 'Token has been revoked');
+        return;
+      }
+
+      // Check if token exists and is valid
+      const tokenData = this.authState.tokens.get(payload.jti);
+      if (!tokenData) {
+        this.sendJsonError(res, 401, 'Invalid token');
+        return;
+      }
+
+      // Check if token is expired (allow some grace period for refresh)
+      const gracePeriod = 60 * 1000; // 1 minute
+      if (tokenData.expiresAt + gracePeriod < Date.now()) {
+        this.sendJsonError(res, 401, 'Token expired');
+        return;
+      }
+
+      // Generate new token
+      const newToken = generateMockJwt(tokenData.userId);
+      const newPayload = JSON.parse(Buffer.from(newToken.split('.')[1], 'base64').toString());
+      this.authState.tokens.set(newPayload.jti, { userId: tokenData.userId, expiresAt: newPayload.exp * 1000 });
+
+      // Optionally revoke old token (rotation)
+      // this.authState.revokedTokens.add(payload.jti);
+
+      this.sendJson(res, 200, { token: newToken });
+
+    } catch (error) {
+      console.error('[Mock Server] Refresh error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  private handleLogout(req: http.IncomingMessage, res: http.ServerResponse): void {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        this.sendJsonError(res, 401, 'Authorization required');
+        return;
+      }
+
+      const token = authHeader.substring(7);
+      let payload;
+      try {
+        payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      } catch {
+        this.sendJsonError(res, 401, 'Invalid token');
+        return;
+      }
+
+      // Revoke the token
+      this.authState.revokedTokens.add(payload.jti);
+      this.authState.tokens.delete(payload.jti);
+
+      this.sendJson(res, 200, { success: true });
+
+    } catch (error) {
+      console.error('[Mock Server] Logout error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  private handleMe(req: http.IncomingMessage, res: http.ServerResponse): void {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        this.sendJsonError(res, 401, 'Authorization required');
+        return;
+      }
+
+      const token = authHeader.substring(7);
+      let payload;
+      try {
+        payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      } catch {
+        this.sendJsonError(res, 401, 'Invalid token');
+        return;
+      }
+
+      // Check if token is revoked
+      if (this.authState.revokedTokens.has(payload.jti)) {
+        this.sendJsonError(res, 401, 'Token has been revoked');
+        return;
+      }
+
+      // Check if token is expired
+      if (payload.exp * 1000 < Date.now()) {
+        this.sendJsonError(res, 401, 'Token expired');
+        return;
+      }
+
+      // Find user
+      const user = Array.from(this.authState.users.values()).find(u => u.id === payload.sub);
+      if (!user) {
+        this.sendJsonError(res, 404, 'User not found');
+        return;
+      }
+
+      // Return user (exclude password)
+      const { password: _, ...userResponse } = user as MockUser & { password?: string };
+      this.sendJson(res, 200, { user: userResponse });
+
+    } catch (error) {
+      console.error('[Mock Server] Me error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  // ============================================
+  // JSON Helpers
+  // ============================================
+
+  private async parseJsonBody(req: http.IncomingMessage): Promise<Record<string, unknown>> {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      req.on('data', chunk => { body += chunk.toString(); });
+      req.on('end', () => {
+        try {
+          resolve(body ? JSON.parse(body) : {});
+        } catch (error) {
+          reject(error);
+        }
+      });
+      req.on('error', reject);
+    });
+  }
+
+  private sendJson(res: http.ServerResponse, status: number, data: unknown): void {
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(data));
+  }
+
+  private sendJsonError(res: http.ServerResponse, status: number, message: string): void {
+    res.writeHead(status, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: message }));
+  }
+
+  // ============================================
+  // Video Config
+  // ============================================
 
   private getVideoConfig(videoId: string): VideoConfig | null {
     // Map video IDs to their configurations

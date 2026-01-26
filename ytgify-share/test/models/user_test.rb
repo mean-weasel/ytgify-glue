@@ -588,4 +588,192 @@ class UserTest < ActiveSupport::TestCase
       assert_equal "omni_uid_link", user.uid
     end
   end
+
+  # ========================================
+  # ACCOUNT LINKING EDGE CASES
+  # ========================================
+
+  test "user can still authenticate with password after Google linking" do
+    # Create user with email/password
+    user = User.create!(
+      email: "linktest@gmail.com",
+      username: "linktestuser",
+      password: "password123"
+    )
+
+    # Password should work before linking
+    assert user.valid_password?("password123")
+
+    # Link to Google
+    User.find_or_create_from_google(
+      uid: "google_link_test_uid",
+      email: "linktest@gmail.com",
+      name: "Link Test User"
+    )
+
+    # Password should STILL work after linking
+    user.reload
+    assert user.valid_password?("password123")
+    assert_equal "google_oauth2", user.provider
+    assert_equal "google_link_test_uid", user.uid
+  end
+
+  test "linking replaces existing Google credentials with new ones" do
+    # User already linked to one Google account
+    user = User.create!(
+      email: "multilink@gmail.com",
+      username: "multilinkuser",
+      password: "password123",
+      provider: "google_oauth2",
+      uid: "old_google_uid_123"
+    )
+
+    # Same email tries to link with different Google account
+    # This should update the provider/uid to the new values
+    auth = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: "new_google_uid_456",
+      info: {
+        email: "multilink@gmail.com",
+        name: "Multi Link User"
+      }
+    )
+
+    # The from_omniauth method first checks provider/uid (won't match)
+    # Then checks email (will match) and updates provider/uid
+    result = User.from_omniauth(auth)
+
+    assert_equal user.id, result.id
+    assert_equal "google_oauth2", result.provider
+    assert_equal "new_google_uid_456", result.uid
+  end
+
+  test "same user authenticating with same Google account returns same user" do
+    # User with Google linked
+    user = User.create!(
+      email: "sameuser@gmail.com",
+      username: "sameuser",
+      password: "password123",
+      provider: "google_oauth2",
+      uid: "same_google_uid"
+    )
+
+    # Authenticate again with same Google account
+    auth = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: "same_google_uid",
+      info: {
+        email: "sameuser@gmail.com",
+        name: "Same User"
+      }
+    )
+
+    assert_no_difference("User.count") do
+      result = User.from_omniauth(auth)
+      assert_equal user.id, result.id
+    end
+  end
+
+  test "find_or_create_from_google preserves existing user data on linking" do
+    # User with custom settings
+    user = User.create!(
+      email: "preservedata@gmail.com",
+      username: "customuser",
+      password: "password123",
+      display_name: "Custom Display Name",
+      bio: "My custom bio",
+      is_verified: true
+    )
+
+    # Link to Google
+    result = User.find_or_create_from_google(
+      uid: "preserve_uid",
+      email: "preservedata@gmail.com",
+      name: "Google Name"  # Different from display_name
+    )
+
+    assert_equal user.id, result.id
+    # Original data should be preserved, not overwritten
+    assert_equal "Custom Display Name", result.display_name  # NOT "Google Name"
+    assert_equal "My custom bio", result.bio
+    assert_equal true, result.is_verified
+    # Only provider/uid should be updated
+    assert_equal "google_oauth2", result.provider
+    assert_equal "preserve_uid", result.uid
+  end
+
+  test "generate_username_from_email handles special characters" do
+    auth = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: "special_uid",
+      info: {
+        email: "user+test.special@gmail.com",
+        name: "Special User"
+      }
+    )
+
+    user = User.from_omniauth(auth)
+
+    # Username should only contain letters, numbers, underscores
+    assert_match(/\A[a-zA-Z0-9_]+\z/, user.username)
+    # Should be based on email prefix with special chars converted
+    assert user.username.start_with?("user_test_special") || user.username.start_with?("user")
+  end
+
+  test "generate_username_from_email handles very long email prefix" do
+    auth = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: "long_uid",
+      info: {
+        email: "verylongemailaddressprefixthatexceedstwentyfivecharacters@gmail.com",
+        name: "Long Email User"
+      }
+    )
+
+    user = User.from_omniauth(auth)
+
+    # Username should be truncated to max 30 characters
+    assert user.username.length <= 30
+    assert user.valid?
+  end
+
+  test "find_or_create_from_google with same uid but different email finds by uid" do
+    # Create user with Google linked
+    user = User.create!(
+      email: "original@gmail.com",
+      username: "originaluser",
+      password: Devise.friendly_token[0, 20],
+      provider: "google_oauth2",
+      uid: "persistent_uid"
+    )
+
+    # Try to find with same uid but different email
+    # (User might have changed their Google email)
+    result = User.find_or_create_from_google(
+      uid: "persistent_uid",
+      email: "changed@gmail.com",
+      name: "Changed Email User"
+    )
+
+    # Should find by uid, not create new user
+    assert_equal user.id, result.id
+    # Email should NOT be updated (just finding by uid)
+    assert_equal "original@gmail.com", result.email
+  end
+
+  test "JTI is regenerated when needed for token invalidation" do
+    user = User.create!(
+      email: "jtitest@example.com",
+      username: "jtiuser",
+      password: "password123"
+    )
+
+    original_jti = user.jti
+    assert_not_nil original_jti
+
+    # Simulate token invalidation by updating JTI
+    user.update!(jti: SecureRandom.uuid)
+
+    assert_not_equal original_jti, user.reload.jti
+  end
 end
