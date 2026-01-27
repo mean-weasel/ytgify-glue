@@ -45,21 +45,8 @@ class GifsController < ApplicationController
   end
 
   def new
-    @gif = current_user.gifs.build
-  end
-
-  def create
-    @gif = current_user.gifs.build(gif_params)
-
-    if @gif.save
-      # Process GIF asynchronously (thumbnail, etc.)
-      # Skip in test environment (libvips not available in CI)
-      GifProcessingJob.perform_later(@gif.id) if @gif.file.attached? && !Rails.env.test?
-
-      redirect_to gif_path(@gif), notice: "GIF uploaded successfully!"
-    else
-      render :new, status: :unprocessable_entity
-    end
+    # Show extension install CTA instead of upload form
+    # Uploads are only allowed via the browser extensions
   end
 
   def edit
