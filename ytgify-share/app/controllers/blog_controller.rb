@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BlogController < ApplicationController
-  layout "marketing"
+  layout "application"
 
   # Constants (matching ytgify.com/lib/constants.ts)
   CHROME_EXTENSION_URL = "https://chromewebstore.google.com/detail/ytgify/dnljofakogbecppbkmnoffppkfdmpfje"

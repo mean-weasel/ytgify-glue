@@ -98,6 +98,33 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({
     checkAuth();
   }, []);
 
+  // Listen for auth state changes from background script
+  // This allows the UI to update when user signs in from popup
+  React.useEffect(() => {
+    const handleMessage = (message: { type: string; authenticated?: boolean }) => {
+      if (message.type === 'AUTH_STATE_CHANGED') {
+        console.log('[SuccessScreen] Auth state changed:', message.authenticated);
+        setIsAuthenticated(!!message.authenticated);
+
+        // Clear any previous upload state when auth changes
+        if (message.authenticated) {
+          setUploadError(null);
+        } else {
+          setUploadedGif(null);
+          setUploadError(null);
+        }
+      }
+    };
+
+    // Add listener for messages from background script
+    chrome.runtime.onMessage.addListener(handleMessage);
+
+    // Cleanup listener on unmount
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMessage);
+    };
+  }, []);
+
   // Handle upload
   const handleUpload = async () => {
     if (!gifDataUrl) return;

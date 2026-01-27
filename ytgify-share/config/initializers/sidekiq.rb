@@ -14,7 +14,7 @@ Sidekiq.configure_client do |config|
   config.redis = { url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0") }
 end
 
-# Set ActiveJob queue adapter to Sidekiq (except in test, where we use inline)
-unless Rails.env.test?
+# Set ActiveJob queue adapter to Sidekiq (only in production - dev/test use async/inline)
+if Rails.env.production?
   Rails.application.config.active_job.queue_adapter = :sidekiq
 end

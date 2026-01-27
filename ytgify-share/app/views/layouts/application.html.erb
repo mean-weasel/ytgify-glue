@@ -1,9 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Ytgify - Create & Share GIFs from YouTube</title>
+    <title><%= @page_title || "YTgify - Create & Share GIFs from YouTube" %></title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= @page_description || "Create and share animated GIFs from YouTube videos." %>">
     <meta name="turbo-visit-control" content="reload">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<%= request.original_url %>">
+    <meta property="og:title" content="<%= @page_title || "YTgify - Create & Share GIFs from YouTube" %>">
+    <meta property="og:description" content="<%= @page_description || "Create and share animated GIFs from YouTube videos." %>">
+    <meta property="og:image" content="<%= @og_image || image_url('marketing/og-image.png') %>">
+    <meta property="og:site_name" content="YTgify">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= @page_title || "YTgify - Create & Share GIFs from YouTube" %>">
+    <meta name="twitter:description" content="<%= @page_description || "Create and share animated GIFs from YouTube videos." %>">
+    <meta name="twitter:image" content="<%= @og_image || image_url('marketing/og-image.png') %>">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -13,10 +30,10 @@
   </head>
 
   <body class="bg-[#0a0a0a] text-white min-h-screen">
-    <%= render "shared/navbar" if user_signed_in? %>
+    <%= render "shared/navbar" %>
     <%= render "shared/scroll_to_top" %>
 
-    <main class="<%= user_signed_in? ? 'pt-16' : '' %>">
+    <main class="pt-16">
       <div id="flash_messages">
         <%= render "shared/flash" if notice || alert %>
       </div>

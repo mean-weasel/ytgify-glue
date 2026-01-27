@@ -82,6 +82,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'LOGOUT') {
     (async () => {
       await chrome.storage.local.remove(['authState', 'userProfile']);
+
+      // Broadcast auth state change to all tabs
+      await broadcastAuthStateChange(false);
+
       sendResponse({ success: true });
     })();
     return true;
@@ -146,6 +150,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const response = await googleLogin(idToken);
 
         console.log('[Background] Google login successful');
+
+        // Broadcast auth state change to all tabs
+        await broadcastAuthStateChange(true);
+
         sendResponse({ success: true, data: response });
       } catch (error) {
         console.error('[Background] Google login failed:', error);
@@ -153,6 +161,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           success: false,
           error: error instanceof Error ? error.message : 'Google login failed',
         });
+      }
+    })();
+    return true;
+  }
+
+  // Handle TRIGGER_AUTH - open popup for authentication
+  if (message.type === 'TRIGGER_AUTH') {
+    console.log('[Background] TRIGGER_AUTH received - opening popup');
+    (async () => {
+      try {
+        // Try to open the extension popup
+        await chrome.action.openPopup();
+        sendResponse({ success: true });
+      } catch (error) {
+        // openPopup may fail if popup is already open or in some contexts
+        console.warn('[Background] Could not open popup:', error);
+        // Fallback: open popup in new tab
+        const popupUrl = chrome.runtime.getURL('popup.html');
+        await chrome.tabs.create({ url: popupUrl });
+        sendResponse({ success: true, fallback: true });
       }
     })();
     return true;
@@ -190,8 +218,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         console.log('[Background] Auth state saved from callback relay');
 
-        // Notify other parts of the extension
-        chrome.runtime.sendMessage({ type: 'AUTH_STATE_CHANGED', authenticated: true }).catch(() => {});
+        // Broadcast to all extension pages and content scripts
+        await broadcastAuthStateChange(true);
 
         sendResponse({ success: true });
       } catch (error) {
@@ -205,5 +233,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Default: don't handle
   return false;
 });
+
+/**
+ * Broadcast auth state change to all YouTube tabs (content scripts)
+ * This allows SuccessScreen to update when user signs in from popup
+ */
+async function broadcastAuthStateChange(authenticated: boolean): Promise<void> {
+  try {
+    // Notify extension pages (popup, etc.)
+    chrome.runtime.sendMessage({ type: 'AUTH_STATE_CHANGED', authenticated }).catch(() => {});
+
+    // Query all YouTube tabs and send message to content scripts
+    const tabs = await chrome.tabs.query({ url: ['*://*.youtube.com/*', '*://youtube.com/*'] });
+
+    for (const tab of tabs) {
+      if (tab.id) {
+        chrome.tabs.sendMessage(tab.id, { type: 'AUTH_STATE_CHANGED', authenticated }).catch(() => {
+          // Tab may not have content script loaded - ignore
+        });
+      }
+    }
+
+    console.log(`[Background] Broadcasted auth state change to ${tabs.length} YouTube tabs`);
+  } catch (error) {
+    console.warn('[Background] Failed to broadcast auth state:', error);
+  }
+}
 
 console.log('[Background] Service worker ready');

@@ -38,6 +38,47 @@ interface MockAuthState {
   revokedTokens: Set<string>;
 }
 
+interface MockGif {
+  id: string;
+  title: string;
+  description: string | null;
+  file_url: string;
+  thumbnail_url: string | null;
+  privacy: string;
+  duration: number | null;
+  fps: number | null;
+  resolution_width: number | null;
+  resolution_height: number | null;
+  file_size: number | null;
+  has_text_overlay: boolean;
+  is_remix: boolean;
+  remix_count: number;
+  view_count: number;
+  like_count: number;
+  comment_count: number;
+  share_count: number;
+  created_at: string;
+  updated_at: string;
+  hashtag_names: string[];
+  youtube_video_url: string | null;
+  youtube_video_title: string | null;
+  youtube_channel_name: string | null;
+  youtube_timestamp_start: number | null;
+  youtube_timestamp_end: number | null;
+  text_overlay_data: string | null;
+  user: {
+    id: string;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    is_verified: boolean;
+  };
+}
+
+interface MockGifState {
+  gifs: Map<string, MockGif>;
+}
+
 // Helper to generate mock JWT
 function generateMockJwt(userId: string, expiresInSeconds: number = 900): string {
   const header = { alg: 'HS256', typ: 'JWT' };
@@ -76,6 +117,11 @@ export class MockYouTubeServer {
     users: new Map(),
     tokens: new Map(),
     revokedTokens: new Set()
+  };
+
+  // Mock GIF state for upload testing
+  private gifState: MockGifState = {
+    gifs: new Map()
   };
 
   constructor(config: MockServerConfig = {}) {
@@ -137,7 +183,24 @@ export class MockYouTubeServer {
       tokens: new Map(),
       revokedTokens: new Set()
     };
+    this.gifState = {
+      gifs: new Map()
+    };
     this.initializeTestUsers();
+  }
+
+  /**
+   * Get uploaded GIFs (for test assertions)
+   */
+  getUploadedGifs(): MockGif[] {
+    return Array.from(this.gifState.gifs.values());
+  }
+
+  /**
+   * Get a specific GIF by ID (for test assertions)
+   */
+  getGifById(id: string): MockGif | undefined {
+    return this.gifState.gifs.get(id);
   }
 
   /**
@@ -200,6 +263,12 @@ export class MockYouTubeServer {
       // API Routes
       if (url.pathname.startsWith('/api/v1/auth/')) {
         this.handleAuthApi(req, res, url);
+        return;
+      }
+
+      // GIF API Routes
+      if (url.pathname.startsWith('/api/v1/gifs')) {
+        this.handleGifsApi(req, res, url);
         return;
       }
 
@@ -887,6 +956,314 @@ export class MockYouTubeServer {
       console.error('[Mock Server] Me error:', error);
       this.sendJsonError(res, 500, 'Internal server error');
     }
+  }
+
+  // ============================================
+  // GIF API Handlers
+  // ============================================
+
+  private handleGifsApi(req: http.IncomingMessage, res: http.ServerResponse, url: URL): void {
+    const pathParts = url.pathname.replace('/api/v1/gifs', '').split('/').filter(p => p);
+    const gifId = pathParts[0];
+
+    // Check for test error simulation via query params
+    const simulateError = url.searchParams.get('simulate_error');
+    if (simulateError) {
+      switch (simulateError) {
+        case '401':
+          this.sendJsonError(res, 401, 'Unauthorized');
+          return;
+        case '429':
+          res.setHeader('Retry-After', '5');
+          this.sendJsonError(res, 429, 'Rate limit exceeded');
+          return;
+        case '500':
+          this.sendJsonError(res, 500, 'Internal server error');
+          return;
+      }
+    }
+
+    // POST /api/v1/gifs - Create/Upload GIF
+    if (req.method === 'POST' && !gifId) {
+      this.handleGifUpload(req, res);
+      return;
+    }
+
+    // GET /api/v1/gifs - List GIFs
+    if (req.method === 'GET' && !gifId) {
+      this.handleGifList(req, res, url);
+      return;
+    }
+
+    // GET /api/v1/gifs/:id - Get single GIF
+    if (req.method === 'GET' && gifId) {
+      this.handleGifShow(req, res, gifId);
+      return;
+    }
+
+    this.sendJsonError(res, 404, 'Endpoint not found');
+  }
+
+  private async handleGifUpload(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    try {
+      // Verify authentication
+      const userId = this.validateAuthToken(req);
+      if (!userId) {
+        this.sendJsonError(res, 401, 'Authorization required');
+        return;
+      }
+
+      // Find user
+      const user = Array.from(this.authState.users.values()).find(u => u.id === userId);
+      if (!user) {
+        this.sendJsonError(res, 401, 'User not found');
+        return;
+      }
+
+      // Parse multipart form data
+      const formData = await this.parseMultipartFormData(req);
+
+      // Extract fields from form data
+      const title = formData.get('gif[title]') as string || 'Untitled GIF';
+      const description = formData.get('gif[description]') as string || null;
+      const privacy = formData.get('gif[privacy]') as string || 'public_access';
+      const youtubeUrl = formData.get('gif[youtube_video_url]') as string || null;
+      const youtubeTitle = formData.get('gif[youtube_video_title]') as string || null;
+      const youtubeChannel = formData.get('gif[youtube_channel_name]') as string || null;
+      const timestampStart = parseFloat(formData.get('gif[youtube_timestamp_start]') as string) || null;
+      const timestampEnd = parseFloat(formData.get('gif[youtube_timestamp_end]') as string) || null;
+      const hasTextOverlay = formData.get('gif[has_text_overlay]') === 'true';
+      const textOverlayData = formData.get('gif[text_overlay_data]') as string || null;
+
+      // Get file info
+      const fileData = formData.get('gif[file]');
+      const fileSize = fileData ? (fileData as Buffer).length : 0;
+
+      // Create mock GIF
+      const now = new Date().toISOString();
+      const gifId = 'gif-' + Math.random().toString(36).substring(2, 15);
+
+      const mockGif: MockGif = {
+        id: gifId,
+        title,
+        description,
+        file_url: `/uploads/gifs/${gifId}.gif`,
+        thumbnail_url: `/uploads/gifs/${gifId}_thumb.png`,
+        privacy,
+        duration: timestampEnd && timestampStart ? timestampEnd - timestampStart : null,
+        fps: 10,
+        resolution_width: 480,
+        resolution_height: 270,
+        file_size: fileSize,
+        has_text_overlay: hasTextOverlay,
+        is_remix: false,
+        remix_count: 0,
+        view_count: 0,
+        like_count: 0,
+        comment_count: 0,
+        share_count: 0,
+        created_at: now,
+        updated_at: now,
+        hashtag_names: [],
+        youtube_video_url: youtubeUrl,
+        youtube_video_title: youtubeTitle,
+        youtube_channel_name: youtubeChannel,
+        youtube_timestamp_start: timestampStart,
+        youtube_timestamp_end: timestampEnd,
+        text_overlay_data: textOverlayData,
+        user: {
+          id: user.id,
+          username: user.username,
+          display_name: user.display_name,
+          avatar_url: user.avatar_url,
+          is_verified: user.is_verified
+        }
+      };
+
+      this.gifState.gifs.set(gifId, mockGif);
+
+      // Update user's gif count
+      user.gifs_count++;
+
+      console.log(`[Mock Server] GIF uploaded: ${gifId} by ${user.username}`);
+
+      this.sendJson(res, 201, {
+        message: 'GIF created successfully',
+        gif: mockGif
+      });
+
+    } catch (error) {
+      console.error('[Mock Server] GIF upload error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  private handleGifList(req: http.IncomingMessage, res: http.ServerResponse, url: URL): void {
+    try {
+      const userId = url.searchParams.get('user_id');
+      const page = parseInt(url.searchParams.get('page') || '1');
+      const perPage = parseInt(url.searchParams.get('per_page') || '20');
+
+      let gifs = Array.from(this.gifState.gifs.values());
+
+      // Filter by user if requested
+      if (userId) {
+        gifs = gifs.filter(g => g.user.id === userId);
+      }
+
+      // Filter to public only (unless viewing own)
+      const authUserId = this.validateAuthToken(req);
+      if (!authUserId) {
+        gifs = gifs.filter(g => g.privacy === 'public_access');
+      } else {
+        gifs = gifs.filter(g => g.privacy === 'public_access' || g.user.id === authUserId);
+      }
+
+      // Paginate
+      const start = (page - 1) * perPage;
+      const paginatedGifs = gifs.slice(start, start + perPage);
+
+      this.sendJson(res, 200, {
+        gifs: paginatedGifs,
+        pagination: {
+          page,
+          per_page: perPage,
+          total: gifs.length
+        }
+      });
+
+    } catch (error) {
+      console.error('[Mock Server] GIF list error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  private handleGifShow(req: http.IncomingMessage, res: http.ServerResponse, gifId: string): void {
+    try {
+      const gif = this.gifState.gifs.get(gifId);
+
+      if (!gif) {
+        this.sendJsonError(res, 404, 'GIF not found');
+        return;
+      }
+
+      // Check privacy
+      const authUserId = this.validateAuthToken(req);
+      if (gif.privacy !== 'public_access' && gif.user.id !== authUserId) {
+        this.sendJsonError(res, 404, 'GIF not found');
+        return;
+      }
+
+      // Increment view count
+      gif.view_count++;
+
+      this.sendJson(res, 200, { gif });
+
+    } catch (error) {
+      console.error('[Mock Server] GIF show error:', error);
+      this.sendJsonError(res, 500, 'Internal server error');
+    }
+  }
+
+  /**
+   * Validate auth token and return user ID if valid
+   */
+  private validateAuthToken(req: http.IncomingMessage): string | null {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.substring(7);
+    try {
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+
+      // Check if token is revoked
+      if (this.authState.revokedTokens.has(payload.jti)) {
+        return null;
+      }
+
+      // Check if token is expired
+      if (payload.exp * 1000 < Date.now()) {
+        return null;
+      }
+
+      return payload.sub;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Parse multipart form data (simplified for testing)
+   */
+  private async parseMultipartFormData(req: http.IncomingMessage): Promise<Map<string, string | Buffer>> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => {
+        try {
+          const body = Buffer.concat(chunks);
+          const contentType = req.headers['content-type'] || '';
+          const result = new Map<string, string | Buffer>();
+
+          // Check if it's multipart
+          if (!contentType.includes('multipart/form-data')) {
+            // Try to parse as JSON
+            try {
+              const json = JSON.parse(body.toString());
+              if (json.gif) {
+                for (const [key, value] of Object.entries(json.gif)) {
+                  result.set(`gif[${key}]`, String(value));
+                }
+              }
+            } catch {
+              // Ignore parse errors
+            }
+            resolve(result);
+            return;
+          }
+
+          // Extract boundary
+          const boundaryMatch = contentType.match(/boundary=(.+)$/);
+          if (!boundaryMatch) {
+            resolve(result);
+            return;
+          }
+
+          const boundary = boundaryMatch[1];
+          const bodyStr = body.toString('binary');
+          const parts = bodyStr.split(`--${boundary}`);
+
+          for (const part of parts) {
+            if (!part.includes('Content-Disposition')) continue;
+
+            const headerEnd = part.indexOf('\r\n\r\n');
+            if (headerEnd === -1) continue;
+
+            const headers = part.substring(0, headerEnd);
+            const content = part.substring(headerEnd + 4).replace(/\r\n--$/, '').replace(/\r\n$/, '');
+
+            const nameMatch = headers.match(/name="([^"]+)"/);
+            if (!nameMatch) continue;
+
+            const name = nameMatch[0].match(/name="([^"]+)"/)?.[1] || '';
+
+            // Check if it's a file
+            if (headers.includes('filename=')) {
+              result.set(name, Buffer.from(content, 'binary'));
+            } else {
+              result.set(name, content);
+            }
+          }
+
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      req.on('error', reject);
+    });
   }
 
   // ============================================
