@@ -8,7 +8,7 @@ class BlogServiceTest < ActiveSupport::TestCase
 
     # Store original files to restore later
     @original_files = Dir.glob(@content_dir.join("*.md")).map do |f|
-      [f, File.read(f)]
+      [ f, File.read(f) ]
     end.to_h
 
     # Create test blog posts
@@ -16,7 +16,7 @@ class BlogServiceTest < ActiveSupport::TestCase
       title: "Test Post One",
       description: "First test post",
       date: "2025-01-15",
-      tags: ["tutorial", "testing"],
+      tags: [ "tutorial", "testing" ],
       thumbnail: "test/image.png",
       readTime: 3
     }, "This is the content of test post one.\n\n## Heading\n\nSome text.")
@@ -25,7 +25,7 @@ class BlogServiceTest < ActiveSupport::TestCase
       title: "Test Post Two",
       description: "Second test post",
       date: "2025-01-10",
-      tags: ["tutorial", "guide"],
+      tags: [ "tutorial", "guide" ],
       thumbnail: "test/image2.png",
       readTime: 5
     }, "Content of test post two with **bold** and *italic*.")
@@ -34,7 +34,7 @@ class BlogServiceTest < ActiveSupport::TestCase
       title: "Test Post Three",
       description: "Third test post",
       date: "2025-01-20",
-      tags: ["news"],
+      tags: [ "news" ],
       thumbnail: "test/image3.png",
       readTime: 2
     }, "Latest news content.")
@@ -76,7 +76,7 @@ class BlogServiceTest < ActiveSupport::TestCase
     assert_equal "Test Post One", post[:title]
     assert_equal "First test post", post[:description]
     assert_equal Date.parse("2025-01-15"), post[:date]
-    assert_equal ["tutorial", "testing"], post[:tags]
+    assert_equal [ "tutorial", "testing" ], post[:tags]
     assert_equal "test/image.png", post[:thumbnail]
     assert_equal 3, post[:read_time]
     assert_includes post[:content], "This is the content"
@@ -266,7 +266,7 @@ class BlogServiceTest < ActiveSupport::TestCase
       title: "Code Blocks Test",
       description: "Testing code blocks",
       date: "2025-01-01",
-      tags: ["test"]
+      tags: [ "test" ]
     }, "```ruby\ndef hello\n  puts 'world'\nend\n```")
 
     post = BlogService.find_by_slug("test-code-blocks")
@@ -366,12 +366,12 @@ class BlogServiceTest < ActiveSupport::TestCase
       title: "Uppercase Tags",
       description: "Test",
       date: "2025-01-01",
-      tags: ["Tutorial", "GUIDE", "MixedCase"]
+      tags: [ "Tutorial", "GUIDE", "MixedCase" ]
     }, "Content")
 
     post = BlogService.find_by_slug("test-uppercase-tags")
 
-    assert_equal ["tutorial", "guide", "mixedcase"], post[:tags]
+    assert_equal [ "tutorial", "guide", "mixedcase" ], post[:tags]
 
     # Cleanup
     File.delete(@content_dir.join("test-uppercase-tags.md"))
