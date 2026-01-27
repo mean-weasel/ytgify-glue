@@ -37,7 +37,7 @@ Rails.application.routes.draw do
   # ============================================================
   get "trending", to: "home#trending", as: :trending
 
-  resources :gifs, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
+  resources :gifs, only: [ :index, :show, :new, :edit, :update, :destroy ] do
     member do
       post :like, to: "likes#toggle"
       get :remix, to: "remixes#new"

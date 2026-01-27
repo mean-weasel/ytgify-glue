@@ -55,71 +55,17 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
-  test "should show new gif form for authenticated user" do
+  test "should show extension CTA page for authenticated user" do
     sign_in @alice
     get new_gif_path
     assert_response :success
-    assert_select "form"
+    # Should show extension CTA page instead of upload form
+    assert_select "h1", text: "Create GIFs from YouTube"
+    assert_select "h2", text: "Get the Extension"
   end
 
-  # ========== CREATE ACTION TESTS ==========
-
-  test "should require authentication to create gif" do
-    assert_no_difference("Gif.count") do
-      post gifs_path, params: {
-        gif: { title: "New GIF" }
-      }
-    end
-    assert_redirected_to new_user_session_path
-  end
-
-  test "should create gif with minimal params" do
-    sign_in @alice
-
-    assert_difference("Gif.count", 1) do
-      post gifs_path, params: {
-        gif: {
-          title: "New Test GIF"
-        }
-      }
-    end
-
-    assert_response :redirect
-    follow_redirect!
-    assert_response :success
-  end
-
-  test "should create gif with full params" do
-    sign_in @alice
-
-    assert_difference("Gif.count", 1) do
-      post gifs_path, params: {
-        gif: {
-          title: "Complete Test GIF",
-          description: "Test description",
-          privacy: "private_access"
-        }
-      }
-    end
-
-    assert_response :redirect
-    assert_match /GIF uploaded successfully/, flash[:notice]
-  end
-
-  test "should reject gif creation with title exceeding max length" do
-    sign_in @alice
-
-    assert_no_difference("Gif.count") do
-      post gifs_path, params: {
-        gif: { title: "A" * 101 }
-      }
-    end
-
-    assert_response :unprocessable_entity
-  end
-
-  # Note: Hashtag creation might require additional setup or validation
-  # Skipping for now to focus on high-impact coverage tests
+  # Note: Web-based GIF creation has been removed.
+  # GIF uploads are only allowed via the browser extensions (POST /api/v1/gifs).
 
   # ========== DESTROY ACTION TESTS ==========
 

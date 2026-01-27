@@ -39,12 +39,12 @@
         </div>
 
         <% if user_signed_in? %>
-          <!-- Upload Button -->
+          <!-- Create GIF Button -->
           <%= link_to new_gif_path, class: "hidden sm:flex bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white px-4 py-2 rounded-full text-sm font-medium hover:opacity-90 transition items-center space-x-2" do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            <span>Upload</span>
+            <span>Create GIF</span>
           <% end %>
 
           <!-- Notifications -->

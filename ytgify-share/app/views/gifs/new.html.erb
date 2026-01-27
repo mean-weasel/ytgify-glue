@@ -1,14 +1,100 @@
 <div class="container mx-auto px-4 py-8">
-  <div class="max-w-3xl mx-auto">
+  <div class="max-w-2xl mx-auto text-center">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-white mb-2">Create GIF</h1>
-      <p class="text-gray-400">Create a GIF from a YouTube video</p>
+      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] rounded-2xl flex items-center justify-center">
+        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-white mb-4">Create GIFs from YouTube</h1>
+      <p class="text-lg text-gray-400 max-w-lg mx-auto">
+        Use our free browser extension to create GIFs directly from any YouTube video.
+        No watermarks, no uploads required—it all happens in your browser.
+      </p>
     </div>
 
-    <!-- Create Form -->
+    <!-- Extension Install CTA -->
+    <div class="bg-gray-900 rounded-lg border border-gray-800 p-8 mb-8">
+      <h2 class="text-xl font-semibold text-white mb-2">Get the Extension</h2>
+      <p class="text-gray-400 mb-6">
+        Install the YTgify extension for your browser to start creating GIFs in seconds.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <%= render "marketing/shared/chrome_store_badge" %>
+        <%= render "marketing/shared/firefox_store_badge" %>
+      </div>
+    </div>
+
+    <!-- How It Works -->
     <div class="bg-gray-900 rounded-lg border border-gray-800 p-8">
-      <%= render "form", gif: @gif %>
+      <h2 class="text-xl font-semibold text-white mb-6">How It Works</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+        <!-- Step 1 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="w-12 h-12 bg-[#E91E8C]/20 rounded-full flex items-center justify-center mb-4">
+            <span class="text-xl font-bold text-[#E91E8C]">1</span>
+          </div>
+          <h3 class="font-medium text-white mb-2">Install Extension</h3>
+          <p class="text-sm text-gray-400">
+            Add YTgify to Chrome or Firefox from the official store.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="w-12 h-12 bg-[#E91E8C]/20 rounded-full flex items-center justify-center mb-4">
+            <span class="text-xl font-bold text-[#E91E8C]">2</span>
+          </div>
+          <h3 class="font-medium text-white mb-2">Find a Video</h3>
+          <p class="text-sm text-gray-400">
+            Go to any YouTube video and click the YTgify button.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="w-12 h-12 bg-[#E91E8C]/20 rounded-full flex items-center justify-center mb-4">
+            <span class="text-xl font-bold text-[#E91E8C]">3</span>
+          </div>
+          <h3 class="font-medium text-white mb-2">Create & Share</h3>
+          <p class="text-sm text-gray-400">
+            Select your clip, customize, and share directly to the feed.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features List -->
+    <div class="mt-8 text-left">
+      <ul class="space-y-3">
+        <li class="flex items-center text-gray-400">
+          <svg class="w-5 h-5 mr-3 text-[#E91E8C]" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+          <span>No watermarks on your GIFs</span>
+        </li>
+        <li class="flex items-center text-gray-400">
+          <svg class="w-5 h-5 mr-3 text-[#E91E8C]" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+          <span>Custom text overlays and captions</span>
+        </li>
+        <li class="flex items-center text-gray-400">
+          <svg class="w-5 h-5 mr-3 text-[#E91E8C]" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+          <span>Adjustable resolution and FPS</span>
+        </li>
+        <li class="flex items-center text-gray-400">
+          <svg class="w-5 h-5 mr-3 text-[#E91E8C]" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+          <span>Share directly to the YTgify community</span>
+        </li>
+      </ul>
     </div>
   </div>
 </div>
