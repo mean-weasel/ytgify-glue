@@ -16,6 +16,7 @@ class FeedService
       following_gifs = Gif.where(user_id: following_ids)
                           .not_deleted
                           .public_only
+                          .with_attached_file
                           .includes(:user, :hashtags)
                           .recent
                           .limit(per_page / 2)
@@ -23,6 +24,7 @@ class FeedService
       trending_gifs = Gif.trending
                          .not_deleted
                          .public_only
+                         .with_attached_file
                          .includes(:user, :hashtags)
                          .where.not(user_id: following_ids + [ user.id ])
                          .limit(per_page / 2)
@@ -34,6 +36,7 @@ class FeedService
       Gif.trending
          .not_deleted
          .public_only
+         .with_attached_file
          .includes(:user, :hashtags)
          .offset((page - 1) * per_page)
          .limit(per_page)
@@ -45,6 +48,7 @@ class FeedService
     Gif.trending
        .not_deleted
        .public_only
+       .with_attached_file
        .includes(:user, :hashtags)
        .offset((page - 1) * per_page)
        .limit(per_page)
@@ -58,6 +62,7 @@ class FeedService
       Gif.trending
          .not_deleted
          .public_only
+         .with_attached_file
          .includes(:user, :hashtags)
          .offset((page - 1) * per_page)
          .limit(per_page)
@@ -79,7 +84,25 @@ class FeedService
     Gif.recent
        .not_deleted
        .public_only
+       .with_attached_file
        .includes(:user, :hashtags)
+       .offset((page - 1) * per_page)
+       .limit(per_page)
+  end
+
+  # Get GIFs from users the current user follows
+  def self.following(user, page: 1, per_page: 20)
+    return [] unless user
+
+    following_ids = user.following.pluck(:id)
+    return [] if following_ids.empty?
+
+    Gif.where(user_id: following_ids)
+       .not_deleted
+       .public_only
+       .with_attached_file
+       .includes(:user, :hashtags)
+       .recent
        .offset((page - 1) * per_page)
        .limit(per_page)
   end
@@ -92,6 +115,7 @@ class FeedService
       Gif.popular
          .not_deleted
          .public_only
+         .with_attached_file
          .includes(:user, :hashtags)
          .offset((page - 1) * per_page)
          .limit(per_page)
@@ -104,6 +128,7 @@ class FeedService
     hashtag.gifs
            .not_deleted
            .public_only
+           .with_attached_file
            .includes(:user, :hashtags)
            .recent
            .offset((page - 1) * per_page)

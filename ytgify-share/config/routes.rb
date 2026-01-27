@@ -36,6 +36,7 @@ Rails.application.routes.draw do
   # App Routes (moved from /app to root level)
   # ============================================================
   get "trending", to: "home#trending", as: :trending
+  get "following", to: "home#following", as: :following
 
   resources :gifs, only: [ :index, :show, :new, :edit, :update, :destroy ] do
     member do
@@ -84,6 +85,7 @@ Rails.application.routes.draw do
   # ============================================================
   get "/app", to: redirect("/")
   get "/app/trending", to: redirect("/trending")
+  get "/app/following", to: redirect("/following")
   get "/app/gifs/:id", to: redirect("/gifs/%{id}")
   get "/app/users/:username", to: redirect("/users/%{username}")
   get "/app/collections", to: redirect("/collections")

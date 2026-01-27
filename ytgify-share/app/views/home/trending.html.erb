@@ -18,7 +18,7 @@
           Trending
         <% end %>
         <% if user_signed_in? %>
-          <%= link_to "#", class: "flex-1 py-3 text-center font-medium text-gray-400" do %>
+          <%= link_to following_path, class: "flex-1 py-3 text-center font-medium #{current_page?(following_path) ? 'text-[#E91E8C] border-b-2 border-[#E91E8C]' : 'text-gray-400'}" do %>
             Following
           <% end %>
         <% end %>

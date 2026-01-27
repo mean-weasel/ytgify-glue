@@ -18,6 +18,7 @@ class CollectionsController < ApplicationController
     end
 
     @pagy, @gifs = pagy(@collection.gifs
+                                   .with_attached_file
                                    .includes(:user, :hashtags)
                                    .order(created_at: :desc),
                         page: params[:page], items: 20)

@@ -16,6 +16,7 @@ class GifsController < ApplicationController
            .where("gifs.title ILIKE ? OR gifs.description ILIKE ? OR hashtags.name ILIKE ?",
                   "%#{@query}%", "%#{@query}%", "%#{@query}%")
            .distinct
+           .with_attached_file
            .includes(:user, :hashtags)
            .order(created_at: :desc),
         page: params[:page], items: 20
@@ -24,6 +25,7 @@ class GifsController < ApplicationController
       # No search query, show recent public GIFs
       @pagy, @gifs = pagy(
         Gif.where(privacy: :public_access)
+           .with_attached_file
            .includes(:user, :hashtags)
            .order(created_at: :desc),
         page: params[:page], items: 20

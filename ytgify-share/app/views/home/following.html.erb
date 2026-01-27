@@ -1,5 +1,4 @@
-<%# Feed Page - Single-column layout with 3-panel structure %>
-<%# Reference: /mockups/feed.html %>
+<%# Following Page - GIFs from users you follow %>
 <main class="pt-16 min-h-screen pb-20 lg:pb-0">
   <div class="max-w-7xl mx-auto flex">
 
@@ -11,16 +10,14 @@
 
       <!-- Mobile Tab Bar -->
       <div class="flex lg:hidden border-b border-gray-800 mb-6 -mx-4 px-4">
-        <%= link_to root_path, class: "flex-1 py-3 text-center font-medium #{current_page?(root_path) ? 'text-[#E91E8C] border-b-2 border-[#E91E8C]' : 'text-gray-400'}" do %>
-          <%= user_signed_in? ? "For You" : "Popular" %>
+        <%= link_to root_path, class: "flex-1 py-3 text-center font-medium text-gray-400" do %>
+          For You
         <% end %>
-        <%= link_to trending_path, class: "flex-1 py-3 text-center font-medium #{current_page?(trending_path) ? 'text-[#E91E8C] border-b-2 border-[#E91E8C]' : 'text-gray-400'}" do %>
+        <%= link_to trending_path, class: "flex-1 py-3 text-center font-medium text-gray-400" do %>
           Trending
         <% end %>
-        <% if user_signed_in? %>
-          <%= link_to following_path, class: "flex-1 py-3 text-center font-medium #{current_page?(following_path) ? 'text-[#E91E8C] border-b-2 border-[#E91E8C]' : 'text-gray-400'}" do %>
-            Following
-          <% end %>
+        <%= link_to following_path, class: "flex-1 py-3 text-center font-medium text-[#E91E8C] border-b-2 border-[#E91E8C]" do %>
+          Following
         <% end %>
       </div>
 
@@ -53,21 +50,15 @@
       <% if @gifs.empty? %>
         <div class="text-center py-20">
           <svg class="mx-auto h-24 w-24 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <h3 class="text-xl font-semibold text-white mb-2">No GIFs yet</h3>
-          <p class="text-gray-400 mb-6">Be the first to share some awesome YouTube GIFs!</p>
-          <% if user_signed_in? %>
-            <%= link_to new_gif_path, class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              Create Your First GIF
-            <% end %>
-          <% else %>
-            <%= link_to new_user_session_path, class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
-              Sign In to Create
-            <% end %>
+          <h3 class="text-xl font-semibold text-white mb-2">No GIFs from people you follow</h3>
+          <p class="text-gray-400 mb-6">Follow some creators to see their GIFs here!</p>
+          <%= link_to trending_path, class: "inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#E91E8C] to-[#7B2FBE] text-white rounded-lg hover:opacity-90 font-medium" do %>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Discover Trending Creators
           <% end %>
         </div>
       <% end %>

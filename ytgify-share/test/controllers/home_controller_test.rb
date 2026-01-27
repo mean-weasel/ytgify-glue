@@ -138,6 +138,71 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "#gif-feed"
   end
 
+  # ========== FOLLOWING ACTION TESTS ==========
+
+  test "following requires authentication" do
+    get following_path
+    assert_redirected_to new_user_session_path
+  end
+
+  test "following shows GIFs from followed users" do
+    sign_in @alice
+    # Alice follows Bob
+    Follow.create!(follower: @alice, following: @bob)
+
+    get following_path
+    assert_response :success
+    assert response.body.include?("Following")
+  end
+
+  test "following shows empty state when not following anyone" do
+    sign_in @alice
+    # Alice doesn't follow anyone
+
+    get following_path
+    assert_response :success
+    assert response.body.include?("No GIFs from people you follow")
+  end
+
+  test "following supports HTML format" do
+    sign_in @alice
+    get following_path
+    assert_response :success
+    assert_equal "text/html", response.media_type
+  end
+
+  test "following responds to page parameter" do
+    sign_in @alice
+    get following_path, params: { page: 1 }
+    assert_response :success
+  end
+
+  test "following excludes deleted GIFs" do
+    sign_in @alice
+    Follow.create!(follower: @alice, following: @bob)
+    @bob_public_gif.soft_delete!
+
+    get following_path
+    assert_response :success
+    assert_select "div[data-gif-id='#{@bob_public_gif.id}']", count: 0
+  end
+
+  test "following shows only public GIFs from followed users" do
+    sign_in @alice
+    Follow.create!(follower: @alice, following: @bob)
+
+    # Create a private GIF for Bob
+    private_gif = Gif.create!(
+      user: @bob,
+      title: "Bob's Private GIF",
+      privacy: :private_access
+    )
+
+    get following_path
+    assert_response :success
+    assert_select "div[data-gif-id='#{private_gif.id}']", count: 0
+  end
+
   # ========== EDGE CASES ==========
 
   test "feed handles empty results gracefully" do
@@ -174,6 +239,17 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path, params: { page: 1 }
     assert_response :success
     assert_select "#gif-feed"
+  end
+
+  test "following handles empty results gracefully" do
+    sign_in @alice
+    Follow.create!(follower: @alice, following: @bob)
+    # Delete Bob's GIFs
+    @bob.gifs.destroy_all
+
+    get following_path
+    assert_response :success
+    assert response.body.include?("No GIFs from people you follow")
   end
 
   private

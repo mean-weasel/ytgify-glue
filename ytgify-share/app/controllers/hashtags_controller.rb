@@ -41,6 +41,7 @@ class HashtagsController < ApplicationController
 
     @pagy, @gifs = pagy(@hashtag.gifs
                                 .public_only
+                                .with_attached_file
                                 .includes(:user, :hashtags)
                                 .order(created_at: :desc),
                         page: params[:page], items: 20)

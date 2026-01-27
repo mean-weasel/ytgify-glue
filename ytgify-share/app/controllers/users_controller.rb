@@ -56,6 +56,7 @@ class UsersController < ApplicationController
 
   def load_user_gifs
     base_query = @user.gifs
+                      .with_attached_file
                       .includes(:user, :hashtags)
                       .order(created_at: :desc)
 
@@ -68,6 +69,7 @@ class UsersController < ApplicationController
   def load_liked_gifs
     # Join through likes to maintain like timestamp ordering
     base_query = @user.liked_gifs
+                      .with_attached_file
                       .includes(:user, :hashtags)
                       .order("likes.created_at DESC")
 
