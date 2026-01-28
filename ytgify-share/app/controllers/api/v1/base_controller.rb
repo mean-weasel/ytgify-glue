@@ -48,6 +48,7 @@ module Api
       private
 
       def record_not_found(exception)
+        log_api_error("RecordNotFound", exception)
         render json: {
           error: "Record not found",
           message: exception.message
@@ -55,6 +56,7 @@ module Api
       end
 
       def record_invalid(exception)
+        log_api_error("RecordInvalid", exception, details: exception.record.errors.full_messages)
         render json: {
           error: "Validation failed",
           message: exception.message,
@@ -63,10 +65,25 @@ module Api
       end
 
       def parameter_missing(exception)
+        log_api_error("ParameterMissing", exception)
         render json: {
           error: "Parameter missing",
           message: exception.message
         }, status: :bad_request
+      end
+
+      # Log API errors with context for debugging
+      def log_api_error(error_type, exception, details: nil)
+        log_data = {
+          error_type: error_type,
+          message: exception.message,
+          path: request.path,
+          method: request.method,
+          user_id: current_user&.id
+        }
+        log_data[:details] = details if details.present?
+
+        Rails.logger.warn("[API Error] #{log_data.to_json}")
       end
 
       def render_unauthorized
@@ -88,7 +105,21 @@ module Api
       # @param message [String] Human-readable error message
       # @param details [Array] Optional array of specific error details
       # @param status [Symbol] HTTP status code
-      def render_error(error:, message:, status:, details: [])
+      # @param log [Boolean] Whether to log this error (default: true)
+      def render_error(error:, message:, status:, details: [], log: true)
+        if log
+          log_data = {
+            error_type: error,
+            message: message,
+            path: request.path,
+            method: request.method,
+            user_id: current_user&.id,
+            status: status
+          }
+          log_data[:details] = details if details.present?
+          Rails.logger.warn("[API Error] #{log_data.to_json}")
+        end
+
         response = { error: error, message: message }
         response[:details] = details if details.present?
         render json: response, status: status
