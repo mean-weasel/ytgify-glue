@@ -181,14 +181,14 @@ class Rack::Attack
   # Cache Store Configuration
   # ============================================================================
 
-  # Use Redis for distributed rate limiting (production)
-  # In development, use memory store
-  if Rails.env.production?
+  # Use Redis for distributed rate limiting when available (production with Redis)
+  # Falls back to memory store when Redis isn't configured
+  if Rails.env.production? && ENV["REDIS_URL"].present?
     Rack::Attack.cache.store = ActiveSupport::Cache::RedisCacheStore.new(
-      url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0")
+      url: ENV["REDIS_URL"]
     )
   else
-    # Memory store for development
+    # Memory store for development or when Redis isn't configured
     Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
   end
 end
