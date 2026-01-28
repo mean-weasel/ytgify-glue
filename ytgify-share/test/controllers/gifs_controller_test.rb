@@ -36,9 +36,10 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should return 404 for non-existent gif" do
+  test "should redirect with flash for non-existent gif" do
     get gif_path(id: "00000000-0000-0000-0000-000000000000")
-    assert_response :not_found
+    assert_redirected_to root_path
+    assert_equal "The page you were looking for could not be found.", flash[:alert]
   end
 
   test "should show deleted gif" do
@@ -98,11 +99,12 @@ class GifsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "You're not authorized to perform this action.", flash[:alert]
   end
 
-  test "should return 404 when deleting non-existent gif" do
+  test "should redirect with flash when deleting non-existent gif" do
     sign_in @alice
 
     delete gif_path(id: "00000000-0000-0000-0000-000000000000")
-    assert_response :not_found
+    assert_redirected_to root_path
+    assert_equal "The page you were looking for could not be found.", flash[:alert]
   end
 
   # ========== EDIT ACTION TESTS ==========
