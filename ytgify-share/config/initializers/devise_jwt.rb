@@ -19,7 +19,8 @@ end
 
 Devise.setup do |config|
   config.jwt do |jwt|
-    jwt.secret = ENV.fetch("JWT_SECRET_KEY", Rails.env.development? ? "dev-secret-key-change-in-production" : nil)
+    # Use consistent fallback for dev/test environments
+    jwt.secret = ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")
     jwt.dispatch_requests = [
       [ "POST", %r{^/api/v1/auth/login$} ],
       [ "POST", %r{^/api/v1/auth/register$} ]

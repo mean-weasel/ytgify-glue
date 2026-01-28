@@ -22,7 +22,16 @@ module Api
             # JWT authentication
             token = request.headers["Authorization"].split(" ").last
             jwt_payload = JWT.decode(token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
-            User.find(jwt_payload["sub"])
+
+            # Check if token has been revoked (added to denylist)
+            jti = jwt_payload["jti"]
+            return nil if jti.blank? || JwtDenylist.exists?(jti: jti)
+
+            # Load user and verify JTI matches (supports rotation on password change)
+            user = User.find(jwt_payload["sub"])
+            return nil if user.jti != jti
+
+            user
           else
             # Fallback to session-based auth
             super
