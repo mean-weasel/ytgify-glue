@@ -39,10 +39,12 @@ module Api
             comment: comment_json(comment)
           }, status: :created
         else
-          render json: {
-            error: "Comment creation failed",
-            details: comment.errors.full_messages
-          }, status: :unprocessable_entity
+          render_error(
+            error: "Validation failed",
+            message: "Comment creation failed",
+            details: comment.errors.full_messages,
+            status: :unprocessable_entity
+          )
         end
       end
 
@@ -54,10 +56,12 @@ module Api
             comment: comment_json(@comment)
           }, status: :ok
         else
-          render json: {
-            error: "Comment update failed",
-            details: @comment.errors.full_messages
-          }, status: :unprocessable_entity
+          render_error(
+            error: "Validation failed",
+            message: "Comment update failed",
+            details: @comment.errors.full_messages,
+            status: :unprocessable_entity
+          )
         end
       end
 

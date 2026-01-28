@@ -160,7 +160,8 @@ module Api
 
         assert_response :forbidden
         json = JSON.parse(response.body)
-        assert_equal "Collection is private", json["error"]
+        assert_equal "Forbidden", json["error"]
+        assert_equal "This collection is private", json["message"]
       end
 
       test "show should allow owner to view private collection" do
@@ -237,7 +238,8 @@ module Api
 
         assert_response :unprocessable_entity
         json = JSON.parse(response.body)
-        assert_includes json, "errors"
+        assert_equal "Validation failed", json["error"]
+        assert_includes json, "details"
       end
 
       test "create should set current_user as collection owner" do
@@ -290,7 +292,9 @@ module Api
 
         assert_response :unprocessable_entity
         json = JSON.parse(response.body)
-        assert_includes json, "errors"
+        assert_equal "Validation failed", json["error"]
+        assert_equal "Collection update failed", json["message"]
+        assert_includes json, "details"
       end
 
       test "update should change privacy setting" do
@@ -390,7 +394,8 @@ module Api
 
         assert_response :unprocessable_entity
         json = JSON.parse(response.body)
-        assert_equal "GIF already in collection", json["error"]
+        assert_equal "Validation failed", json["error"]
+        assert_equal "GIF is already in this collection", json["message"]
       end
 
       test "add_gif returns 404 for non-existent GIF" do
@@ -451,7 +456,8 @@ module Api
 
         assert_response :not_found
         json = JSON.parse(response.body)
-        assert_equal "GIF not in collection", json["error"]
+        assert_equal "Not found", json["error"]
+        assert_equal "GIF is not in this collection", json["message"]
       end
 
       # ========== REORDER TESTS ==========

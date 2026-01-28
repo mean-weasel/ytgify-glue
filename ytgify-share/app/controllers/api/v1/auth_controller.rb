@@ -85,10 +85,11 @@ module Api
           }, status: :ok
         rescue StandardError => e
           Rails.logger.error("Google auth error: #{e.message}")
-          render json: {
-            error: "Google authentication failed",
-            message: e.message
-          }, status: :unauthorized
+          render_error(
+            error: "Unauthorized",
+            message: "Google authentication failed. Please try again.",
+            status: :unauthorized
+          )
         end
       end
 

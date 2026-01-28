@@ -35,7 +35,11 @@ module Api
       # GET /api/v1/collections/:id
       def show
         unless @collection.visible_to?(current_user)
-          return render json: { error: "Collection is private" }, status: :forbidden
+          return render_error(
+            error: "Forbidden",
+            message: "This collection is private",
+            status: :forbidden
+          )
         end
 
         @gifs = @collection.gifs
@@ -60,7 +64,12 @@ module Api
         if @collection.save
           render json: @collection, status: :created
         else
-          render json: { errors: @collection.errors.full_messages }, status: :unprocessable_entity
+          render_error(
+            error: "Validation failed",
+            message: "Collection creation failed",
+            details: @collection.errors.full_messages,
+            status: :unprocessable_entity
+          )
         end
       end
 
@@ -69,7 +78,12 @@ module Api
         if @collection.update(collection_params)
           render json: @collection
         else
-          render json: { errors: @collection.errors.full_messages }, status: :unprocessable_entity
+          render_error(
+            error: "Validation failed",
+            message: "Collection update failed",
+            details: @collection.errors.full_messages,
+            status: :unprocessable_entity
+          )
         end
       end
 
@@ -90,7 +104,11 @@ module Api
             gifs_count: @collection.reload.gifs_count
           }
         else
-          render json: { error: "GIF already in collection" }, status: :unprocessable_entity
+          render_error(
+            error: "Validation failed",
+            message: "GIF is already in this collection",
+            status: :unprocessable_entity
+          )
         end
       end
 
@@ -102,7 +120,11 @@ module Api
             gifs_count: @collection.reload.gifs_count
           }
         else
-          render json: { error: "GIF not in collection" }, status: :not_found
+          render_error(
+            error: "Not found",
+            message: "GIF is not in this collection",
+            status: :not_found
+          )
         end
       end
 
@@ -119,9 +141,7 @@ module Api
       end
 
       def authorize_collection!
-        unless @collection.user == current_user
-          render json: { error: "Unauthorized" }, status: :forbidden
-        end
+        render_forbidden unless @collection.user == current_user
       end
 
       def collection_params

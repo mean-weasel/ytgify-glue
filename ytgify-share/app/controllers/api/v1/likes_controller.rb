@@ -27,10 +27,12 @@ module Api
               like_count: gif.reload.like_count
             }, status: :created
           else
-            render json: {
-              error: "Failed to like",
-              details: like.errors.full_messages
-            }, status: :unprocessable_entity
+            render_error(
+              error: "Validation failed",
+              message: "Failed to add like",
+              details: like.errors.full_messages,
+              status: :unprocessable_entity
+            )
           end
         end
       end

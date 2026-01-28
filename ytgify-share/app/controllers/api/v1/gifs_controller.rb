@@ -64,10 +64,12 @@ module Api
             gif: gif_json(gif)
           }, status: :created
         else
-          render json: {
-            error: "GIF creation failed",
-            details: gif.errors.full_messages
-          }, status: :unprocessable_entity
+          render_error(
+            error: "Validation failed",
+            message: "GIF creation failed",
+            details: gif.errors.full_messages,
+            status: :unprocessable_entity
+          )
         end
       end
 
@@ -79,10 +81,12 @@ module Api
             gif: gif_json(@gif)
           }, status: :ok
         else
-          render json: {
-            error: "GIF update failed",
-            details: @gif.errors.full_messages
-          }, status: :unprocessable_entity
+          render_error(
+            error: "Validation failed",
+            message: "GIF update failed",
+            details: @gif.errors.full_messages,
+            status: :unprocessable_entity
+          )
         end
       end
 
