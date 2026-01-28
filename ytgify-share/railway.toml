@@ -1,0 +1,26 @@
+# Railway configuration for ytgify-share Rails app
+# Documentation: https://docs.railway.app/reference/config-as-code
+
+[build]
+# Use the existing Dockerfile for builds
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Start command (Dockerfile uses Thruster, but can override here)
+# startCommand = "bin/rails server -b 0.0.0.0 -p ${PORT:-3000}"
+
+# Health check configuration
+healthcheckPath = "/up"
+healthcheckTimeout = 30
+
+# Restart policy
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Number of deployment instances
+numReplicas = 1
+
+[deploy.triggers]
+# Only trigger builds when ytgify-share files change (monorepo support)
+paths = ["ytgify-share/**"]
