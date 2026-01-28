@@ -82,6 +82,17 @@ module Api
           message: "You do not have permission to access this resource"
         }, status: :forbidden
       end
+
+      # Standardized error response helper for consistent API error format
+      # @param error [String] Error type (e.g., "Validation failed", "Not found")
+      # @param message [String] Human-readable error message
+      # @param details [Array] Optional array of specific error details
+      # @param status [Symbol] HTTP status code
+      def render_error(error:, message:, status:, details: [])
+        response = { error: error, message: message }
+        response[:details] = details if details.present?
+        render json: response, status: status
+      end
     end
   end
 end

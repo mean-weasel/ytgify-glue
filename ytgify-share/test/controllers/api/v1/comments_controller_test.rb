@@ -213,7 +213,8 @@ module Api
 
         assert_response :unprocessable_entity
         json = JSON.parse(response.body)
-        assert_equal "Comment creation failed", json["error"]
+        assert_equal "Validation failed", json["error"]
+        assert_equal "Comment creation failed", json["message"]
         assert_includes json, "details"
       end
 
@@ -291,7 +292,8 @@ module Api
 
         assert_response :unprocessable_entity
         json = JSON.parse(response.body)
-        assert_equal "Comment update failed", json["error"]
+        assert_equal "Validation failed", json["error"]
+        assert_equal "Comment update failed", json["message"]
       end
 
       test "update requires comment parameter" do
