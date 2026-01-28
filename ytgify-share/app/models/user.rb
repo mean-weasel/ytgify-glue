@@ -1,12 +1,10 @@
 class User < ApplicationRecord
-  include Devise::JWT::RevocationStrategies::Denylist
-
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, :trackable,
          :jwt_authenticatable, :omniauthable,
-         jwt_revocation_strategy: self,
+         jwt_revocation_strategy: JwtDenylist,
          omniauth_providers: [ :google_oauth2 ]
 
   # Associations
@@ -43,6 +41,7 @@ class User < ApplicationRecord
   before_validation :generate_jti, on: :create
   before_validation :set_display_name, if: :new_record?
   after_initialize :set_default_preferences, if: :new_record?
+  before_update :rotate_jti_on_security_change
 
   # Scopes
   scope :verified, -> { where(is_verified: true) }
@@ -169,10 +168,22 @@ class User < ApplicationRecord
     username
   end
 
+  # Rotate JTI to invalidate all existing tokens (logout from all devices)
+  def rotate_jti!
+    update!(jti: SecureRandom.uuid)
+  end
+
   private
 
   def generate_jti
     self.jti ||= SecureRandom.uuid
+  end
+
+  # Automatically rotate JTI when password or email changes (security measure)
+  def rotate_jti_on_security_change
+    if encrypted_password_changed? || email_changed?
+      self.jti = SecureRandom.uuid
+    end
   end
 
   def set_display_name

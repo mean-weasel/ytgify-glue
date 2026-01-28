@@ -706,22 +706,98 @@ module Api
         assert_includes [ 401, 404 ], response.status
       end
 
-      test "JWT with revoked JTI should be rejected" do
+      test "JWT with rotated JTI should be rejected" do
         # Generate token with current JTI
         token = generate_jwt_token(@alice)
 
-        # Simulate JTI revocation (user logged out, password changed, etc.)
-        @alice.update!(jti: SecureRandom.uuid)
+        # Rotate JTI (simulates password change, logout all devices, etc.)
+        @alice.rotate_jti!
 
-        # Old token should still decode but user's JTI has changed
-        # Note: Current implementation doesn't check JTI, but this tests the concept
+        # Old token should be rejected because JTI no longer matches
         get api_v1_auth_me_path,
             headers: { "Authorization" => "Bearer #{token}" },
             as: :json
 
-        # Response depends on implementation - may still work if JTI not checked
-        # This test documents expected behavior for future JTI validation
-        assert_includes [ 200, 401 ], response.status
+        assert_response :unauthorized
+      end
+
+      test "JWT on denylist should be rejected" do
+        # Generate valid token
+        token = generate_jwt_token(@alice)
+
+        # Add token's JTI to denylist (simulates logout)
+        decoded = JWT.decode(token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
+        JwtDenylist.create!(jti: decoded["jti"], exp: Time.at(decoded["exp"]))
+
+        # Token should be rejected
+        get api_v1_auth_me_path,
+            headers: { "Authorization" => "Bearer #{token}" },
+            as: :json
+
+        assert_response :unauthorized
+      end
+
+      test "logout adds token to denylist" do
+        token = generate_jwt_token(@alice)
+
+        assert_difference("JwtDenylist.count", 1) do
+          delete api_v1_auth_logout_path + ".json",
+                 headers: { "Authorization" => "Bearer #{token}" }
+        end
+
+        assert_response :ok
+        assert JwtDenylist.exists?(jti: @alice.jti)
+      end
+
+      test "logout token cannot be reused" do
+        token = generate_jwt_token(@alice)
+
+        # Logout
+        delete api_v1_auth_logout_path + ".json",
+               headers: { "Authorization" => "Bearer #{token}" }
+        assert_response :ok
+
+        # Try to use the same token
+        get api_v1_auth_me_path + ".json",
+            headers: { "Authorization" => "Bearer #{token}" }
+
+        assert_response :unauthorized
+      end
+
+      test "password change invalidates existing tokens" do
+        token = generate_jwt_token(@alice)
+        original_jti = @alice.jti
+
+        # Change password
+        @alice.update!(password: "newpassword123", password_confirmation: "newpassword123")
+
+        # JTI should have rotated
+        assert_not_equal original_jti, @alice.reload.jti
+
+        # Old token should be rejected
+        get api_v1_auth_me_path,
+            headers: { "Authorization" => "Bearer #{token}" },
+            as: :json
+
+        assert_response :unauthorized
+      end
+
+      test "email change invalidates existing tokens" do
+        token = generate_jwt_token(@alice)
+        original_jti = @alice.jti
+
+        # Change email
+        @alice.update!(email: "newemail@example.com")
+
+        # JTI should have rotated
+        assert_not_equal original_jti, @alice.reload.jti
+
+        # Old token should be rejected
+        get api_v1_auth_me_path,
+            headers: { "Authorization" => "Bearer #{token}" },
+            as: :json
+
+        assert_response :unauthorized
       end
 
       test "JWT without Bearer prefix should be handled" do

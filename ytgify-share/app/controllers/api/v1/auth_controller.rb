@@ -94,7 +94,21 @@ module Api
 
       # DELETE /api/v1/auth/logout
       def logout
-        # JWT will be added to denylist via devise-jwt
+        # Extract token and add JTI to denylist
+        if request.headers["Authorization"].present?
+          token = request.headers["Authorization"].split(" ").last
+          begin
+            jwt_payload = JWT.decode(token, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production")).first
+            jti = jwt_payload["jti"]
+            exp = Time.at(jwt_payload["exp"])
+
+            # Add to denylist (will be rejected on future requests)
+            JwtDenylist.create!(jti: jti, exp: exp) if jti.present?
+          rescue JWT::DecodeError, JWT::ExpiredSignature
+            # Token already invalid, nothing to revoke
+          end
+        end
+
         render json: { message: "Logout successful" }, status: :ok
       end
 

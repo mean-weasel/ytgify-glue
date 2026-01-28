@@ -776,4 +776,79 @@ class UserTest < ActiveSupport::TestCase
 
     assert_not_equal original_jti, user.reload.jti
   end
+
+  # ========================================
+  # JTI ROTATION TESTS
+  # ========================================
+
+  test "rotate_jti! generates new JTI and saves" do
+    user = User.create!(
+      email: "rotate@example.com",
+      username: "rotateuser",
+      password: "password123"
+    )
+
+    original_jti = user.jti
+    user.rotate_jti!
+
+    assert_not_equal original_jti, user.jti
+    assert_not_equal original_jti, user.reload.jti
+  end
+
+  test "password change automatically rotates JTI" do
+    user = User.create!(
+      email: "pwchange@example.com",
+      username: "pwchangeuser",
+      password: "password123"
+    )
+
+    original_jti = user.jti
+
+    user.update!(password: "newpassword456", password_confirmation: "newpassword456")
+
+    assert_not_equal original_jti, user.reload.jti
+  end
+
+  test "email change automatically rotates JTI" do
+    user = User.create!(
+      email: "emailchange@example.com",
+      username: "emailchangeuser",
+      password: "password123"
+    )
+
+    original_jti = user.jti
+
+    user.update!(email: "newemail@example.com")
+
+    assert_not_equal original_jti, user.reload.jti
+  end
+
+  test "non-security changes do not rotate JTI" do
+    user = User.create!(
+      email: "nosecurity@example.com",
+      username: "nosecurityuser",
+      password: "password123"
+    )
+
+    original_jti = user.jti
+
+    # Update non-security fields
+    user.update!(display_name: "New Display Name", bio: "New bio")
+
+    assert_equal original_jti, user.reload.jti
+  end
+
+  test "username change does not rotate JTI" do
+    user = User.create!(
+      email: "usernamechange@example.com",
+      username: "oldusername",
+      password: "password123"
+    )
+
+    original_jti = user.jti
+
+    user.update!(username: "newusername")
+
+    assert_equal original_jti, user.reload.jti
+  end
 end

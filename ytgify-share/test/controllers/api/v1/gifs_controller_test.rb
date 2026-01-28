@@ -341,8 +341,12 @@ module Api
 
       # Helper to generate JWT token for API authentication
       def generate_jwt_token(user)
+        # Ensure user has jti
+        user.update_column(:jti, SecureRandom.uuid) if user.jti.nil?
+
         payload = {
           sub: user.id,
+          jti: user.jti,
           exp: 24.hours.from_now.to_i
         }
         JWT.encode(payload, ENV.fetch("JWT_SECRET_KEY", "changeme-in-production"))
