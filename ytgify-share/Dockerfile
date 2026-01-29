@@ -46,7 +46,8 @@ COPY . .
 RUN bundle exec bootsnap precompile app/ lib/
 
 # Precompile assets (includes Tailwind CSS compilation)
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+# JWT_SECRET_KEY is required by devise_jwt initializer, set dummy for build
+RUN SECRET_KEY_BASE_DUMMY=1 JWT_SECRET_KEY=dummy-key-for-asset-precompile ./bin/rails assets:precompile
 
 
 
