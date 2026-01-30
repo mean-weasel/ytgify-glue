@@ -1,10 +1,10 @@
 import Link from 'next/link'
-
-// Extension URLs
-const CHROME_EXTENSION_URL = 'https://chromewebstore.google.com/detail/ytgify/dnljofakogbecppbkmnoffppkfdmpfje'
-const FIREFOX_ADDON_URL = 'https://addons.mozilla.org/en-US/firefox/addon/ytgify-for-firefox/'
-const GITHUB_URL = 'https://github.com/neonwatty'
-const TWITTER_URL = 'https://x.com/neonwatty'
+import {
+  CHROME_EXTENSION_URL,
+  FIREFOX_ADDON_URL,
+  GITHUB_URL,
+  TWITTER_URL
+} from '@/lib/constants'
 
 export default function MarketingLayout({
   children,
