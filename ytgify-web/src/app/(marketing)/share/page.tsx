@@ -30,7 +30,7 @@ export default function SharePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#0a0a0a] grid-pattern flex items-center justify-center p-6">
       <div className="max-w-2xl text-center relative">
         {/* Gradient blur background */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-red-500/20 via-orange-500/20 to-yellow-500/20 blur-[100px] rounded-full pointer-events-none"></div>

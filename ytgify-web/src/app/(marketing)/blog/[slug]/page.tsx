@@ -143,7 +143,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const htmlContent = markdownToHtml(post.content)
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] grid-pattern">
+    <main className="min-h-screen bg-[#0a0a0a]">
       <article className="max-w-[800px] mx-auto px-6 sm:px-12 pt-12 pb-8">
         <Link
           href="/blog"
@@ -203,6 +203,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
         )}
       </article>
-    </div>
+    </main>
   )
 }
