@@ -5,6 +5,11 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "regions": ["iad1"],
+  "protectionBypass": {
+    "api": {
+      "enabled": false
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
