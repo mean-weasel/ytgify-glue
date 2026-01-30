@@ -3,7 +3,7 @@ title: "Best GIF Settings for Social Media"
 description: "Optimal GIF resolution, frame rate, and file size for Twitter, Discord, Reddit, and more."
 date: "2025-01-10"
 tags: ["tips", "social-media", "gif"]
-thumbnail: "/marketing/ytgify-demo-5.png"
+thumbnail: "/ytgify-demo-5.png"
 readTime: 3
 ---
 

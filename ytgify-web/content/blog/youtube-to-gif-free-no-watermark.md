@@ -3,7 +3,7 @@ title: "How to Make a GIF from YouTube in Seconds (Free, No Watermark)"
 description: "Convert any YouTube video to GIF instantly with the YTgify extension. Free, no watermark, no signup required."
 date: "2024-12-20"
 tags: ["tutorial", "gif", "youtube", "free"]
-thumbnail: "/marketing/ytgify-demo-2.png"
+thumbnail: "/ytgify-demo-1.png"
 readTime: 3
 ---
 

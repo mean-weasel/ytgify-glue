@@ -3,7 +3,7 @@ title: "How to Create a GIF from Any YouTube Video"
 description: "Step-by-step guide to creating animated GIFs from YouTube videos using the YTgify browser extension."
 date: "2025-01-15"
 tags: ["tutorial", "gif", "youtube"]
-thumbnail: "/marketing/ytgify-demo-2.png"
+thumbnail: "/ytgify-demo-2.png"
 readTime: 2
 ---
 
