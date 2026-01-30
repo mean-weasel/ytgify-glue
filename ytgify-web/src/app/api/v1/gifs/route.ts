@@ -12,6 +12,13 @@ function getSupabase() {
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 
+// Map extension privacy values to database enum
+const privacyTransform = z.string().transform((val) => {
+  // Extension sends 'public_access', map to 'public'
+  if (val === 'public_access') return 'public'
+  return val
+}).pipe(z.enum(['public', 'unlisted', 'private']))
+
 const gifMetadataSchema = z.object({
   youtube_video_url: z.string().url().optional(),
   youtube_video_title: z.string().optional(),
@@ -25,9 +32,11 @@ const gifMetadataSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   hashtags: z.string().optional(), // comma-separated
-  privacy: z.enum(['public', 'unlisted', 'private']).default('public'),
+  privacy: privacyTransform.default('public'),
   has_text_overlay: z.coerce.boolean().default(false),
   text_overlay_data: z.string().optional(), // JSON string
+  // Extension sends hashtag_names[] as array
+  'hashtag_names[]': z.string().optional(),
 })
 
 export async function POST(request: Request) {
@@ -56,7 +65,9 @@ export async function POST(request: Request) {
 
     // Parse multipart form data
     const formData = await request.formData()
-    const file = formData.get('file') as File | null
+
+    // Support both flat keys (file) and Rails-style keys (gif[file])
+    const file = (formData.get('file') || formData.get('gif[file]')) as File | null
 
     if (!file) {
       return NextResponse.json(
@@ -82,11 +93,30 @@ export async function POST(request: Request) {
     }
 
     // Parse metadata from form data
+    // Support both flat keys and Rails-style keys (gif[field])
     const metadataObj: Record<string, unknown> = {}
+    const hashtagNames: string[] = []
+
     for (const [key, value] of formData.entries()) {
-      if (key !== 'file' && typeof value === 'string') {
-        metadataObj[key] = value
+      if (typeof value === 'string') {
+        // Handle Rails-style array keys: gif[hashtag_names][] -> collect into array
+        if (key === 'gif[hashtag_names][]') {
+          hashtagNames.push(value)
+          continue
+        }
+        // Handle Rails-style keys: gif[field] -> field
+        const match = key.match(/^gif\[(.+)\]$/)
+        if (match) {
+          metadataObj[match[1]] = value
+        } else if (key !== 'file') {
+          metadataObj[key] = value
+        }
       }
+    }
+
+    // Convert hashtag array to comma-separated string for schema
+    if (hashtagNames.length > 0) {
+      metadataObj['hashtags'] = hashtagNames.join(',')
     }
 
     const metadataResult = gifMetadataSchema.safeParse(metadataObj)

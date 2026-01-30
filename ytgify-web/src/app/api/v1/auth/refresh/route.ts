@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { verifyRefreshToken, createTokenPair } from '@/lib/jwt'
+import { verifyRefreshToken, verifyAccessToken, extractBearerToken, createTokenPair } from '@/lib/jwt'
 import { z } from 'zod'
 
+// Support refresh_token in body (web app) or empty body with Bearer token (extension)
 const refreshSchema = z.object({
-  refresh_token: z.string().min(1),
+  refresh_token: z.string().min(1).optional(),
 })
 
 function getSupabase() {
@@ -16,24 +17,40 @@ function getSupabase() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const result = refreshSchema.safeParse(body)
-
-    if (!result.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: result.error.flatten() },
-        { status: 400 }
-      )
+    // Try to parse body (may be empty for extension calls)
+    let bodyRefreshToken: string | undefined
+    try {
+      const body = await request.json()
+      const result = refreshSchema.safeParse(body)
+      if (result.success) {
+        bodyRefreshToken = result.data.refresh_token
+      }
+    } catch {
+      // Empty body is okay for extension-style refresh
     }
 
-    const { refresh_token } = result.data
+    let payload
 
-    // Verify the refresh token
-    const payload = await verifyRefreshToken(refresh_token)
+    // Method 1: Use refresh_token from body (web app)
+    if (bodyRefreshToken) {
+      payload = await verifyRefreshToken(bodyRefreshToken)
+    } else {
+      // Method 2: Use Bearer token from header (extension)
+      const authHeader = request.headers.get('Authorization')
+      const token = extractBearerToken(authHeader)
+      if (token) {
+        // Try as access token first (extension sends access token)
+        payload = await verifyAccessToken(token)
+        // Also try as refresh token if access token verification fails
+        if (!payload) {
+          payload = await verifyRefreshToken(token)
+        }
+      }
+    }
 
     if (!payload || !payload.sub) {
       return NextResponse.json(
-        { error: 'Invalid or expired refresh token' },
+        { error: 'Invalid or expired token' },
         { status: 401 }
       )
     }
@@ -55,14 +72,17 @@ export async function POST(request: Request) {
     }
 
     // Create new token pair
-    const { accessToken, refreshToken } = await createTokenPair(
+    const { accessToken, refreshToken: newRefreshToken } = await createTokenPair(
       payload.sub,
       payload.email
     )
 
     return NextResponse.json({
+      // Extension compatibility: uses "token"
+      token: accessToken,
+      // Web app compatibility: uses "access_token" / "refresh_token"
       access_token: accessToken,
-      refresh_token: refreshToken,
+      refresh_token: newRefreshToken,
       user: {
         id: profile.id,
         email: payload.email,

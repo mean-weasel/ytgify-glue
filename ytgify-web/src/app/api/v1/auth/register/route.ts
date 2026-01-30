@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import { createTokenPair } from '@/lib/jwt'
 import { z } from 'zod'
 
-const registerSchema = z.object({
+// User fields schema (shared between formats)
+const userFieldsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   username: z
@@ -11,7 +12,14 @@ const registerSchema = z.object({
     .min(3, 'Username must be at least 3 characters')
     .max(20, 'Username must be at most 20 characters')
     .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+  password_confirmation: z.string().optional(), // Extension sends this, we ignore it
 })
+
+// Support both direct fields and extension format (wrapped in "user" object)
+const registerSchema = z.union([
+  userFieldsSchema,
+  z.object({ user: userFieldsSchema }),
+])
 
 function getSupabase() {
   return createClient(
@@ -32,7 +40,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const { email, password, username } = result.data
+    // Extract fields from either format
+    const data = result.data
+    const fields = 'user' in data ? data.user : data
+    const { email, password, username } = fields
     const normalizedUsername = username.toLowerCase()
     const supabase = getSupabase()
 
@@ -92,6 +103,9 @@ export async function POST(request: Request) {
     )
 
     return NextResponse.json({
+      // Extension compatibility: uses "token"
+      token: accessToken,
+      // Web app compatibility: uses "access_token" / "refresh_token"
       access_token: accessToken,
       refresh_token: refreshToken,
       user: {

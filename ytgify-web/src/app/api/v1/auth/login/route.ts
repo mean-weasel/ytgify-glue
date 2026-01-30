@@ -3,10 +3,19 @@ import { createClient } from '@supabase/supabase-js'
 import { createTokenPair } from '@/lib/jwt'
 import { z } from 'zod'
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-})
+// Support both direct fields and extension format (wrapped in "user" object)
+const loginSchema = z.union([
+  z.object({
+    email: z.string().email(),
+    password: z.string().min(1),
+  }),
+  z.object({
+    user: z.object({
+      email: z.string().email(),
+      password: z.string().min(1),
+    }),
+  }),
+])
 
 // Create client lazily to avoid build-time errors
 function getSupabase() {
@@ -28,7 +37,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const { email, password } = result.data
+    // Extract email/password from either format
+    const data = result.data
+    const email = 'user' in data ? data.user.email : data.email
+    const password = 'user' in data ? data.user.password : data.password
     const supabase = getSupabase()
 
     // Authenticate with Supabase Auth
@@ -65,6 +77,9 @@ export async function POST(request: Request) {
     )
 
     return NextResponse.json({
+      // Extension compatibility: uses "token"
+      token: accessToken,
+      // Web app compatibility: uses "access_token" / "refresh_token"
       access_token: accessToken,
       refresh_token: refreshToken,
       user: {
