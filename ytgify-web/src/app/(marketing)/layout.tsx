@@ -77,10 +77,10 @@ export default function MarketingLayout({
             >
               Install Firefox Add-on
             </a>
-            <Link href="/privacy" className="text-[#a0a0a0] hover:text-white transition-colors">
+            <Link href="/privacy-policy" className="text-[#a0a0a0] hover:text-white transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="text-[#a0a0a0] hover:text-white transition-colors">
+            <Link href="/terms-of-service" className="text-[#a0a0a0] hover:text-white transition-colors">
               Terms of Service
             </Link>
           </div>
