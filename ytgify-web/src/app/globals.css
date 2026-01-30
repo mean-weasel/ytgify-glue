@@ -227,3 +227,11 @@ html {
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
 }
+
+/* Grid pattern background for marketing pages */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}

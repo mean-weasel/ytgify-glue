@@ -2,9 +2,9 @@ import Link from 'next/link'
 
 // Extension URLs
 const CHROME_EXTENSION_URL = 'https://chromewebstore.google.com/detail/ytgify/dnljofakogbecppbkmnoffppkfdmpfje'
-const FIREFOX_ADDON_URL = 'https://addons.mozilla.org/en-US/firefox/addon/ytgify/'
-const GITHUB_URL = 'https://github.com/nicholasoxford/ytgify'
-const TWITTER_URL = 'https://twitter.com/ytgify'
+const FIREFOX_ADDON_URL = 'https://addons.mozilla.org/en-US/firefox/addon/ytgify-for-firefox/'
+const GITHUB_URL = 'https://github.com/neonwatty'
+const TWITTER_URL = 'https://x.com/neonwatty'
 
 export default function MarketingLayout({
   children,
@@ -16,7 +16,7 @@ export default function MarketingLayout({
       {children}
 
       {/* Footer */}
-      <footer className="max-w-[800px] mx-auto px-12 sm:px-6 py-16 border-t border-[#2a2a2a]">
+      <footer className="max-w-[800px] mx-auto px-6 sm:px-12 py-16 border-t border-[#2a2a2a]">
         <div className="flex flex-col items-center gap-6">
           <p className="text-sm text-[#a0a0a0]">
             &copy; {new Date().getFullYear()} YTgify. All rights reserved.
@@ -47,6 +47,16 @@ export default function MarketingLayout({
                   <path d="M4 4l16 16m0-16L4 20" />
                 </svg>
               </a>
+              <Link
+                href="/blog"
+                className="text-[#a0a0a0] hover:text-white transition-colors"
+                aria-label="Blog"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </Link>
             </div>
             <Link href="/blog" className="text-[#a0a0a0] hover:text-white transition-colors">
               Blog
@@ -67,10 +77,10 @@ export default function MarketingLayout({
             >
               Install Firefox Add-on
             </a>
-            <Link href="/privacy-policy" className="text-[#a0a0a0] hover:text-white transition-colors">
+            <Link href="/privacy" className="text-[#a0a0a0] hover:text-white transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms-of-service" className="text-[#a0a0a0] hover:text-white transition-colors">
+            <Link href="/terms" className="text-[#a0a0a0] hover:text-white transition-colors">
               Terms of Service
             </Link>
           </div>
