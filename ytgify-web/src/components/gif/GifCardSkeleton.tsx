@@ -30,16 +30,3 @@ export function GifCardSkeleton() {
     </div>
   )
 }
-
-/**
- * Grid of loading skeletons
- */
-export function GifCardSkeletonGrid({ count = 4 }: { count?: number }) {
-  return (
-    <div className="space-y-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <GifCardSkeleton key={i} />
-      ))}
-    </div>
-  )
-}

@@ -79,21 +79,3 @@ export function AppHeader({
     </header>
   )
 }
-
-// Simple header variant for non-authenticated pages
-export function SimpleHeader({ title }: { title: string }) {
-  return (
-    <header className="sticky top-0 z-40 bg-black border-b border-gray-800">
-      <div className="flex items-center h-14 px-4 max-w-lg mx-auto">
-        <button
-          onClick={() => window.history.back()}
-          className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
-          aria-label="Go back"
-        >
-          <ChevronLeftIcon size={24} />
-        </button>
-        <h1 className="text-lg font-semibold text-white ml-2">{title}</h1>
-      </div>
-    </header>
-  )
-}

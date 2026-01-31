@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useEffect, useState, ReactNode } from 'react'
 import {
   isNative,
   isIOS,
@@ -32,10 +32,6 @@ const CapacitorContext = createContext<CapacitorContextValue>({
   haptic: async () => {},
   hapticNotification: async () => {},
 })
-
-export function useCapacitorContext() {
-  return useContext(CapacitorContext)
-}
 
 interface CapacitorProviderProps {
   children: ReactNode

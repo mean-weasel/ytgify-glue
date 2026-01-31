@@ -1,2 +1,2 @@
 export { BottomNav } from './BottomNav'
-export { AppHeader, SimpleHeader } from './AppHeader'
+export { AppHeader } from './AppHeader'

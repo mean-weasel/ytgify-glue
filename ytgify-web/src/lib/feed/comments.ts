@@ -85,51 +85,6 @@ export async function getComments(
 }
 
 /**
- * Get replies to a comment
- */
-export async function getReplies(
-  commentId: string,
-  limit = 10
-): Promise<CommentWithUser[]> {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('comments')
-    .select(
-      `
-      *,
-      user:users!user_id (
-        id,
-        username,
-        display_name,
-        avatar_url,
-        is_verified
-      )
-    `
-    )
-    .eq('parent_comment_id', commentId)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true })
-    .limit(limit)
-
-  if (error) {
-    console.error('Error fetching replies:', error)
-    return []
-  }
-
-  const comments = data as unknown as CommentRow[] | null
-
-  if (!comments) {
-    return []
-  }
-
-  return comments.map((c) => ({
-    ...c,
-    user: c.user as CommentWithUser['user'],
-  }))
-}
-
-/**
  * Add a comment to a GIF
  */
 export async function addComment(
@@ -188,34 +143,4 @@ export async function addComment(
       user: comment.user as CommentWithUser['user'],
     },
   }
-}
-
-/**
- * Delete a comment
- */
-export async function deleteComment(
-  commentId: string
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { success: false, error: 'Not authenticated' }
-  }
-
-  // Soft delete - only if the user owns the comment
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
-    .from('comments')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', commentId)
-    .eq('user_id', user.id)
-
-  if (error) {
-    return { success: false, error: error.message }
-  }
-
-  return { success: true }
 }

@@ -1,3 +1,3 @@
 export { GifCard } from './GifCard'
-export { GifCardSkeleton, GifCardSkeletonGrid } from './GifCardSkeleton'
+export { GifCardSkeleton } from './GifCardSkeleton'
 export { Feed } from './Feed'

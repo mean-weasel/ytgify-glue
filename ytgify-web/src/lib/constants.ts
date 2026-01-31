@@ -26,10 +26,5 @@ export const MOBILE_REMINDER_EMAIL = {
   ),
 };
 
-export const SITE_URL = 'https://ytgify.com';
-export const SITE_NAME = 'YTgify';
-export const SITE_TITLE = 'YTgify - Free YouTube to GIF Converter | No Watermark';
-export const SITE_DESCRIPTION = 'Free YouTube to GIF converter Chrome extension. Create animated GIFs from any YouTube video in seconds - no watermark, no uploads. Convert video to GIF with custom text, FPS control, and multiple resolutions. Perfect for memes and social sharing.';
-
 export const GITHUB_URL = 'https://github.com/neonwatty';
 export const TWITTER_URL = 'https://x.com/neonwatty';

@@ -432,27 +432,16 @@ export interface Database {
 
 // Helper types
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-export type InsertTables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert']
-export type UpdateTables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update']
 
 // Convenience types
 export type User = Tables<'users'>
 export type Gif = Tables<'gifs'>
-export type Like = Tables<'likes'>
 export type Comment = Tables<'comments'>
-export type Follow = Tables<'follows'>
 export type Collection = Tables<'collections'>
-export type CollectionGif = Tables<'collection_gifs'>
 export type Hashtag = Tables<'hashtags'>
-export type GifHashtag = Tables<'gif_hashtags'>
 export type Notification = Tables<'notifications'>
-export type ViewEvent = Tables<'view_events'>
 
 // Extended types with relations
-export type GifWithUser = Gif & {
-  user: User
-}
-
 export type GifWithDetails = Gif & {
   user: User
   hashtags?: Hashtag[]
@@ -462,14 +451,6 @@ export type GifWithDetails = Gif & {
 
 export type CommentWithUser = Comment & {
   user: User
-}
-
-export type NotificationWithActorAndNotifiable = Notification & {
-  actor: User
-}
-
-export type CollectionWithGifs = Collection & {
-  gifs: Gif[]
 }
 
 export type UserWithStats = User & {

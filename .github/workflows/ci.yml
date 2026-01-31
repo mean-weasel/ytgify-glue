@@ -19,6 +19,10 @@ on:
         description: 'Run Rails CI'
         type: boolean
         default: true
+      run_nextjs:
+        description: 'Run Next.js CI'
+        type: boolean
+        default: true
       run_integration:
         description: 'Run Integration Tests'
         type: boolean
@@ -43,6 +47,7 @@ jobs:
       chrome: ${{ steps.filter.outputs.chrome }}
       firefox: ${{ steps.filter.outputs.firefox }}
       rails: ${{ steps.filter.outputs.rails }}
+      nextjs: ${{ steps.filter.outputs.nextjs }}
       integration: ${{ steps.filter.outputs.integration }}
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +66,8 @@ jobs:
               - 'package-lock.json'
             rails:
               - 'ytgify-share/**'
+            nextjs:
+              - 'ytgify-web/**'
             integration:
               - 'ytgify/**'
               - 'ytgify-share/**'
@@ -89,6 +96,14 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.run_rails)
     uses: ./.github/workflows/rails-backend.yml
 
+  nextjs:
+    name: Next.js Backend
+    needs: changes
+    if: |
+      needs.changes.outputs.nextjs == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_nextjs)
+    uses: ./.github/workflows/nextjs-backend.yml
+
   integration:
     name: Integration Tests
     needs: [changes, chrome, rails]
@@ -101,7 +116,7 @@ jobs:
 
   ci-success:
     name: CI Success
-    needs: [changes, chrome, firefox, rails, integration]
+    needs: [changes, chrome, firefox, rails, nextjs, integration]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -110,6 +125,7 @@ jobs:
           if [[ "${{ needs.chrome.result }}" == "failure" ]] || \
              [[ "${{ needs.firefox.result }}" == "failure" ]] || \
              [[ "${{ needs.rails.result }}" == "failure" ]] || \
+             [[ "${{ needs.nextjs.result }}" == "failure" ]] || \
              [[ "${{ needs.integration.result }}" == "failure" ]]; then
             echo "One or more CI jobs failed"
             exit 1

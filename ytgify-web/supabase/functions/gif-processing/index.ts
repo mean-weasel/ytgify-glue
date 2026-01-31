@@ -92,6 +92,7 @@ serve(async (req) => {
   }
 })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function generateThumbnail(supabase: any, gifId: string) {
   // Get GIF record
   const { data: gif, error: gifError } = await supabase

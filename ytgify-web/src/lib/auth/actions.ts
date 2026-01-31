@@ -127,12 +127,6 @@ export async function updatePassword(formData: FormData) {
   redirect('/app')
 }
 
-export async function getUser() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
-}
-
 export async function getUserProfile(): Promise<User | null> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
