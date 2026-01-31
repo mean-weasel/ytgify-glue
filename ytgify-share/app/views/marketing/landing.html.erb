@@ -1,52 +1,14 @@
 <div class="min-h-screen bg-[#0a0a0a] grid-pattern">
   <!-- Ultra Narrow Blog Style - Max 800px -->
   <article class="max-w-[800px] mx-auto px-12 sm:px-6 pt-12 pb-16">
-    <!-- Logo and Chrome Store Badge - Side by Side -->
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 mt-2 mb-4">
-      <div class="flex items-center gap-3 flex-shrink-0">
-        <%= render "marketing/shared/logo" %>
-        <h2 class="text-4xl sm:text-5xl font-bold text-white">YTgify</h2>
-      </div>
-      <div class="flex-shrink-0">
-        <%= render "marketing/shared/chrome_store_badge" %>
-      </div>
+    <!-- Logo -->
+    <div class="flex items-center justify-center gap-3 mt-2 mb-8">
+      <%= render "marketing/shared/logo" %>
+      <h2 class="text-4xl sm:text-5xl font-bold text-white">YTgify</h2>
     </div>
 
-    <!-- Social Proof -->
-    <div class="mb-8">
-      <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
-        <a
-          href="https://chromewebstore.google.com/detail/ytgify/dnljofakogbecppbkmnoffppkfdmpfje/reviews"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/15 border border-yellow-500/40 rounded-full text-yellow-300 font-semibold hover:bg-yellow-500/25 transition-colors"
-        >
-          <span class="text-lg">5-star rated</span>
-        </a>
-        <span class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/15 border border-blue-500/40 rounded-full text-blue-300 font-semibold">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-          Featured
-        </span>
-        <span class="inline-flex items-center gap-2 px-4 py-2 bg-green-500/15 border border-green-500/40 rounded-full text-green-300 font-semibold">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/></svg>
-          2,000+ weekly users
-        </span>
-      </div>
-      <!-- Featured Review -->
-      <div class="text-center">
-        <p class="text-gray-400 italic text-sm">
-          "No more searching for the perfect gif moment only to come up empty handed - now I can just make my own super easily. Love it."
-        </p>
-        <a
-          href="https://chromewebstore.google.com/detail/ytgify/dnljofakogbecppbkmnoffppkfdmpfje/reviews"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-gray-500 text-xs hover:text-gray-400 transition-colors"
-        >
-          - Chrome Web Store review
-        </a>
-      </div>
-    </div>
+    <!-- Discontinuation Notice and Local Install Instructions -->
+    <%= render "marketing/shared/discontinuation_notice" %>
 
     <!-- Large headline -->
     <h1 class="text-3xl sm:text-4xl font-bold mb-8 leading-tight text-white tracking-tight">
@@ -87,15 +49,17 @@
       <!-- CTA after video -->
       <div class="mt-12 text-center">
         <p class="text-xl text-white mb-6 font-semibold">Ready to create your first GIF?</p>
-        <div class="flex flex-col sm:flex-row items-start justify-center gap-6">
-          <%= render "marketing/shared/chrome_store_badge" %>
-          <%= render "marketing/shared/firefox_store_badge" %>
-        </div>
+        <a href="/downloads/ytgify-v1.0.19-chrome.zip"
+           download
+           class="inline-flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download YTgify for Chrome
+        </a>
         <p class="text-gray-400 text-sm mt-4">100% free. No watermark. No tracking. Ever.</p>
+        <p class="text-gray-500 text-xs mt-2">See installation instructions above</p>
       </div>
-
-      <!-- Waitlist Section -->
-      <%= render "marketing/shared/waitlist_section" %>
     </div>
   </article>
 
